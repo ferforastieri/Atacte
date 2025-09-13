@@ -26,6 +26,7 @@ model User {
   passwordEntries      PasswordEntry[]
   userSessions         UserSession[]
   auditLogs            AuditLog[]
+  preferences          UserPreferences?
   
   @@map("users")
 }
@@ -101,4 +102,19 @@ model AuditLog {
   user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   
   @@map("audit_logs")
+}
+
+model UserPreferences {
+  id        String   @id @default(cuid())
+  userId    String   @unique @map("user_id")
+  theme     String   @default("light") // 'light' ou 'dark'
+  language  String   @default("pt-BR") // 'pt-BR', 'en-US', etc.
+  autoLock  Int      @default(15) @map("auto_lock") // minutos para auto-lock (0 = desabilitado)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_preferences")
 }
