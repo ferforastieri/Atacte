@@ -1,4 +1,4 @@
-import { UserPreferencesRepository, CreateUserPreferencesData, UpdateUserPreferencesData } from '../../repositories/preferences/userPreferencesRepository';
+import { PreferencesRepository, CreateUserPreferencesData, UpdateUserPreferencesData } from '../../repositories/preferences/preferencesRepository';
 
 export interface UserPreferencesDto {
   id: string;
@@ -10,15 +10,15 @@ export interface UserPreferencesDto {
   updatedAt: Date;
 }
 
-export class UserPreferencesService {
-  private userPreferencesRepository: UserPreferencesRepository;
+export class PreferencesService {
+  private preferencesRepository: PreferencesRepository;
 
   constructor() {
-    this.userPreferencesRepository = new UserPreferencesRepository();
+    this.preferencesRepository = new PreferencesRepository();
   }
 
   async getUserPreferences(userId: string): Promise<UserPreferencesDto | null> {
-    const preferences = await this.userPreferencesRepository.findByUserId(userId);
+    const preferences = await this.preferencesRepository.findByUserId(userId);
     
     if (!preferences) {
       return null;
@@ -28,7 +28,7 @@ export class UserPreferencesService {
   }
 
   async createUserPreferences(userId: string, data: CreateUserPreferencesData): Promise<UserPreferencesDto> {
-    const preferences = await this.userPreferencesRepository.create({
+    const preferences = await this.preferencesRepository.create({
       userId,
       theme: data.theme || 'light',
       language: data.language || 'pt-BR',
@@ -39,18 +39,18 @@ export class UserPreferencesService {
   }
 
   async updateUserPreferences(userId: string, data: UpdateUserPreferencesData): Promise<UserPreferencesDto | null> {
-    const existingPreferences = await this.userPreferencesRepository.findByUserId(userId);
+    const existingPreferences = await this.preferencesRepository.findByUserId(userId);
     
     if (!existingPreferences) {
       return null;
     }
 
-    const preferences = await this.userPreferencesRepository.update(userId, data);
+    const preferences = await this.preferencesRepository.update(userId, data);
     return this.mapToDto(preferences);
   }
 
   async upsertUserPreferences(userId: string, data: CreateUserPreferencesData): Promise<UserPreferencesDto> {
-    const preferences = await this.userPreferencesRepository.upsert(userId, {
+    const preferences = await this.preferencesRepository.upsert(userId, {
       userId,
       theme: data.theme || 'light',
       language: data.language || 'pt-BR',
@@ -62,7 +62,7 @@ export class UserPreferencesService {
 
   async deleteUserPreferences(userId: string): Promise<boolean> {
     try {
-      await this.userPreferencesRepository.delete(userId);
+      await this.preferencesRepository.delete(userId);
       return true;
     } catch (error) {
       return false;

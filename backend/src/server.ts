@@ -37,17 +37,19 @@ app.get('/health', (req, res) => {
 });
 
 // Importar e usar rotas
-import authRoutes from './controllers/authController';
-import passwordRoutes from './controllers/passwordController';
-import userRoutes from './controllers/userController';
-import totpRoutes from './controllers/totpController';
-import importExportRoutes from './controllers/importExportController';
+import authRoutes from './controllers/auth/authController';
+import passwordRoutes from './controllers/passwords/passwordController';
+import userRoutes from './controllers/users/userController';
+import totpRoutes from './controllers/totp/totpController';
+import importExportRoutes from './controllers/importExport/importExportController';
+import preferencesRoutes from './controllers/preferences/preferencesController';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/passwords', passwordRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/totp', totpRoutes);
 app.use('/api/import-export', importExportRoutes);
+app.use('/api/preferences', preferencesRoutes);
 
 // Middleware de tratamento de erros
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

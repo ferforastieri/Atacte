@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { body, validationResult } from 'express-validator';
-import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
-import { TOTPService } from '../services/totpService';
+import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
+import { TOTPService } from '../../services/totp/totpService';
 
 const router = Router();
 
@@ -234,4 +234,3 @@ router.post('/test', [
 });
 
 export default router;
-

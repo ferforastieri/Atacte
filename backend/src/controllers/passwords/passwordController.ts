@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { body, query, validationResult } from 'express-validator';
-import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
-import { PasswordService } from '../services/passwordService';
+import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
+import { PasswordService } from '../../services/passwords/passwordService';
 
 const router = Router();
 const passwordService = new PasswordService();
@@ -401,6 +401,5 @@ router.delete('/:id/totp', async (req: AuthenticatedRequest, res: Response) => {
     });
   }
 });
-
 
 export default router;

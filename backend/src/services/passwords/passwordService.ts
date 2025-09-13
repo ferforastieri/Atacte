@@ -1,9 +1,10 @@
 import { Request } from 'express';
-import { prisma, PasswordEntry, CustomField } from '../infrastructure/prisma';
-import { CryptoUtil } from '../utils/cryptoUtil';
-import { AuditUtil } from '../utils/auditUtil';
-import { PasswordUtil, PasswordGeneratorOptions } from '../utils/passwordUtil';
-import { TOTPService, TOTPCode } from './totpService';
+import { PasswordEntry, CustomField } from '../../infrastructure/prisma';
+import { CryptoUtil } from '../../utils/cryptoUtil';
+import { AuditUtil } from '../../utils/auditUtil';
+import { PasswordUtil, PasswordGeneratorOptions } from '../../utils/passwordUtil';
+import { TOTPService, TOTPCode } from '../totp/totpService';
+import { PasswordRepository } from '../../repositories/passwords/passwordRepository';
 
 export interface PasswordEntryDto {
   id: string;
@@ -54,10 +55,10 @@ export interface SearchFilters {
   query?: string;
   folder?: string;
   isFavorite?: boolean;
-  limit: number;
-  offset: number;
-  sortBy: 'name' | 'createdAt' | 'updatedAt' | 'lastUsed';
-  sortOrder: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+  sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'lastUsed';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface SearchResult {
@@ -66,6 +67,12 @@ export interface SearchResult {
 }
 
 export class PasswordService {
+  private passwordRepository: PasswordRepository;
+
+  constructor() {
+    this.passwordRepository = new PasswordRepository();
+  }
+
   // Buscar senhas com filtros
   async searchPasswords(userId: string, filters: SearchFilters, req?: Request): Promise<SearchResult> {
     const {
@@ -78,45 +85,23 @@ export class PasswordService {
       sortOrder
     } = filters;
 
-    // Construir where clause
-    const where: any = { userId };
+    // Buscar senhas usando repository
+    const searchFilters: any = {
+      userId
+    };
+    
+    if (query) searchFilters.search = query;
+    if (folder) searchFilters.folder = folder;
+    if (isFavorite !== undefined) searchFilters.isFavorite = isFavorite;
+    if (limit) searchFilters.limit = limit;
+    if (offset) searchFilters.offset = offset;
 
-    if (query) {
-      where.OR = [
-        { name: { contains: query, mode: 'insensitive' } },
-        { website: { contains: query, mode: 'insensitive' } },
-        { username: { contains: query, mode: 'insensitive' } },
-        { notes: { contains: query, mode: 'insensitive' } }
-      ];
-    }
-
-    if (folder) {
-      where.folder = folder;
-    }
-
-    if (isFavorite !== undefined) {
-      where.isFavorite = isFavorite;
-    }
-
-    // Buscar senhas e total
-    const [passwords, total] = await Promise.all([
-      prisma.passwordEntry.findMany({
-        where,
-        include: {
-          customFields: true
-        },
-        orderBy: { [sortBy]: sortOrder },
-        take: limit,
-        skip: offset
-      }),
-      prisma.passwordEntry.count({ where })
-    ]);
+    const result = await this.passwordRepository.search(searchFilters);
+    const passwords = result.items;
+    const total = result.total;
 
     // Buscar chave de criptografia do usuário
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { encryptionKeyHash: true }
-    });
+    const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
@@ -135,35 +120,21 @@ export class PasswordService {
 
   // Buscar senha por ID
   async getPasswordById(userId: string, passwordId: string, req?: Request): Promise<PasswordEntryDto | null> {
-    const password = await prisma.passwordEntry.findFirst({
-      where: {
-        id: passwordId,
-        userId
-      },
-      include: {
-        customFields: true
-      }
-    });
+    const password = await this.passwordRepository.findById(passwordId, userId);
 
     if (!password) {
       return null;
     }
 
     // Buscar chave de criptografia
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { encryptionKeyHash: true }
-    });
+    const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
     }
 
     // Atualizar último uso
-    await prisma.passwordEntry.update({
-      where: { id: passwordId },
-      data: { lastUsed: new Date() }
-    });
+    await this.passwordRepository.updateLastUsed(passwordId);
 
     // Log de auditoria
     await AuditUtil.log(userId, 'PASSWORD_VIEWED', 'PASSWORD_ENTRY', passwordId, null, req);
@@ -174,10 +145,7 @@ export class PasswordService {
   // Criar nova senha
   async createPassword(userId: string, data: CreatePasswordEntryData, req?: Request): Promise<PasswordEntryDto> {
     // Buscar chave de criptografia
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { encryptionKeyHash: true }
-    });
+    const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
@@ -188,8 +156,7 @@ export class PasswordService {
 
     // Criptografar TOTP secret se fornecido
     let encryptedTotpSecret: string | undefined;
-    if (data.totpSecret && data.totpEnabled) {
-      // Validar se o secret TOTP é válido
+    if (data.totpSecret) {
       if (!TOTPService.isValidSecret(data.totpSecret)) {
         throw new Error('Secret TOTP inválido');
       }
@@ -197,30 +164,23 @@ export class PasswordService {
     }
 
     // Criar entrada de senha
-    const passwordEntry = await prisma.passwordEntry.create({
-      data: {
-        userId,
-        name: data.name,
-        website: data.website,
-        username: data.username,
-        encryptedPassword,
-        notes: data.notes,
-        folder: data.folder,
-        isFavorite: data.isFavorite || false,
-        totpSecret: encryptedTotpSecret,
-        totpEnabled: data.totpEnabled || false,
-        customFields: data.customFields ? {
-          create: data.customFields.map(field => ({
-            fieldName: field.fieldName,
-            encryptedValue: CryptoUtil.encrypt(field.value, user.encryptionKeyHash),
-            fieldType: field.fieldType
-          }))
-        } : undefined
-      },
-      include: {
-        customFields: true
-      }
-    });
+    const passwordEntry = await this.passwordRepository.create({
+      userId,
+      name: data.name,
+      website: data.website,
+      username: data.username,
+      encryptedPassword,
+      notes: data.notes,
+      folder: data.folder,
+      isFavorite: data.isFavorite || false,
+      totpSecret: encryptedTotpSecret,
+      totpEnabled: data.totpEnabled || false,
+      customFields: data.customFields?.map(field => ({
+        fieldName: field.fieldName,
+        encryptedValue: CryptoUtil.encrypt(field.value, user.encryptionKeyHash),
+        fieldType: field.fieldType
+      })) || undefined
+    } as any);
 
     // Log de auditoria
     await AuditUtil.log(
@@ -243,75 +203,67 @@ export class PasswordService {
     req?: Request
   ): Promise<PasswordEntryDto | null> {
     // Verificar se a senha existe
-    const existingPassword = await prisma.passwordEntry.findFirst({
-      where: {
-        id: passwordId,
-        userId
-      }
-    });
+    const existingPassword = await this.passwordRepository.findById(passwordId, userId);
 
     if (!existingPassword) {
       return null;
     }
 
     // Buscar chave de criptografia
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { encryptionKeyHash: true }
-    });
+    const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
     }
 
     // Preparar dados para atualização
-    const updateData: any = {
-      name: data.name,
-      website: data.website,
-      username: data.username,
-      notes: data.notes,
-      folder: data.folder,
-      isFavorite: data.isFavorite
-    };
+    const updateData: any = {};
+
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.website !== undefined) updateData.website = data.website;
+    if (data.username !== undefined) updateData.username = data.username;
+    if (data.notes !== undefined) updateData.notes = data.notes;
+    if (data.folder !== undefined) updateData.folder = data.folder;
+    if (data.isFavorite !== undefined) updateData.isFavorite = data.isFavorite;
 
     if (data.password) {
       updateData.encryptedPassword = CryptoUtil.encrypt(data.password, user.encryptionKeyHash);
     }
 
-    // Atualizar senha
-    const updatedPassword = await prisma.passwordEntry.update({
-      where: { id: passwordId },
-      data: updateData,
-      include: {
-        customFields: true
+    if (data.totpSecret !== undefined) {
+      if (data.totpSecret) {
+        if (!TOTPService.isValidSecret(data.totpSecret)) {
+          throw new Error('Secret TOTP inválido');
+        }
+        updateData.totpSecret = TOTPService.encryptSecret(data.totpSecret, user.encryptionKeyHash);
+        updateData.totpEnabled = true;
+      } else {
+        updateData.totpSecret = undefined;
+        updateData.totpEnabled = false;
       }
-    });
+    }
+
+    // Atualizar senha
+    const updatedPassword = await this.passwordRepository.update(passwordId, updateData);
 
     // Atualizar campos customizados se fornecidos
     if (data.customFields) {
       // Remover campos existentes
-      await prisma.customField.deleteMany({
-        where: { passwordEntryId: passwordId }
-      });
+      await this.passwordRepository.deleteCustomFieldsByPasswordEntryId(passwordId);
 
       // Criar novos campos
-      await prisma.customField.createMany({
-        data: data.customFields.map(field => ({
+      for (const field of data.customFields) {
+        await this.passwordRepository.createCustomField({
           passwordEntryId: passwordId,
           fieldName: field.fieldName,
           encryptedValue: CryptoUtil.encrypt(field.value, user.encryptionKeyHash),
           fieldType: field.fieldType
-        }))
-      });
+        });
+      }
     }
 
     // Buscar senha atualizada com campos customizados
-    const finalPassword = await prisma.passwordEntry.findUnique({
-      where: { id: passwordId },
-      include: {
-        customFields: true
-      }
-    });
+    const finalPassword = await this.passwordRepository.findById(passwordId);
 
     // Log de auditoria
     await AuditUtil.log(
@@ -328,20 +280,13 @@ export class PasswordService {
 
   // Deletar senha
   async deletePassword(userId: string, passwordId: string, req?: Request): Promise<boolean> {
-    const password = await prisma.passwordEntry.findFirst({
-      where: {
-        id: passwordId,
-        userId
-      }
-    });
+    const password = await this.passwordRepository.findById(passwordId, userId);
 
     if (!password) {
       return false;
     }
 
-    await prisma.passwordEntry.delete({
-      where: { id: passwordId }
-    });
+    await this.passwordRepository.delete(passwordId);
 
     // Log de auditoria
     await AuditUtil.log(
@@ -363,21 +308,14 @@ export class PasswordService {
 
   // Buscar pastas do usuário
   async getUserFolders(userId: string): Promise<string[]> {
-    const result = await prisma.passwordEntry.findMany({
-      where: {
-        userId,
-        folder: { not: null }
-      },
-      select: {
-        folder: true
-      },
-      distinct: ['folder']
-    });
-
-    return result
-      .map(item => item.folder!)
+    const passwords = await this.passwordRepository.findByUserId(userId);
+    
+    const folders = passwords
+      .map(item => item.folder)
       .filter(folder => folder)
       .sort();
+    
+    return [...new Set(folders)] as string[];
   }
 
   // Adicionar TOTP a uma entrada existente
@@ -388,19 +326,14 @@ export class PasswordService {
     req?: Request
   ): Promise<PasswordEntryDto | null> {
     // Verificar se a entrada existe
-    const existingEntry = await prisma.passwordEntry.findFirst({
-      where: { id: passwordId, userId }
-    });
+    const existingEntry = await this.passwordRepository.findById(passwordId, userId);
 
     if (!existingEntry) {
       return null;
     }
 
     // Buscar chave de criptografia
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { encryptionKeyHash: true }
-    });
+    const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
@@ -414,13 +347,9 @@ export class PasswordService {
     // Criptografar e salvar
     const encryptedSecret = TOTPService.encryptSecret(totpSecret, user.encryptionKeyHash);
 
-    const updatedEntry = await prisma.passwordEntry.update({
-      where: { id: passwordId },
-      data: {
-        totpSecret: encryptedSecret,
-        totpEnabled: true
-      },
-      include: { customFields: true }
+    const updatedEntry = await this.passwordRepository.update(passwordId, {
+      totpSecret: encryptedSecret,
+      totpEnabled: true
     });
 
     await AuditUtil.log(
@@ -428,7 +357,7 @@ export class PasswordService {
       'PASSWORD_UPDATED',
       'PASSWORD_ENTRY',
       passwordId,
-      { action: 'TOTP_ENABLED' },
+      { action: 'TOTP_ADDED' },
       req
     );
 
@@ -441,38 +370,29 @@ export class PasswordService {
     passwordId: string, 
     req?: Request
   ): Promise<PasswordEntryDto | null> {
-    const existingEntry = await prisma.passwordEntry.findFirst({
-      where: { id: passwordId, userId }
-    });
+    const existingEntry = await this.passwordRepository.findById(passwordId, userId);
 
     if (!existingEntry) {
       return null;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { encryptionKeyHash: true }
-    });
+    const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
     }
 
-    const updatedEntry = await prisma.passwordEntry.update({
-      where: { id: passwordId },
-      data: {
-        totpSecret: null,
-        totpEnabled: false
-      },
-      include: { customFields: true }
-    });
+    const updatedEntry = await this.passwordRepository.update(passwordId, {
+      totpSecret: undefined,
+      totpEnabled: false
+    } as any);
 
     await AuditUtil.log(
       userId,
       'PASSWORD_UPDATED',
       'PASSWORD_ENTRY',
       passwordId,
-      { action: 'TOTP_DISABLED' },
+      { action: 'TOTP_REMOVED' },
       req
     );
 
@@ -481,23 +401,13 @@ export class PasswordService {
 
   // Buscar apenas código TOTP atual (sem dados sensíveis)
   async getTotpCode(userId: string, passwordId: string, req?: Request): Promise<TOTPCode | null> {
-    const entry = await prisma.passwordEntry.findFirst({
-      where: {
-        id: passwordId,
-        userId,
-        totpEnabled: true,
-        totpSecret: { not: null }
-      }
-    });
-
-    if (!entry || !entry.totpSecret) {
+    const entry = await this.passwordRepository.findById(passwordId, userId);
+    
+    if (!entry || !entry.totpEnabled || !entry.totpSecret) {
       return null;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { encryptionKeyHash: true }
-    });
+    const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
@@ -519,24 +429,30 @@ export class PasswordService {
 
       return totpCode;
     } catch (error) {
-      console.error('Erro ao gerar código TOTP:', error);
+      console.error('Erro ao descriptografar TOTP secret:', error);
       return null;
     }
   }
 
   // Descriptografar entrada de senha
-  private async decryptPasswordEntry(
-    password: PasswordEntry & { customFields: CustomField[] },
-    encryptionKey: string
-  ): Promise<PasswordEntryDto> {
-    // Descriptografar TOTP se habilitado
+  private async decryptPasswordEntry(password: PasswordEntry, encryptionKey: string): Promise<PasswordEntryDto> {
+    const decryptedPassword = CryptoUtil.decrypt(password.encryptedPassword, encryptionKey);
+    
+    const decryptedCustomFields = (password as any).customFields?.map((field: any) => ({
+      id: field.id,
+      fieldName: field.fieldName,
+      value: CryptoUtil.decrypt(field.encryptedValue, encryptionKey),
+      fieldType: field.fieldType
+    })) || [];
+
+    // Gerar código TOTP atual se habilitado
     let totpCode: TOTPCode | undefined;
     if (password.totpEnabled && password.totpSecret) {
       try {
-        const decryptedSecret = TOTPService.decryptSecret(password.totpSecret, encryptionKey);
-        totpCode = TOTPService.generateCurrentCode(decryptedSecret);
+        const decryptedTotpSecret = TOTPService.decryptSecret(password.totpSecret, encryptionKey);
+        totpCode = TOTPService.generateCurrentCode(decryptedTotpSecret);
       } catch (error) {
-        console.error('Erro ao descriptografar TOTP secret:', error);
+        console.error('Erro ao gerar código TOTP:', error);
       }
     }
 
@@ -545,21 +461,16 @@ export class PasswordService {
       name: password.name,
       website: password.website || undefined,
       username: password.username || undefined,
-      password: CryptoUtil.decrypt(password.encryptedPassword, encryptionKey),
+      password: decryptedPassword,
       notes: password.notes || undefined,
       folder: password.folder || undefined,
       isFavorite: password.isFavorite,
       createdAt: password.createdAt,
       updatedAt: password.updatedAt,
       lastUsed: password.lastUsed || undefined,
+      customFields: decryptedCustomFields,
       totpEnabled: password.totpEnabled,
-      totpCode,
-      customFields: password.customFields.map(field => ({
-        id: field.id,
-        fieldName: field.fieldName,
-        value: CryptoUtil.decrypt(field.encryptedValue, encryptionKey),
-        fieldType: field.fieldType
-      }))
-    };
+      totpCode
+    } as PasswordEntryDto;
   }
 }

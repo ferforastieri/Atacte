@@ -1,5 +1,5 @@
-import { prisma } from '../infrastructure/prisma'
-import { CryptoUtil } from '../utils/cryptoUtil'
+import { CryptoUtil } from '../../utils/cryptoUtil'
+import { ImportExportRepository } from '../../repositories/importExport/importExportRepository'
 
 export interface BitwardenItem {
   passwordHistory: Array<{
@@ -49,7 +49,6 @@ export interface ImportResult {
   imported: number
   duplicates: number
   errors: string[]
-  total: number
 }
 
 export interface ExportResult {
@@ -58,22 +57,25 @@ export interface ExportResult {
 }
 
 class ImportExportService {
+  private importExportRepository: ImportExportRepository;
+
+  constructor() {
+    this.importExportRepository = new ImportExportRepository();
+  }
+
   /**
    * Importa senhas do formato Bitwarden
    */
   async importFromBitwarden(userId: string, importData: BitwardenImportData): Promise<ImportResult> {
     const { items } = importData
-    
+
     // Validar estrutura básica do JSON
     if (!Array.isArray(items)) {
       throw new Error('Formato JSON inválido. Esperado um array de "items"')
     }
 
     // Buscar chave de criptografia do usuário
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { encryptionKeyHash: true }
-    })
+    const user = await this.importExportRepository.getUserEncryptionKey(userId)
 
     if (!user) {
       throw new Error('Usuário não encontrado')
@@ -91,7 +93,6 @@ class ImportExportService {
           continue
         }
 
-        // Extrair dados do item Bitwarden
         const name = item.name || 'Item sem nome'
         const website = item.login.uris?.[0]?.uri || null
         const username = item.login.username || null
@@ -100,19 +101,7 @@ class ImportExportService {
         const isFavorite = item.favorite || false
         const totpSecret = item.login.totp || null
 
-        // Verificar se já existe uma senha com o mesmo nome e website
-        const existingPassword = await prisma.passwordEntry.findFirst({
-          where: {
-            userId,
-            name,
-            website
-          }
-        })
-
-        if (existingPassword) {
-          duplicates++
-          continue
-        }
+        // Importação direta - sem verificação de duplicados
 
         // Criptografar senha antes de salvar
         const encryptedPassword = CryptoUtil.encrypt(password, user.encryptionKeyHash)
@@ -121,24 +110,21 @@ class ImportExportService {
         const encryptedTotpSecret = totpSecret ? CryptoUtil.encrypt(totpSecret, user.encryptionKeyHash) : null
 
         // Criar nova entrada
-        await prisma.passwordEntry.create({
-          data: {
-            userId,
-            name,
-            website,
-            username,
-            encryptedPassword,
-            notes,
-            isFavorite,
-            totpSecret: encryptedTotpSecret,
-            totpEnabled: !!totpSecret
-          }
+        await this.importExportRepository.createPasswordEntry({
+          userId,
+          name,
+          website,
+          username,
+          encryptedPassword,
+          notes,
+          isFavorite,
+          totpSecret: encryptedTotpSecret,
+          totpEnabled: !!totpSecret
         })
 
         imported++
 
       } catch (itemError: any) {
-        console.error('Erro ao processar item:', itemError)
         errors.push(`Erro ao importar "${item.name || 'Item sem nome'}": ${itemError.message}`)
       }
     }
@@ -146,8 +132,7 @@ class ImportExportService {
     return {
       imported,
       duplicates,
-      errors,
-      total: items.length
+      errors
     }
   }
 
@@ -156,17 +141,7 @@ class ImportExportService {
    */
   async exportToBitwarden(userId: string): Promise<ExportResult> {
     // Buscar todas as senhas do usuário
-    const passwords = await prisma.passwordEntry.findMany({
-      where: {
-        userId
-      },
-      include: {
-        customFields: true
-      },
-      orderBy: {
-        createdAt: 'asc'
-      }
-    })
+    const passwords = await this.importExportRepository.findUserPasswords(userId)
 
     // Converter para formato Bitwarden
     const items = passwords.map((password, index) => ({
@@ -207,7 +182,7 @@ class ImportExportService {
 
     return {
       data: exportData,
-      total: items.length
+      total: passwords.length
     }
   }
 
@@ -215,17 +190,7 @@ class ImportExportService {
    * Exporta senhas para formato CSV
    */
   async exportToCSV(userId: string): Promise<ExportResult> {
-    const passwords = await prisma.passwordEntry.findMany({
-      where: {
-        userId
-      },
-      include: {
-        customFields: true
-      },
-      orderBy: {
-        createdAt: 'asc'
-      }
-    })
+    const passwords = await this.importExportRepository.findUserPasswords(userId)
 
     // Cabeçalhos do CSV
     const headers = [

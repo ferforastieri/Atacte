@@ -1,9 +1,10 @@
 import { Router, Request, Response } from 'express'
-import importExportService from '../services/importExportService'
-import { prisma } from '../infrastructure/prisma'
-import { authenticateToken, AuthenticatedRequest } from '../middleware/auth'
+import importExportService from '../../services/importExport/importExportService'
+import { ImportExportRepository } from '../../repositories/importExport/importExportRepository'
+import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth'
 
 const router = Router()
+const importExportRepository = new ImportExportRepository()
 
 // Aplicar middleware de autenticação em todas as rotas
 router.use(authenticateToken)
@@ -29,14 +30,12 @@ router.post('/import', async (req: Request, res: Response) => {
     const result = await importExportService.importFromBitwarden(userId, importData)
 
     // Log da importação
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action: 'IMPORT_PASSWORDS',
-        details: `Importação de ${result.imported} senhas, ${result.duplicates} duplicatas ignoradas`,
-        ipAddress: req.ip || 'unknown',
-        userAgent: req.get('User-Agent') || 'unknown'
-      }
+    await importExportRepository.createAuditLog({
+      userId,
+      action: 'IMPORT_PASSWORDS',
+      details: `Importação de ${result.imported} senhas, ${result.duplicates} duplicatas ignoradas`,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.get('User-Agent') || 'unknown'
     })
 
     res.json({
@@ -65,14 +64,12 @@ router.get('/export/bitwarden', async (req: Request, res: Response) => {
     const result = await importExportService.exportToBitwarden(userId)
 
     // Log da exportação
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action: 'EXPORT_PASSWORDS',
-        details: `Exportação de ${result.total} senhas para formato Bitwarden`,
-        ipAddress: req.ip || 'unknown',
-        userAgent: req.get('User-Agent') || 'unknown'
-      }
+    await importExportRepository.createAuditLog({
+      userId,
+      action: 'EXPORT_PASSWORDS',
+      details: `Exportação de ${result.total} senhas para formato Bitwarden`,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.get('User-Agent') || 'unknown'
     })
 
     // Configurar headers para download
@@ -105,14 +102,12 @@ router.get('/export/csv', async (req: Request, res: Response) => {
     const result = await importExportService.exportToCSV(userId)
 
     // Log da exportação
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action: 'EXPORT_PASSWORDS',
-        details: `Exportação de ${result.total} senhas para formato CSV`,
-        ipAddress: req.ip || 'unknown',
-        userAgent: req.get('User-Agent') || 'unknown'
-      }
+    await importExportRepository.createAuditLog({
+      userId,
+      action: 'EXPORT_PASSWORDS',
+      details: `Exportação de ${result.total} senhas para formato CSV`,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.get('User-Agent') || 'unknown'
     })
 
     // Configurar headers para download

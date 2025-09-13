@@ -1,14 +1,14 @@
 import express from 'express';
-import { UserPreferencesService } from '../../services/preferences/userPreferencesService';
+import { PreferencesService } from '../../services/preferences/preferencesService';
 import { authenticateToken } from '../../middleware/auth';
 
 const router = express.Router();
-const userPreferencesService = new UserPreferencesService();
+const preferencesService = new PreferencesService();
 
 // GET /api/preferences - Buscar preferências do usuário
 router.get('/', authenticateToken, async (req: any, res) => {
   try {
-    const preferences = await userPreferencesService.getUserPreferences(req.user.id);
+    const preferences = await preferencesService.getUserPreferences(req.user.id);
     
     if (!preferences) {
       return res.status(404).json({
@@ -34,7 +34,7 @@ router.post('/', authenticateToken, async (req: any, res) => {
   try {
     const { theme, language, autoLock } = req.body;
     
-    const preferences = await userPreferencesService.createUserPreferences(req.user.id, {
+    const preferences = await preferencesService.createUserPreferences(req.user.id, {
       theme,
       language,
       autoLock,
@@ -59,7 +59,7 @@ router.put('/', authenticateToken, async (req: any, res) => {
   try {
     const { theme, language, autoLock } = req.body;
     
-    const preferences = await userPreferencesService.updateUserPreferences(req.user.id, {
+    const preferences = await preferencesService.updateUserPreferences(req.user.id, {
       theme,
       language,
       autoLock,
@@ -91,7 +91,7 @@ router.patch('/', authenticateToken, async (req: any, res) => {
   try {
     const { theme, language, autoLock } = req.body;
     
-    const preferences = await userPreferencesService.upsertUserPreferences(req.user.id, {
+    const preferences = await preferencesService.upsertUserPreferences(req.user.id, {
       theme,
       language,
       autoLock,
@@ -114,7 +114,7 @@ router.patch('/', authenticateToken, async (req: any, res) => {
 // DELETE /api/preferences - Deletar preferências do usuário
 router.delete('/', authenticateToken, async (req: any, res) => {
   try {
-    const deleted = await userPreferencesService.deleteUserPreferences(req.user.id);
+    const deleted = await preferencesService.deleteUserPreferences(req.user.id);
     
     if (!deleted) {
       return res.status(404).json({

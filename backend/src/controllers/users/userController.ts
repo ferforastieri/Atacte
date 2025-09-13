@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
-import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
-import { UserService } from '../services/userService';
+import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
+import { UserService } from '../../services/users/userService';
 
 const router = Router();
 const userService = new UserService();
@@ -126,4 +126,3 @@ router.delete('/account', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 export default router;
-

@@ -15,7 +15,7 @@ export interface UpdateUserPreferencesData {
   autoLock?: number;
 }
 
-export class UserPreferencesRepository {
+export class PreferencesRepository {
   async create(data: CreateUserPreferencesData): Promise<UserPreferences> {
     return await prisma.userPreferences.create({
       data,
