@@ -64,7 +64,7 @@ export class PasswordUtil {
         warning: result.feedback.warning || '',
         suggestions: result.feedback.suggestions || []
       },
-      crackTime: this.formatCrackTime(result.crack_times_display.offline_slow_hashing_1e4_per_second)
+      crackTime: this.formatCrackTime(result.crack_times_display.offline_slow_hashing_1e4_per_second.toString())
     };
   }
 

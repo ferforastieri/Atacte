@@ -38,7 +38,7 @@ router.post('/import', async (req: Request, res: Response) => {
       userAgent: req.get('User-Agent') || 'unknown'
     })
 
-    res.json({
+    return res.json({
       success: true,
       data: result,
       message: `Importação concluída: ${result.imported} senhas importadas, ${result.duplicates} duplicatas ignoradas`

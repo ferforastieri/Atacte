@@ -87,11 +87,10 @@ export class AuthService {
     const token = jwt.sign(
       { 
         userId: user.id, 
-        email: user.email,
-        iat: Math.floor(Date.now() / 1000)
+        email: user.email
       },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { expiresIn: JWT_EXPIRES_IN as any }
     );
 
     // Criar sessão
@@ -139,11 +138,10 @@ export class AuthService {
     const token = jwt.sign(
       { 
         userId: user.id, 
-        email: user.email,
-        iat: Math.floor(Date.now() / 1000)
+        email: user.email
       },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { expiresIn: JWT_EXPIRES_IN as any }
     );
 
     return { token };

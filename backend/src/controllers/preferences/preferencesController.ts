@@ -35,6 +35,7 @@ router.post('/', authenticateToken, async (req: any, res) => {
     const { theme, language, autoLock } = req.body;
     
     const preferences = await preferencesService.createUserPreferences(req.user.id, {
+      userId: req.user.id,
       theme,
       language,
       autoLock,
@@ -92,6 +93,7 @@ router.patch('/', authenticateToken, async (req: any, res) => {
     const { theme, language, autoLock } = req.body;
     
     const preferences = await preferencesService.upsertUserPreferences(req.user.id, {
+      userId: req.user.id,
       theme,
       language,
       autoLock,

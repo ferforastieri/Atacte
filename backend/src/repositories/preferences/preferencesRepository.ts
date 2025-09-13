@@ -33,6 +33,7 @@ export class PreferencesRepository {
       where: { userId },
       data: {
         ...data,
+        autoLock: data.autoLock?.toString(),
         updatedAt: new Date(),
       },
     });
@@ -50,10 +51,13 @@ export class PreferencesRepository {
       update: {
         theme: data.theme,
         language: data.language,
-        autoLock: data.autoLock,
+        autoLock: data.autoLock?.toString(),
         updatedAt: new Date(),
       },
-      create: data,
+      create: {
+        ...data,
+        autoLock: data.autoLock?.toString(),
+      },
     });
   }
 }

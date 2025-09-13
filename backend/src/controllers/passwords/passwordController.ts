@@ -242,7 +242,7 @@ router.put('/:id', createPasswordValidation, async (req: Request<{id: string}, {
       return;
     }
 
-    const authReq = req as AuthenticatedRequest;
+    const authReq = req as any;
     const { id } = req.params;
     const updateData = req.body;
 

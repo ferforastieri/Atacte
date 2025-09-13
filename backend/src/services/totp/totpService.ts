@@ -66,8 +66,7 @@ export class TOTPService {
     const token = speakeasy.totp({
       secret: cleanSecret,
       encoding: 'base32',
-      step: this.TOTP_PERIOD,
-      window: 0
+      step: this.TOTP_PERIOD
     });
 
     console.log('🔍 TOTP Service - Código gerado:', token);

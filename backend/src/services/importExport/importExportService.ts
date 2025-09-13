@@ -157,7 +157,7 @@ class ImportExportService {
       name: password.name,
       notes: password.notes,
       favorite: password.isFavorite,
-      fields: password.customFields?.map(field => ({
+      fields: (password as any).customFields?.map((field: any) => ({
         name: field.fieldName,
         value: field.value,
         type: 0 // Text field

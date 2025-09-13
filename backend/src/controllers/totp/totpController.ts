@@ -266,7 +266,7 @@ router.post('/passwords/:id', [
   body('totpInput')
     .notEmpty()
     .withMessage('Chave TOTP ou URL otpauth é obrigatória')
-], async (req: Request<{id: string}, {}, {totpInput: string}>, res: Response) => {
+], async (req: any, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
