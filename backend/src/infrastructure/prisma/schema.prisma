@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  masterPasswordHash    String   @map("master_password_hash")
+  masterPasswordSalt    String   @map("master_password_salt")
+  encryptionKeyHash     String   @map("encryption_key_hash")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+  lastLogin            DateTime? @map("last_login")
+  isActive             Boolean  @default(true) @map("is_active")
+  
+  // Relacionamentos
+  passwordEntries      PasswordEntry[]
+  userSessions         UserSession[]
+  auditLogs            AuditLog[]
+  
+  @@map("users")
+}
+
+model PasswordEntry {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  name              String
+  website           String?
+  username          String?
+  encryptedPassword String   @map("encrypted_password")
+  notes             String?
+  folder            String?
+  isFavorite        Boolean  @default(false) @map("is_favorite")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  lastUsed          DateTime? @map("last_used")
+  
+  // TOTP/2FA para esta entrada
+  totpSecret        String?  @map("totp_secret") // Secret criptografado
+  totpEnabled       Boolean  @default(false) @map("totp_enabled")
+  
+  // Relacionamentos
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customFields      CustomField[]
+  
+  @@map("password_entries")
+}
+
+model CustomField {
+  id                String   @id @default(cuid())
+  passwordEntryId   String   @map("password_entry_id")
+  fieldName         String   @map("field_name")
+  encryptedValue    String   @map("encrypted_value")
+  fieldType         String   @default("text") @map("field_type")
+  createdAt         DateTime @default(now()) @map("created_at")
+  
+  // Relacionamentos
+  passwordEntry     PasswordEntry @relation(fields: [passwordEntryId], references: [id], onDelete: Cascade)
+  
+  @@map("custom_fields")
+}
+
+model UserSession {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  tokenHash   String   @map("token_hash")
+  deviceName  String?  @map("device_name")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  expiresAt   DateTime @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  lastUsed    DateTime @default(now()) @map("last_used")
+  
+  // Relacionamentos
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_sessions")
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?  @map("user_id")
+  action       String
+  resourceType String?  @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  details      Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  // Relacionamentos
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@map("audit_logs")
+}
