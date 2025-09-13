@@ -24,3 +24,4 @@ onMounted(async () => {
 <style>
 /* Estilos globais já estão no style.css */
 </style>
+
