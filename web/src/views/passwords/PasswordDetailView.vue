@@ -5,7 +5,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center">
-            <router-link to="/passwords" class="flex items-center">
+            <router-link to="/dashboard" class="flex items-center">
               <ArrowLeftIcon class="h-5 w-5 text-gray-400 mr-2" />
               <span class="text-lg font-semibold text-gray-900">{{ password.name }}</span>
             </router-link>
@@ -382,7 +382,7 @@ const handlePasswordUpdated = () => {
 
 const handlePasswordDeleted = () => {
   showDeleteModal.value = false
-  router.push('/passwords')
+  router.push('/dashboard')
 }
 
 const formatDate = (dateString: string) => {

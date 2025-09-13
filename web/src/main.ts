@@ -6,11 +6,13 @@ import 'vue-toastification/dist/index.css'
 import App from './App.vue'
 import router from './router'
 import './style.css'
+import appInit from './plugins/app-init'
 
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
+app.use(appInit)
 app.use(Toast, {
   position: 'top-right',
   timeout: 5000,

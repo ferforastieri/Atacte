@@ -1,4 +1,4 @@
-import axios from 'axios'
+import api from './index'
 
 // Tipos específicos para senhas
 export interface PasswordEntry {
@@ -90,31 +90,31 @@ const passwordsApi = {
       }
     })
     
-    const response = await axios.get(`/api/passwords?${params.toString()}`)
+    const response = await api.get(`/passwords?${params.toString()}`)
     return response.data
   },
 
   // Buscar senha por ID
   async getPasswordById(id: string) {
-    const response = await axios.get(`/api/passwords/${id}`)
+    const response = await api.get(`/passwords/${id}`)
     return response.data
   },
 
   // Criar nova senha
   async createPassword(passwordData: CreatePasswordRequest) {
-    const response = await axios.post('/api/passwords', passwordData)
+    const response = await api.post('/passwords', passwordData)
     return response.data
   },
 
   // Atualizar senha
   async updatePassword(id: string, passwordData: UpdatePasswordRequest) {
-    const response = await axios.put(`/api/passwords/${id}`, passwordData)
+    const response = await api.put(`/passwords/${id}`, passwordData)
     return response.data
   },
 
   // Deletar senha
   async deletePassword(id: string) {
-    const response = await axios.delete(`/api/passwords/${id}`)
+    const response = await api.delete(`/passwords/${id}`)
     return response.data
   },
 
@@ -127,26 +127,33 @@ const passwordsApi = {
       }
     })
     
-    const response = await axios.get(`/api/passwords/generate?${params.toString()}`)
+    const response = await api.get(`/passwords/generate?${params.toString()}`)
     return response.data
   },
 
   // === TOTP ===
   // Buscar código TOTP atual
   async getTotpCode(id: string) {
-    const response = await axios.get(`/api/passwords/${id}/totp`)
+    const response = await api.get(`/passwords/${id}/totp`)
     return response.data
   },
 
   // Adicionar TOTP a entrada
   async addTotp(id: string, totpSecret: string) {
-    const response = await axios.post(`/api/passwords/${id}/totp`, { totpSecret })
+    const response = await api.post(`/passwords/${id}/totp`, { totpSecret })
     return response.data
   },
 
   // Remover TOTP de entrada
   async removeTotp(id: string) {
-    const response = await axios.delete(`/api/passwords/${id}/totp`)
+    const response = await api.delete(`/passwords/${id}/totp`)
+    return response.data
+  },
+
+  // === IMPORTAÇÃO ===
+  // Importar senhas do Bitwarden
+  async importPasswords(jsonData: any) {
+    const response = await api.post('/import-export/import', jsonData)
     return response.data
   }
 }

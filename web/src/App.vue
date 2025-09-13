@@ -6,17 +6,22 @@ np<template>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, getCurrentInstance } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
+const instance = getCurrentInstance()
 
 onMounted(async () => {
   try {
-    // Inicializar store de autenticação
-    authStore.initialize()
+    await authStore.initialize()
+    
+    // Inicializar dados da aplicação se autenticado
+    if (authStore.isAuthenticated && instance?.appContext.config.globalProperties.$initApp) {
+      await instance.appContext.config.globalProperties.$initApp()
+    }
   } catch (error) {
-    console.error('Erro ao inicializar auth store:', error)
+    console.error('Erro ao inicializar aplicação:', error)
   }
 })
 </script>

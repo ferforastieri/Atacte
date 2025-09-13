@@ -1,0 +1,299 @@
+import { prisma } from '../infrastructure/prisma'
+import { CryptoUtil } from '../utils/cryptoUtil'
+
+export interface BitwardenItem {
+  passwordHistory: Array<{
+    lastUsedDate: string
+    password: string
+  }>
+  revisionDate: string
+  creationDate: string
+  deletedDate?: string | null
+  id: string
+  organizationId?: string | null
+  folderId?: string | null
+  type: number
+  reprompt: number
+  name: string
+  notes?: string | null
+  favorite: boolean
+  fields: Array<{
+    name: string
+    value: string
+    type: number
+  }>
+  login: {
+    uris: Array<{
+      match?: string | null
+      uri: string
+    }>
+    username?: string | null
+    password: string
+    totp?: string | null
+  }
+  collectionIds?: string | null
+  key?: string
+}
+
+export interface BitwardenImportData {
+  encrypted: boolean
+  folders: Array<{
+    id: string
+    name: string
+    revisionDate: string
+  }>
+  items: BitwardenItem[]
+}
+
+export interface ImportResult {
+  imported: number
+  duplicates: number
+  errors: string[]
+  total: number
+}
+
+export interface ExportResult {
+  data: any
+  total: number
+}
+
+class ImportExportService {
+  /**
+   * Importa senhas do formato Bitwarden
+   */
+  async importFromBitwarden(userId: string, importData: BitwardenImportData): Promise<ImportResult> {
+    const { items } = importData
+    
+    // Validar estrutura básica do JSON
+    if (!Array.isArray(items)) {
+      throw new Error('Formato JSON inválido. Esperado um array de "items"')
+    }
+
+    // Buscar chave de criptografia do usuário
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { encryptionKeyHash: true }
+    })
+
+    if (!user) {
+      throw new Error('Usuário não encontrado')
+    }
+
+    let imported = 0
+    let duplicates = 0
+    const errors: string[] = []
+
+    // Processar cada item
+    for (const item of items) {
+      try {
+        // Verificar se é um item de login (type: 1)
+        if (item.type !== 1 || !item.login) {
+          continue
+        }
+
+        // Extrair dados do item Bitwarden
+        const name = item.name || 'Item sem nome'
+        const website = item.login.uris?.[0]?.uri || null
+        const username = item.login.username || null
+        const password = item.login.password || ''
+        const notes = item.notes || null
+        const isFavorite = item.favorite || false
+        const totpSecret = item.login.totp || null
+
+        // Verificar se já existe uma senha com o mesmo nome e website
+        const existingPassword = await prisma.passwordEntry.findFirst({
+          where: {
+            userId,
+            name,
+            website
+          }
+        })
+
+        if (existingPassword) {
+          duplicates++
+          continue
+        }
+
+        // Criptografar senha antes de salvar
+        const encryptedPassword = CryptoUtil.encrypt(password, user.encryptionKeyHash)
+        
+        // Criptografar TOTP secret se existir
+        const encryptedTotpSecret = totpSecret ? CryptoUtil.encrypt(totpSecret, user.encryptionKeyHash) : null
+
+        // Criar nova entrada
+        await prisma.passwordEntry.create({
+          data: {
+            userId,
+            name,
+            website,
+            username,
+            encryptedPassword,
+            notes,
+            isFavorite,
+            totpSecret: encryptedTotpSecret,
+            totpEnabled: !!totpSecret
+          }
+        })
+
+        imported++
+
+      } catch (itemError: any) {
+        console.error('Erro ao processar item:', itemError)
+        errors.push(`Erro ao importar "${item.name || 'Item sem nome'}": ${itemError.message}`)
+      }
+    }
+
+    return {
+      imported,
+      duplicates,
+      errors,
+      total: items.length
+    }
+  }
+
+  /**
+   * Exporta senhas para formato Bitwarden
+   */
+  async exportToBitwarden(userId: string): Promise<ExportResult> {
+    // Buscar todas as senhas do usuário
+    const passwords = await prisma.passwordEntry.findMany({
+      where: {
+        userId
+      },
+      include: {
+        customFields: true
+      },
+      orderBy: {
+        createdAt: 'asc'
+      }
+    })
+
+    // Converter para formato Bitwarden
+    const items = passwords.map((password, index) => ({
+      passwordHistory: [], // TODO: Implementar histórico se necessário
+      revisionDate: password.updatedAt.toISOString(),
+      creationDate: password.createdAt.toISOString(),
+      deletedDate: null,
+      id: password.id,
+      organizationId: null,
+      folderId: null,
+      type: 1, // Login type
+      reprompt: 0,
+      name: password.name,
+      notes: password.notes,
+      favorite: password.isFavorite,
+      fields: password.customFields?.map(field => ({
+        name: field.fieldName,
+        value: field.value,
+        type: 0 // Text field
+      })) || [],
+      login: {
+        uris: password.website ? [{
+          match: null,
+          uri: password.website
+        }] : [],
+        username: password.username,
+        password: password.encryptedPassword, // Será descriptografado pelo middleware
+        totp: password.totpSecret ? Buffer.from(password.totpSecret, 'base64').toString() : null
+      },
+      collectionIds: null
+    }))
+
+    const exportData = {
+      encrypted: false,
+      folders: [], // TODO: Implementar pastas se necessário
+      items
+    }
+
+    return {
+      data: exportData,
+      total: items.length
+    }
+  }
+
+  /**
+   * Exporta senhas para formato CSV
+   */
+  async exportToCSV(userId: string): Promise<ExportResult> {
+    const passwords = await prisma.passwordEntry.findMany({
+      where: {
+        userId
+      },
+      include: {
+        customFields: true
+      },
+      orderBy: {
+        createdAt: 'asc'
+      }
+    })
+
+    // Cabeçalhos do CSV
+    const headers = [
+      'Nome',
+      'Website',
+      'Usuário',
+      'Senha',
+      'Notas',
+      'Pasta',
+      'Favorito',
+      'TOTP Habilitado',
+      'Data de Criação',
+      'Última Atualização'
+    ]
+
+    // Converter para CSV
+    const csvRows = [headers.join(',')]
+    
+    passwords.forEach(password => {
+      const row = [
+        `"${password.name}"`,
+        `"${password.website || ''}"`,
+        `"${password.username || ''}"`,
+        `"${password.encryptedPassword}"`, // Será descriptografado pelo middleware
+        `"${password.notes || ''}"`,
+        `"${password.folder || ''}"`,
+        password.isFavorite ? 'Sim' : 'Não',
+        password.totpEnabled ? 'Sim' : 'Não',
+        password.createdAt.toISOString(),
+        password.updatedAt.toISOString()
+      ]
+      csvRows.push(row.join(','))
+    })
+
+    return {
+      data: csvRows.join('\n'),
+      total: passwords.length
+    }
+  }
+
+  /**
+   * Valida dados de importação
+   */
+  validateImportData(data: any): { valid: boolean; errors: string[] } {
+    const errors: string[] = []
+
+    if (!data || typeof data !== 'object') {
+      errors.push('Dados de importação inválidos')
+      return { valid: false, errors }
+    }
+
+    if (typeof data.encrypted !== 'boolean') {
+      errors.push('Campo "encrypted" é obrigatório')
+    }
+
+    if (!Array.isArray(data.items)) {
+      errors.push('Campo "items" deve ser um array')
+    }
+
+    if (data.items && data.items.length === 0) {
+      errors.push('Nenhum item encontrado para importar')
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors
+    }
+  }
+}
+
+export default new ImportExportService()

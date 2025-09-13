@@ -36,17 +36,11 @@
         <div class="flex items-center space-x-2">
           <BaseInput
             :value="password.password"
-            :type="showPassword ? 'text' : 'password'"
+            type="password"
             readonly
+            showPasswordToggle
             class="flex-1"
           />
-          <button
-            @click="showPassword = !showPassword"
-            class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md border border-gray-300"
-          >
-            <EyeIcon v-if="showPassword" class="h-4 w-4" />
-            <EyeSlashIcon v-else class="h-4 w-4" />
-          </button>
           <button
             @click="copyPassword"
             class="px-3 py-2 text-sm bg-primary-600 text-white rounded-md hover:bg-primary-700"
@@ -59,7 +53,12 @@
       <!-- TOTP -->
       <div v-if="password.totpEnabled">
         <label class="block text-sm font-medium text-gray-700 mb-2">Código TOTP</label>
-        <TotpCode :secret="password.totpSecret || ''" />
+        <TotpCode 
+          :code="totpCode?.code"
+          :time-remaining="totpCode?.timeRemaining"
+          :period="totpCode?.period"
+          @refresh="refreshTotpCode"
+        />
       </div>
 
       <!-- Notas -->
@@ -106,11 +105,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
-import { EyeIcon, EyeSlashIcon, HeartIcon, KeyIcon } from '@heroicons/vue/24/outline'
+import { HeartIcon, KeyIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, TotpCode } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
+import { usePasswordsStore } from '@/stores/passwords'
 
 interface Props {
   show: boolean
@@ -126,9 +126,10 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 const toast = useToast()
+const passwordsStore = usePasswordsStore()
 
-const showPassword = ref(false)
 const isDeleting = ref(false)
+const totpCode = ref<{ code: string; timeRemaining: number; period: number } | null>(null)
 
 const copyPassword = async () => {
   if (!props.password) return
@@ -163,5 +164,33 @@ const handleDelete = async () => {
     isDeleting.value = false
   }
 }
+
+const loadTotpCode = async () => {
+  if (!props.password?.id || !props.password?.totpEnabled) return
+  
+  try {
+    const code = await passwordsStore.getTotpCode(props.password.id)
+    totpCode.value = code
+  } catch (error) {
+    console.error('Erro ao carregar código TOTP:', error)
+  }
+}
+
+const refreshTotpCode = async () => {
+  await loadTotpCode()
+}
+
+// Carregar código TOTP quando o modal abrir e a senha tiver TOTP habilitado
+watch(() => props.show, async (show) => {
+  if (show && props.password?.totpEnabled) {
+    await loadTotpCode()
+  }
+})
+
+watch(() => props.password?.id, async (id) => {
+  if (id && props.password?.totpEnabled) {
+    await loadTotpCode()
+  }
+})
 </script>
 

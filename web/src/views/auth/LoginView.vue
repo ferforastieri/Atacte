@@ -1,12 +1,10 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
     <div class="max-w-md w-full space-y-8">
       <!-- Header -->
       <div class="text-center">
-        <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-primary-100">
-          <LockClosedIcon class="h-8 w-8 text-primary-600" />
-        </div>
-        <h2 class="mt-6 text-3xl font-bold text-gray-900">
+        <Logo :size="48" text-size="text-2xl" class="justify-center mb-4" />
+        <h2 class="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
           Entre na sua conta
         </h2>
         <p class="mt-2 text-sm text-gray-600">
@@ -92,7 +90,7 @@ import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { LockClosedIcon, EnvelopeIcon, ComputerDesktopIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
-import { BaseButton, BaseInput, BaseCard } from '@/components/ui'
+import { BaseButton, BaseInput, BaseCard, Logo } from '@/components/ui'
 
 const router = useRouter()
 const toast = useToast()

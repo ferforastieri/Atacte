@@ -1,4 +1,4 @@
-import axios from 'axios'
+import api from './index'
 
 // Tipos específicos para TOTP
 export interface TOTPData {
@@ -29,7 +29,7 @@ export interface ParsedOtpAuth {
 const totpApi = {
   // Gerar novo secret TOTP
   async generateSecret(serviceName: string, accountName: string) {
-    const response = await axios.post('/api/totp/generate', {
+    const response = await api.post('/totp/generate', {
       serviceName,
       accountName
     })
@@ -38,25 +38,25 @@ const totpApi = {
 
   // Gerar QR Code
   async generateQRCode(otpauthUrl: string) {
-    const response = await axios.post('/api/totp/qrcode', { otpauthUrl })
+    const response = await api.post('/totp/qrcode', { otpauthUrl })
     return response.data
   },
 
   // Validar código TOTP
   async validateCode(secret: string, code: string) {
-    const response = await axios.post('/api/totp/validate', { secret, code })
+    const response = await api.post('/totp/validate', { secret, code })
     return response.data
   },
 
   // Analisar URL otpauth
   async parseOtpAuthUrl(otpauthUrl: string) {
-    const response = await axios.post('/api/totp/parse', { otpauthUrl })
+    const response = await api.post('/totp/parse', { otpauthUrl })
     return response.data
   },
 
   // Gerar códigos de teste (desenvolvimento)
   async testCodes(secret: string) {
-    const response = await axios.post('/api/totp/test', { secret })
+    const response = await api.post('/totp/test', { secret })
     return response.data
   }
 }

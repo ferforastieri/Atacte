@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import passwordsApi, { type PasswordEntry, type CreatePasswordRequest, type UpdatePasswordRequest, type PasswordSearchFilters } from '@/api/passwords'
+import importExportApi from '@/api/importExport'
 
 export const usePasswordsStore = defineStore('passwords', () => {
   // Estado
@@ -8,6 +9,12 @@ export const usePasswordsStore = defineStore('passwords', () => {
   const currentPassword = ref<PasswordEntry | null>(null)
   const folders = ref<string[]>([])
   const isLoading = ref(false)
+  const pagination = ref({
+    total: 0,
+    limit: 50,
+    offset: 0,
+    currentPage: 1
+  })
   const searchFilters = ref<PasswordSearchFilters>({
     query: '',
     folder: '',
@@ -40,49 +47,10 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }))
   })
 
-  const totalCount = computed(() => passwords.value.length)
+  const totalCount = computed(() => pagination.value.total)
 
-  const searchResults = computed(() => {
-    let filtered = passwords.value
-
-    if (searchFilters.value.query) {
-      const query = searchFilters.value.query.toLowerCase()
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(query) ||
-        p.website?.toLowerCase().includes(query) ||
-        p.username?.toLowerCase().includes(query) ||
-        p.notes?.toLowerCase().includes(query)
-      )
-    }
-
-    if (searchFilters.value.folder) {
-      filtered = filtered.filter(p => p.folder === searchFilters.value.folder)
-    }
-
-    if (searchFilters.value.isFavorite !== undefined) {
-      filtered = filtered.filter(p => p.isFavorite === searchFilters.value.isFavorite)
-    }
-
-    // Ordenar
-    filtered.sort((a, b) => {
-      const field = searchFilters.value.sortBy || 'name'
-      const order = searchFilters.value.sortOrder || 'asc'
-      
-      let aValue = a[field as keyof PasswordEntry]
-      let bValue = b[field as keyof PasswordEntry]
-      
-      if (typeof aValue === 'string') aValue = aValue.toLowerCase()
-      if (typeof bValue === 'string') bValue = bValue.toLowerCase()
-      
-      if (order === 'asc') {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
-      }
-    })
-
-    return filtered
-  })
+  // Agora usamos as senhas diretamente do backend (já filtradas e paginadas)
+  const searchResults = computed(() => passwords.value)
 
   // Actions
   const fetchPasswords = async (filters?: Partial<PasswordSearchFilters>) => {
@@ -93,9 +61,21 @@ export const usePasswordsStore = defineStore('passwords', () => {
       
       if (response.success) {
         passwords.value = response.data
+        // Atualizar informações de paginação
+        if (response.pagination) {
+          pagination.value = {
+            total: response.pagination.total,
+            limit: response.pagination.limit,
+            offset: response.pagination.offset,
+            currentPage: Math.floor(response.pagination.offset / response.pagination.limit) + 1
+          }
+        }
         return response.data
       }
       throw new Error(response.message || 'Erro ao buscar senhas')
+    } catch (error) {
+      console.error('Erro ao buscar senhas:', error)
+      throw error
     } finally {
       isLoading.value = false
     }
@@ -253,6 +233,42 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }
   }
 
+  // Importação
+  const importPasswords = async (jsonData: any) => {
+    isLoading.value = true
+    try {
+      const response = await importExportApi.importPasswords(jsonData)
+      if (response.success) {
+        // Recarregar lista de senhas e pastas
+        await fetchPasswords()
+        await fetchFolders()
+        return response.data
+      }
+      throw new Error(response.message || 'Erro ao importar senhas')
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Exportação
+  const exportToBitwarden = async () => {
+    try {
+      const result = await importExportApi.exportToBitwarden()
+      return result
+    } catch (error) {
+      throw error
+    }
+  }
+
+  const exportToCSV = async () => {
+    try {
+      const result = await importExportApi.exportToCSV()
+      return result
+    } catch (error) {
+      throw error
+    }
+  }
+
   // Utilitários
   const setSearchFilters = (filters: Partial<PasswordSearchFilters>) => {
     searchFilters.value = { ...searchFilters.value, ...filters }
@@ -274,6 +290,29 @@ export const usePasswordsStore = defineStore('passwords', () => {
     currentPassword.value = null
   }
 
+  // Funções de paginação
+  const goToPage = async (page: number) => {
+    const newOffset = (page - 1) * pagination.value.limit
+    await fetchPasswords({ offset: newOffset })
+  }
+
+  const nextPage = async () => {
+    const totalPages = Math.ceil(pagination.value.total / pagination.value.limit)
+    if (pagination.value.currentPage < totalPages) {
+      await goToPage(pagination.value.currentPage + 1)
+    }
+  }
+
+  const previousPage = async () => {
+    if (pagination.value.currentPage > 1) {
+      await goToPage(pagination.value.currentPage - 1)
+    }
+  }
+
+  const setPageSize = async (size: number) => {
+    await fetchPasswords({ limit: size, offset: 0 })
+  }
+
   return {
     // Estado
     passwords,
@@ -281,6 +320,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
     folders,
     isLoading,
     searchFilters,
+    pagination,
     
     // Getters
     favoritePasswords,
@@ -301,6 +341,19 @@ export const usePasswordsStore = defineStore('passwords', () => {
     getTotpCode,
     addTotp,
     removeTotp,
+    
+    // Importação
+    importPasswords,
+    
+    // Exportação
+    exportToBitwarden,
+    exportToCSV,
+    
+    // Paginação
+    goToPage,
+    nextPage,
+    previousPage,
+    setPageSize,
     
     // Utilitários
     setSearchFilters,

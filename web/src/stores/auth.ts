@@ -99,10 +99,18 @@ export const useAuthStore = defineStore('auth', () => {
   // Inicializar store
   const initialize = async () => {
     loadUserFromStorage()
-    // Não verificar token automaticamente para evitar erros quando API não está disponível
-    // if (token.value) {
-    //   verifyToken()
-    // }
+    
+    // Se temos token, verificar se ainda é válido
+    if (token.value && user.value) {
+      try {
+        const isValid = await verifyToken()
+        if (!isValid) {
+          clearAuth()
+        }
+      } catch (error) {
+        clearAuth()
+      }
+    }
   }
 
   return {

@@ -1,44 +1,55 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center">
             <router-link to="/dashboard" class="flex items-center">
-              <ArrowLeftIcon class="h-5 w-5 text-gray-400 mr-2" />
-              <span class="text-lg font-semibold text-gray-900">Configurações</span>
+              <ArrowLeftIcon class="h-5 w-5 text-gray-400 dark:text-gray-500 mr-2" />
+              <span class="text-lg font-semibold text-gray-900 dark:text-white">Configurações</span>
             </router-link>
           </div>
+          <ThemeToggle />
         </div>
       </div>
     </header>
 
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="space-y-6">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div class="space-y-4 sm:space-y-6">
         <!-- Security Settings -->
-        <BaseCard>
+        <BaseCard class="dark:bg-gray-800 dark:border-gray-700">
           <div class="space-y-4">
-            <h2 class="text-xl font-semibold text-gray-900">Segurança</h2>
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Segurança</h2>
             
             <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="text-sm font-medium text-gray-900">Alterar Senha Master</h3>
-                  <p class="text-sm text-gray-500">Atualize sua senha master</p>
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex-1">
+                  <h3 class="text-sm font-medium text-gray-900 dark:text-white">Alterar Senha Master</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Atualize sua senha master</p>
                 </div>
-                <BaseButton variant="secondary" @click="showChangePasswordModal = true">
+                <BaseButton variant="secondary" @click="showChangePasswordModal = true" class="w-full sm:w-auto">
                   Alterar
                 </BaseButton>
               </div>
               
-              <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="text-sm font-medium text-gray-900">Exportar Dados</h3>
-                  <p class="text-sm text-gray-500">Baixe todas as suas senhas</p>
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex-1">
+                  <h3 class="text-sm font-medium text-gray-900 dark:text-white">Exportar Dados</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Baixe todas as suas senhas em formato JSON</p>
                 </div>
-                <BaseButton variant="secondary" @click="exportData">
+                <BaseButton variant="secondary" @click="exportData" class="w-full sm:w-auto">
                   Exportar
+                </BaseButton>
+              </div>
+
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex-1">
+                  <h3 class="text-sm font-medium text-gray-900 dark:text-white">Importar Dados</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Importe senhas de outros gerenciadores</p>
+                </div>
+                <BaseButton variant="secondary" @click="showImportModal = true" class="w-full sm:w-auto">
+                  Importar
                 </BaseButton>
               </div>
             </div>
@@ -46,31 +57,60 @@
         </BaseCard>
 
         <!-- Preferences -->
-        <BaseCard>
+        <BaseCard class="dark:bg-gray-800 dark:border-gray-700">
           <div class="space-y-4">
-            <h2 class="text-xl font-semibold text-gray-900">Preferências</h2>
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Preferências</h2>
             
             <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="text-sm font-medium text-gray-900">Tema</h3>
-                  <p class="text-sm text-gray-500">Escolha o tema da aplicação</p>
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex-1">
+                  <h3 class="text-sm font-medium text-gray-900 dark:text-white">Tema</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Escolha o tema da aplicação</p>
                 </div>
-                <select v-model="theme" class="input-field w-32">
-                  <option value="light">Claro</option>
-                  <option value="dark">Escuro</option>
-                  <option value="auto">Automático</option>
-                </select>
+                <div class="flex items-center space-x-2">
+                  <ThemeToggle />
+                  <select 
+                    v-model="theme" 
+                    @change="changeTheme"
+                    class="input-field w-32 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  >
+                    <option value="light">Claro</option>
+                    <option value="dark">Escuro</option>
+                    <option value="auto">Automático</option>
+                  </select>
+                </div>
               </div>
               
-              <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="text-sm font-medium text-gray-900">Idioma</h3>
-                  <p class="text-sm text-gray-500">Idioma da interface</p>
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex-1">
+                  <h3 class="text-sm font-medium text-gray-900 dark:text-white">Idioma</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Idioma da interface</p>
                 </div>
-                <select v-model="language" class="input-field w-32">
+                <select 
+                  v-model="language" 
+                  @change="changeLanguage"
+                  class="input-field w-32 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                >
                   <option value="pt-BR">Português</option>
                   <option value="en-US">English</option>
+                </select>
+              </div>
+
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex-1">
+                  <h3 class="text-sm font-medium text-gray-900 dark:text-white">Auto-lock</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Bloquear automaticamente após inatividade</p>
+                </div>
+                <select 
+                  v-model="autoLock" 
+                  @change="changeAutoLock"
+                  class="input-field w-32 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                >
+                  <option value="5">5 minutos</option>
+                  <option value="15">15 minutos</option>
+                  <option value="30">30 minutos</option>
+                  <option value="60">1 hora</option>
+                  <option value="0">Desabilitado</option>
                 </select>
               </div>
             </div>
@@ -78,18 +118,18 @@
         </BaseCard>
 
         <!-- Danger Zone -->
-        <BaseCard class="border-red-200 bg-red-50">
+        <BaseCard class="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
           <div class="space-y-4">
-            <h2 class="text-xl font-semibold text-red-900">Zona de Perigo</h2>
+            <h2 class="text-lg sm:text-xl font-semibold text-red-900 dark:text-red-300">Zona de Perigo</h2>
             
             <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="text-sm font-medium text-red-900">Deletar Conta</h3>
-                  <p class="text-sm text-red-700">Esta ação não pode ser desfeita</p>
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex-1">
+                  <h3 class="text-sm font-medium text-red-900 dark:text-red-300">Deletar Conta</h3>
+                  <p class="text-sm text-red-700 dark:text-red-400">Esta ação não pode ser desfeita. Todos os dados serão perdidos permanentemente.</p>
                 </div>
-                <BaseButton variant="danger" @click="showDeleteAccountModal = true">
-                  Deletar
+                <BaseButton variant="danger" @click="showDeleteAccountModal = true" class="w-full sm:w-auto">
+                  Deletar Conta
                 </BaseButton>
               </div>
             </div>
@@ -99,42 +139,143 @@
     </div>
 
     <!-- Modals -->
-    <ChangePasswordModal
-      :show="showChangePasswordModal"
-      @close="showChangePasswordModal = false"
+    <ImportPasswordModal
+      :show="showImportModal"
+      @close="showImportModal = false"
+      @imported="() => { showImportModal = false; toast.success('Dados importados com sucesso!') }"
     />
 
-    <DeleteAccountModal
-      :show="showDeleteAccountModal"
-      @close="showDeleteAccountModal = false"
-    />
+    <!-- Change Password Modal (placeholder) -->
+    <div v-if="showChangePasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Alterar Senha Master</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Esta funcionalidade será implementada em breve.
+        </p>
+        <div class="flex justify-end space-x-3">
+          <BaseButton variant="secondary" @click="showChangePasswordModal = false">
+            Fechar
+          </BaseButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Account Modal (placeholder) -->
+    <div v-if="showDeleteAccountModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+        <h3 class="text-lg font-semibold text-red-900 dark:text-red-300 mb-4">Deletar Conta</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Esta funcionalidade será implementada em breve. Esta ação não pode ser desfeita.
+        </p>
+        <div class="flex justify-end space-x-3">
+          <BaseButton variant="secondary" @click="showDeleteAccountModal = false">
+            Cancelar
+          </BaseButton>
+          <BaseButton variant="danger" disabled>
+            Deletar
+          </BaseButton>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
-import { BaseButton, BaseCard } from '@/components/ui'
+import { BaseButton, BaseCard, ThemeToggle } from '@/components/ui'
+import { useThemeStore } from '@/stores/theme'
+import { usePasswordsStore } from '@/stores/passwords'
+import { useAuthStore } from '@/stores/auth'
+import importExportApi from '@/api/importExport'
 
-// Components (serão criados depois)
-// import ChangePasswordModal from '@/components/user/ChangePasswordModal.vue'
-// import DeleteAccountModal from '@/components/user/DeleteAccountModal.vue'
+// Components
+import ImportPasswordModal from '@/components/passwords/ImportPasswordModal.vue'
 
 const router = useRouter()
 const toast = useToast()
+const themeStore = useThemeStore()
+const passwordsStore = usePasswordsStore()
+const authStore = useAuthStore()
 
 const showChangePasswordModal = ref(false)
 const showDeleteAccountModal = ref(false)
-const theme = ref('light')
+const showImportModal = ref(false)
+
+// Configurações
+const theme = ref('auto')
 const language = ref('pt-BR')
+const autoLock = ref('15')
+
+// Carregar configurações salvas
+onMounted(() => {
+  loadSettings()
+})
+
+const loadSettings = () => {
+  // Carregar tema do store (já inicializado)
+  theme.value = themeStore.isDarkMode ? 'dark' : 'light'
+  
+  // Carregar outras configurações
+  const savedLanguage = localStorage.getItem('language')
+  const savedAutoLock = localStorage.getItem('autoLock')
+  
+  if (savedLanguage) {
+    language.value = savedLanguage
+  }
+  
+  if (savedAutoLock) {
+    autoLock.value = savedAutoLock
+  }
+}
+
+const changeTheme = () => {
+  if (theme.value === 'dark') {
+    themeStore.isDarkMode = true
+  } else if (theme.value === 'light') {
+    themeStore.isDarkMode = false
+  } else {
+    // Auto - seguir preferência do sistema
+    themeStore.isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
+  
+  themeStore.applyTheme()
+  localStorage.setItem('theme', themeStore.isDarkMode ? 'dark' : 'light')
+  toast.success('Tema alterado!')
+}
+
+const changeLanguage = () => {
+  localStorage.setItem('language', language.value)
+  toast.success('Idioma alterado!')
+}
+
+const changeAutoLock = () => {
+  localStorage.setItem('autoLock', autoLock.value)
+  toast.success('Auto-lock configurado!')
+}
 
 const exportData = async () => {
   try {
-    // Implementar exportação
-    toast.success('Exportação iniciada!')
+    toast.info('Preparando exportação...')
+    
+    const result = await passwordsStore.exportToBitwarden()
+    
+    // Criar e baixar arquivo
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `atacte-backup-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    
+    toast.success('Dados exportados com sucesso!')
   } catch (error) {
+    console.error('Erro ao exportar dados:', error)
     toast.error('Erro ao exportar dados')
   }
 }

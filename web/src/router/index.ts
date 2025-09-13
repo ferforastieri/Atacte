@@ -41,15 +41,6 @@ const router = createRouter({
       }
     },
     {
-      path: '/passwords',
-      name: 'Passwords',
-      component: () => import('@/views/passwords/PasswordsView.vue'),
-      meta: { 
-        requiresAuth: true,
-        title: 'Senhas - Atacte'
-      }
-    },
-    {
       path: '/passwords/:id',
       name: 'PasswordDetail',
       component: () => import('@/views/passwords/PasswordDetailView.vue'),

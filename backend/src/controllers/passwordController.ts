@@ -402,4 +402,5 @@ router.delete('/:id/totp', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
+
 export default router;

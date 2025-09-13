@@ -1,19 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <!-- Logo -->
-          <div class="flex items-center">
-            <div class="flex-shrink-0 flex items-center">
-              <LockClosedIcon class="h-8 w-8 text-primary-600" />
-              <span class="ml-2 text-xl font-bold text-gray-900">Atacte</span>
-            </div>
-          </div>
+          <Logo :size="32" text-size="text-xl" />
 
           <!-- User Menu -->
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3">
+            <ThemeToggle />
+            
             <BaseButton
               variant="ghost"
               size="sm"
@@ -21,7 +18,7 @@
               :loading="isRefreshing"
             >
               <ArrowPathIcon class="w-4 h-4 mr-1" />
-              Atualizar
+              <span class="hidden sm:inline">Atualizar</span>
             </BaseButton>
 
             <div class="relative">
@@ -40,25 +37,25 @@
               <Transition name="fade">
                 <div
                   v-if="showUserMenu"
-                  class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200"
+                  class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700"
                 >
                   <router-link
                     to="/profile"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     @click="showUserMenu = false"
                   >
                     Perfil
                   </router-link>
                   <router-link
                     to="/settings"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     @click="showUserMenu = false"
                   >
                     Configurações
                   </router-link>
                   <button
                     @click="handleLogout"
-                    class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    class="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     Sair
                   </button>
@@ -72,7 +69,7 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
           <div class="flex items-center">
             <div class="flex-shrink-0">
@@ -185,7 +182,7 @@
       </BaseCard>
 
       <!-- Passwords List -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         <BaseCard
           v-for="password in filteredPasswords"
           :key="password.id"
@@ -239,6 +236,31 @@
             </div>
           </div>
         </BaseCard>
+      </div>
+
+      <!-- Paginação -->
+      <div v-if="passwordsStore.pagination.total > passwordsStore.pagination.limit" class="mt-8">
+        <div class="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div class="text-sm text-gray-700">
+            Mostrando {{ passwordsStore.pagination.offset + 1 }} a {{ Math.min(passwordsStore.pagination.offset + passwordsStore.pagination.limit, passwordsStore.pagination.total) }} de {{ passwordsStore.pagination.total }} senhas
+          </div>
+          <div class="flex space-x-2">
+            <button
+              @click="passwordsStore.fetchPasswords({ offset: passwordsStore.pagination.offset - passwordsStore.pagination.limit })"
+              :disabled="passwordsStore.pagination.offset === 0"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ← Anterior
+            </button>
+            <button
+              @click="passwordsStore.fetchPasswords({ offset: passwordsStore.pagination.offset + passwordsStore.pagination.limit })"
+              :disabled="passwordsStore.pagination.offset + passwordsStore.pagination.limit >= passwordsStore.pagination.total"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Próximo →
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Empty State -->
@@ -302,7 +324,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { usePasswordsStore } from '@/stores/passwords'
-import { BaseButton, BaseInput, BaseCard } from '@/components/ui'
+import { BaseButton, BaseInput, BaseCard, ThemeToggle, Logo } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 
 // Components
@@ -440,9 +462,16 @@ const handlePasswordDeleted = () => {
 
 // Lifecycle
 onMounted(async () => {
-  // Não buscar senhas automaticamente para evitar erros quando API não está disponível
-  // await passwordsStore.fetchPasswords()
-  // await passwordsStore.fetchFolders()
+  // Verificar se dados já foram carregados globalmente
+  if (passwordsStore.passwords.length === 0 && authStore.isAuthenticated) {
+    try {
+      await passwordsStore.fetchPasswords()
+      await passwordsStore.fetchFolders()
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error)
+      toast.error('Erro ao carregar dados')
+    }
+  }
 })
 
 // Fechar menu ao clicar fora
