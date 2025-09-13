@@ -47,10 +47,12 @@ export const authenticateToken = async (
     };
     
     // Verificar se a sessão ainda existe e é válida
+    const tokenHash = crypto.SHA256(token).toString();
+    
     const session = await prisma.userSession.findFirst({
       where: {
         userId: decoded.userId,
-        tokenHash: crypto.SHA256(token).toString(),
+        tokenHash: tokenHash,
         expiresAt: { gt: new Date() }
       },
       include: { user: true }
@@ -65,10 +67,15 @@ export const authenticateToken = async (
     }
 
     // Atualizar último uso da sessão
-    await prisma.userSession.update({
-      where: { id: session.id },
-      data: { lastUsed: new Date() }
-    });
+    try {
+      await prisma.userSession.update({
+        where: { id: session.id },
+        data: { lastUsed: new Date() }
+      });
+    } catch (updateError) {
+      console.error('Erro ao atualizar sessão:', updateError);
+      // Continuar mesmo com erro na atualização
+    }
 
     // Adicionar dados do usuário ao request
     (req as AuthenticatedRequest).user = session.user;

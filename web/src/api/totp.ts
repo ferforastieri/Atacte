@@ -58,6 +58,28 @@ const totpApi = {
   async testCodes(secret: string) {
     const response = await api.post('/totp/test', { secret })
     return response.data
+  },
+
+  // === FUNÇÕES PARA GERENCIAR TOTP DE SENHAS ===
+
+  // Buscar código TOTP atual de uma senha
+  async getTotpCode(passwordId: string) {
+    const response = await api.get(`/totp/passwords/${passwordId}`)
+    return response.data
+  },
+
+  // Adicionar TOTP a uma senha
+  async addTotpToPassword(passwordId: string, totpInput: string) {
+    const response = await api.post(`/totp/passwords/${passwordId}`, {
+      totpInput
+    })
+    return response.data
+  },
+
+  // Remover TOTP de uma senha
+  async removeTotpFromPassword(passwordId: string) {
+    const response = await api.delete(`/totp/passwords/${passwordId}`)
+    return response.data
   }
 }
 

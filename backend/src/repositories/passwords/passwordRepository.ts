@@ -45,6 +45,7 @@ export interface SearchFilters {
   search?: string;
   folder?: string;
   isFavorite?: boolean;
+  totpEnabled?: boolean;
   limit?: number;
   offset?: number;
 }
@@ -120,6 +121,10 @@ export class PasswordRepository {
 
     if (filters.isFavorite !== undefined) {
       where.isFavorite = filters.isFavorite;
+    }
+
+    if (filters.totpEnabled !== undefined) {
+      where.totpEnabled = filters.totpEnabled;
     }
 
     const limit = filters.limit || 50;

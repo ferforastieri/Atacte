@@ -1,6 +1,9 @@
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import { CryptoUtil } from '../../utils/cryptoUtil';
+import { PasswordRepository } from '../../repositories/passwords/passwordRepository';
+import { AuditUtil } from '../../utils/auditUtil';
+import { Request } from 'express';
 
 export interface TOTPData {
   secret: string;
@@ -20,8 +23,13 @@ export interface TOTPValidation {
 }
 
 export class TOTPService {
+  private passwordRepository: PasswordRepository;
   private static readonly TOTP_WINDOW = 2; // Janela de tolerância (±2 períodos)
   private static readonly TOTP_PERIOD = 30; // 30 segundos por período
+
+  constructor() {
+    this.passwordRepository = new PasswordRepository();
+  }
 
   /**
    * Gerar um novo secret TOTP
@@ -44,12 +52,26 @@ export class TOTPService {
    * Gerar código TOTP atual baseado no secret
    */
   static generateCurrentCode(secret: string): TOTPCode {
+    console.log('🔍 TOTP Service - generateCurrentCode chamado com secret:', secret);
+    
+    // Limpar e normalizar o secret
+    const cleanSecret = secret.trim().replace(/\s/g, '').toUpperCase();
+    
+    if (!cleanSecret) {
+      throw new Error('Secret TOTP vazio');
+    }
+
+    console.log('🔍 TOTP Service - Secret limpo:', cleanSecret);
+    
     const token = speakeasy.totp({
-      secret: secret,
+      secret: cleanSecret,
       encoding: 'base32',
       step: this.TOTP_PERIOD,
       window: 0
     });
+
+    console.log('🔍 TOTP Service - Código gerado:', token);
+    console.log('🔍 TOTP Service - Timestamp atual:', Math.floor(Date.now() / 1000));
 
     const timeRemaining = this.TOTP_PERIOD - (Math.floor(Date.now() / 1000) % this.TOTP_PERIOD);
 
@@ -165,27 +187,52 @@ export class TOTPService {
     accountName: string;
   } | null {
     try {
-      const url = new URL(otpauthUrl);
+      console.log('🔍 Parsing URL:', otpauthUrl);
       
-      if (url.protocol !== 'otpauth:' || url.hostname !== 'totp') {
+      // Remover espaços e normalizar
+      const cleanUrl = otpauthUrl.trim();
+      
+      // Verificar se é uma URL otpauth válida
+      if (!cleanUrl.startsWith('otpauth://totp/')) {
+        console.log('🔍 Invalid otpauth URL format');
         return null;
       }
-
-      const pathParts = url.pathname.split(':');
-      const serviceName = decodeURIComponent(pathParts[0]);
+      
+      // Extrair a parte após otpauth://totp/
+      const urlPart = cleanUrl.substring(15); // Remove 'otpauth://totp/'
+      
+      // Separar o pathname dos query parameters
+      const [pathname, queryString] = urlPart.split('?');
+      
+      if (!queryString) {
+        console.log('🔍 No query parameters found');
+        return null;
+      }
+      
+      // Parse dos query parameters
+      const params = new URLSearchParams(queryString);
+      const secret = params.get('secret');
+      
+      if (!secret) {
+        console.log('🔍 No secret parameter found');
+        return null;
+      }
+      
+      // Parse do pathname: serviceName:accountName
+      const pathParts = pathname.split(':');
+      const serviceName = decodeURIComponent(pathParts[0] || '');
       const accountName = pathParts.length > 1 ? decodeURIComponent(pathParts[1]) : '';
 
-      const secret = url.searchParams.get('secret');
-      if (!secret) {
-        return null;
-      }
-
-      return {
-        secret,
+      const result = {
+        secret: secret.trim(),
         serviceName,
         accountName
       };
+      
+      console.log('🔍 Parsed result:', result);
+      return result;
     } catch (error) {
+      console.log('🔍 Error parsing URL:', error);
       return null;
     }
   }
@@ -203,4 +250,153 @@ export class TOTPService {
   static decryptSecret(encryptedSecret: string, encryptionKey: string): string {
     return CryptoUtil.decrypt(encryptedSecret, encryptionKey);
   }
+
+  // === MÉTODOS DE INSTÂNCIA PARA GERENCIAR TOTP DE SENHAS ===
+
+  /**
+   * Adicionar TOTP a uma entrada de senha
+   */
+  async addTotpToEntry(
+    userId: string, 
+    passwordId: string, 
+    totpInput: string, // Pode ser uma chave TOTP ou URL otpauth://
+    req?: Request
+  ): Promise<any> {
+    // Verificar se a entrada existe
+    const existingEntry = await this.passwordRepository.findById(passwordId, userId);
+
+    if (!existingEntry) {
+      throw new Error('Senha não encontrada');
+    }
+
+    // Buscar chave de criptografia
+    const user = await this.passwordRepository.getUserEncryptionKey(userId);
+
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    let totpSecret: string;
+
+    // Verificar se é uma URL otpauth://
+    if (totpInput.startsWith('otpauth://')) {
+      console.log('🔍 Detectada URL otpauth, fazendo parse...');
+      const parsed = TOTPService.parseOtpAuthUrl(totpInput);
+      
+      if (!parsed) {
+        throw new Error('URL otpauth inválida');
+      }
+      
+      totpSecret = parsed.secret;
+      console.log('🔍 Secret extraído da URL:', totpSecret);
+    } else {
+      // É uma chave TOTP direta
+      totpSecret = totpInput;
+    }
+
+    // Validar secret TOTP
+    if (!TOTPService.isValidSecret(totpSecret)) {
+      throw new Error('Secret TOTP inválido');
+    }
+
+    // Criptografar e salvar
+    const encryptedSecret = TOTPService.encryptSecret(totpSecret, user.encryptionKeyHash);
+
+    const updatedEntry = await this.passwordRepository.update(passwordId, {
+      totpSecret: encryptedSecret,
+      totpEnabled: true
+    });
+
+    await AuditUtil.log(
+      userId,
+      'PASSWORD_UPDATED',
+      'PASSWORD_ENTRY',
+      passwordId,
+      { action: 'TOTP_ADDED' },
+      req
+    );
+
+    return updatedEntry;
+  }
+
+  /**
+   * Remover TOTP de uma entrada de senha
+   */
+  async removeTotpFromEntry(
+    userId: string, 
+    passwordId: string, 
+    req?: Request
+  ): Promise<any> {
+    const existingEntry = await this.passwordRepository.findById(passwordId, userId);
+
+    if (!existingEntry) {
+      throw new Error('Senha não encontrada');
+    }
+
+    const user = await this.passwordRepository.getUserEncryptionKey(userId);
+
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    const updatedEntry = await this.passwordRepository.update(passwordId, {
+      totpSecret: undefined,
+      totpEnabled: false
+    } as any);
+
+    await AuditUtil.log(
+      userId,
+      'PASSWORD_UPDATED',
+      'PASSWORD_ENTRY',
+      passwordId,
+      { action: 'TOTP_REMOVED' },
+      req
+    );
+
+    return updatedEntry;
+  }
+
+  /**
+   * Buscar código TOTP atual para uma entrada
+   */
+  async getTotpCodeForEntry(
+    userId: string, 
+    passwordId: string, 
+    req?: Request
+  ): Promise<TOTPCode | null> {
+    const entry = await this.passwordRepository.findById(passwordId, userId);
+    
+    if (!entry || !entry.totpEnabled || !entry.totpSecret) {
+      return null;
+    }
+
+    const user = await this.passwordRepository.getUserEncryptionKey(userId);
+
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    try {
+      const decryptedSecret = TOTPService.decryptSecret(entry.totpSecret, user.encryptionKeyHash);
+      console.log('🔍 TOTP Service - Secret descriptografado:', decryptedSecret);
+      
+      const totpCode = TOTPService.generateCurrentCode(decryptedSecret);
+
+      // Log do acesso ao TOTP
+      await AuditUtil.log(
+        userId,
+        'PASSWORD_VIEWED',
+        'PASSWORD_ENTRY',
+        passwordId,
+        { action: 'TOTP_CODE_ACCESSED' },
+        req
+      );
+
+      return totpCode;
+    } catch (error) {
+      console.error('Erro ao descriptografar TOTP secret:', error);
+      return null;
+    }
+  }
+
 }

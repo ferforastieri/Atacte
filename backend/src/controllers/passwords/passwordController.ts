@@ -31,6 +31,7 @@ interface SearchQuery {
   query?: string;
   folder?: string;
   isFavorite?: string;
+  totpEnabled?: string;
   limit?: string;
   offset?: string;
   sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'lastUsed';
@@ -65,7 +66,41 @@ const createPasswordValidation = [
   body('totpSecret')
     .optional()
     .isString()
-    .withMessage('Secret TOTP deve ser uma string'),
+    .withMessage('Secret TOTP deve ser uma string')
+    .custom((value) => {
+      if (value) {
+        // Validar se é uma chave TOTP válida (base32)
+        const cleanValue = value.replace(/\s/g, '').toUpperCase();
+        const base32Regex = /^[A-Z2-7]+=*$/;
+        
+        // Verificar se tem pelo menos 16 caracteres (chave TOTP mínima)
+        if (cleanValue.length < 16) {
+          throw new Error('Chave TOTP muito curta. Deve ter pelo menos 16 caracteres.');
+        }
+        
+        // Verificar se contém apenas caracteres base32 válidos
+        if (!base32Regex.test(cleanValue)) {
+          throw new Error('Chave TOTP inválida. Deve conter apenas letras A-Z e números 2-7 (ex: ABCD EFGH IJKL MNOP)');
+        }
+        
+        // Tentar gerar um código para validar se a chave funciona
+        try {
+          const speakeasy = require('speakeasy');
+          const cleanSecret = value.replace(/\s/g, '').toUpperCase();
+          console.log('🔍 Validando chave TOTP:', cleanSecret);
+          const testCode = speakeasy.totp({
+            secret: cleanSecret,
+            encoding: 'base32',
+            step: 30
+          });
+          console.log('🔍 Código de teste gerado:', testCode);
+        } catch (error) {
+          console.log('🔍 Erro ao validar chave TOTP:', error);
+          throw new Error('Chave TOTP inválida. Verifique se a chave está correta.');
+        }
+      }
+      return true;
+    }),
   body('totpEnabled')
     .optional()
     .isBoolean()
@@ -75,12 +110,16 @@ const createPasswordValidation = [
 const searchValidation = [
   query('limit')
     .optional()
-    .isInt({ min: 1, max: 100 })
-    .withMessage('Limit deve ser entre 1 e 100'),
+    .isInt({ min: 1 })
+    .withMessage('Limit deve ser um número inteiro positivo'),
   query('offset')
     .optional()
     .isInt({ min: 0 })
     .withMessage('Offset deve ser >= 0'),
+  query('totpEnabled')
+    .optional()
+    .isBoolean()
+    .withMessage('totpEnabled deve ser boolean'),
 ];
 
 // Aplicar autenticação a todas as rotas
@@ -104,6 +143,7 @@ router.get('/', searchValidation, async (req: Request<{}, {}, {}, SearchQuery>, 
       query: req.query.query,
       folder: req.query.folder,
       isFavorite: req.query.isFavorite === 'true',
+      totpEnabled: req.query.totpEnabled ? req.query.totpEnabled === 'true' : undefined,
       limit: parseInt(req.query.limit || '50'),
       offset: parseInt(req.query.offset || '0'),
       sortBy: req.query.sortBy || 'name',
@@ -286,120 +326,5 @@ router.get('/generate', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
-// === ROTAS TOTP ===
-
-// GET /api/passwords/:id/totp - Buscar código TOTP atual
-router.get('/:id/totp', async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const totpCode = await passwordService.getTotpCode(req.user.id, id, req);
-
-    if (!totpCode) {
-      res.status(404).json({
-        success: false,
-        message: 'TOTP não encontrado ou não habilitado para esta entrada'
-      });
-      return;
-    }
-
-    res.json({
-      success: true,
-      data: totpCode
-    });
-  } catch (error) {
-    console.error('Erro ao buscar código TOTP:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro interno do servidor'
-    });
-  }
-});
-
-// POST /api/passwords/:id/totp - Adicionar TOTP a entrada existente
-router.post('/:id/totp', [
-  body('totpSecret')
-    .notEmpty()
-    .withMessage('Secret TOTP é obrigatório')
-], async (req: Request<{id: string}, {}, {totpSecret: string}>, res: Response) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(400).json({
-        success: false,
-        message: 'Dados inválidos',
-        errors: errors.array()
-      });
-      return;
-    }
-
-    const authReq = req as AuthenticatedRequest;
-    const { id } = req.params;
-    const { totpSecret } = req.body;
-
-    const updatedPassword = await passwordService.addTotpToEntry(
-      authReq.user.id, 
-      id, 
-      totpSecret, 
-      authReq
-    );
-
-    if (!updatedPassword) {
-      res.status(404).json({
-        success: false,
-        message: 'Senha não encontrada'
-      });
-      return;
-    }
-
-    res.json({
-      success: true,
-      message: 'TOTP adicionado com sucesso',
-      data: updatedPassword
-    });
-  } catch (error: any) {
-    console.error('Erro ao adicionar TOTP:', error);
-    
-    if (error.message === 'Secret TOTP inválido') {
-      res.status(400).json({
-        success: false,
-        message: error.message
-      });
-      return;
-    }
-
-    res.status(500).json({
-      success: false,
-      message: 'Erro interno do servidor'
-    });
-  }
-});
-
-// DELETE /api/passwords/:id/totp - Remover TOTP da entrada
-router.delete('/:id/totp', async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const updatedPassword = await passwordService.removeTotpFromEntry(req.user.id, id, req);
-
-    if (!updatedPassword) {
-      res.status(404).json({
-        success: false,
-        message: 'Senha não encontrada'
-      });
-      return;
-    }
-
-    res.json({
-      success: true,
-      message: 'TOTP removido com sucesso',
-      data: updatedPassword
-    });
-  } catch (error) {
-    console.error('Erro ao remover TOTP:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro interno do servidor'
-    });
-  }
-});
 
 export default router;

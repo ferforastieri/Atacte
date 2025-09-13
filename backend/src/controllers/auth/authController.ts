@@ -5,7 +5,6 @@ import { authenticateToken } from '../../middleware/auth';
 const router = express.Router();
 const authService = new AuthService();
 
-// POST /api/auth/register - Registrar novo usuário
 router.post('/register', async (req, res) => {
   try {
     const { email, masterPassword } = req.body;
@@ -140,5 +139,6 @@ router.delete('/sessions/:sessionId', authenticateToken, async (req: any, res) =
     });
   }
 });
+
 
 export default router;

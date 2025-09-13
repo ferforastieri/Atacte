@@ -47,7 +47,7 @@
                 </div>
                 
                 <div class="text-center p-4 bg-gray-50 rounded-lg">
-                  <p class="text-2xl font-bold text-green-600">{{ passwordsStore.favoritePasswords.length }}</p>
+                  <p class="text-2xl font-bold text-green-600">{{ passwordsStore.allFavoritePasswords.length }}</p>
                   <p class="text-sm text-gray-600">Favoritas</p>
                 </div>
                 
@@ -112,11 +112,14 @@ const authStore = useAuthStore()
 const passwordsStore = usePasswordsStore()
 
 const totpEnabledCount = computed(() => {
-  return passwordsStore.passwords.filter(p => p.totpEnabled).length
+  return passwordsStore.allTotpEnabledPasswords.length
 })
 
 onMounted(async () => {
   await passwordsStore.fetchPasswords()
+  if (!passwordsStore.statsLoaded) {
+    await passwordsStore.loadCompleteStats()
+  }
 })
 </script>
 

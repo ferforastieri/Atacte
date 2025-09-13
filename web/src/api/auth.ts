@@ -58,7 +58,7 @@ const authApi = {
 
   // Verificar token
   async verifyToken() {
-    const response = await api.get('/auth/verify')
+    const response = await api.get('/auth/me')
     return response.data
   },
 

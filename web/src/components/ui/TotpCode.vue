@@ -100,6 +100,8 @@ const startTimer = () => {
   if (intervalId) return
   
   intervalId = window.setInterval(() => {
+    // O timer será controlado pelo componente pai
+    // Aqui apenas verificamos se precisa fazer refresh
     if (props.timeRemaining && props.timeRemaining <= 1) {
       emit('refresh')
     }

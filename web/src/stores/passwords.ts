@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import passwordsApi, { type PasswordEntry, type CreatePasswordRequest, type UpdatePasswordRequest, type PasswordSearchFilters } from '@/api/passwords'
 import importExportApi from '@/api/importExport'
+import totpApi, { type TOTPCode } from '@/api/totp'
 
 export const usePasswordsStore = defineStore('passwords', () => {
   // Estado
@@ -29,6 +30,11 @@ export const usePasswordsStore = defineStore('passwords', () => {
   const favoritePasswords = computed(() => 
     passwords.value.filter(p => p.isFavorite)
   )
+
+  // Estatísticas completas (não apenas da página atual)
+  const allFavoritePasswords = ref<PasswordEntry[]>([])
+  const allTotpEnabledPasswords = ref<PasswordEntry[]>([])
+  const statsLoaded = ref(false)
 
   const passwordsByFolder = computed(() => {
     const grouped = passwords.value.reduce((acc, password) => {
@@ -113,8 +119,23 @@ export const usePasswordsStore = defineStore('passwords', () => {
   const updatePassword = async (id: string, passwordData: UpdatePasswordRequest) => {
     isLoading.value = true
     try {
-      const response = await passwordsApi.updatePassword(id, passwordData)
+      // Separar dados TOTP dos dados da senha
+      const { totpEnabled, totpSecret, ...passwordFields } = passwordData
+      
+      // Atualizar dados da senha (sem TOTP)
+      const response = await passwordsApi.updatePassword(id, passwordFields)
+      
       if (response.success) {
+        // Se há mudanças no TOTP, gerenciar separadamente
+        if (totpEnabled && totpSecret) {
+          // Adicionar ou atualizar TOTP
+          await addTotp(id, totpSecret)
+        } else if (totpEnabled === false) {
+          // Remover TOTP se foi desabilitado
+          await removeTotp(id)
+        }
+        
+        // Atualizar a senha na lista
         const index = passwords.value.findIndex(p => p.id === id)
         if (index !== -1) {
           passwords.value[index] = response.data
@@ -181,7 +202,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
   // TOTP Actions
   const getTotpCode = async (id: string) => {
     try {
-      const response = await passwordsApi.getTotpCode(id)
+      const response = await totpApi.getTotpCode(id)
       if (response.success) {
         return response.data
       }
@@ -191,10 +212,10 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }
   }
 
-  const addTotp = async (id: string, totpSecret: string) => {
+  const addTotp = async (id: string, totpInput: string) => {
     isLoading.value = true
     try {
-      const response = await passwordsApi.addTotp(id, totpSecret)
+      const response = await totpApi.addTotpToPassword(id, totpInput)
       if (response.success) {
         // Atualizar a senha na lista
         const index = passwords.value.findIndex(p => p.id === id)
@@ -215,7 +236,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
   const removeTotp = async (id: string) => {
     isLoading.value = true
     try {
-      const response = await passwordsApi.removeTotp(id)
+      const response = await totpApi.removeTotpFromPassword(id)
       if (response.success) {
         // Atualizar a senha na lista
         const index = passwords.value.findIndex(p => p.id === id)
@@ -269,6 +290,37 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }
   }
 
+  // Carregar estatísticas completas
+  const loadCompleteStats = async () => {
+    try {
+      // Buscar todas as senhas favoritas
+      const favoritesResponse = await passwordsApi.searchPasswords({
+        isFavorite: true,
+        limit: 1000, // Buscar muitas senhas favoritas
+        offset: 0
+      })
+      
+      if (favoritesResponse.success) {
+        allFavoritePasswords.value = favoritesResponse.data.passwords
+      }
+
+      // Buscar todas as senhas com TOTP
+      const totpResponse = await passwordsApi.searchPasswords({
+        totpEnabled: true,
+        limit: 1000, // Buscar muitas senhas com TOTP
+        offset: 0
+      })
+      
+      if (totpResponse.success) {
+        allTotpEnabledPasswords.value = totpResponse.data
+      }
+
+      statsLoaded.value = true
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas completas:', error)
+    }
+  }
+
   // Utilitários
   const setSearchFilters = (filters: Partial<PasswordSearchFilters>) => {
     searchFilters.value = { ...searchFilters.value, ...filters }
@@ -313,6 +365,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
     await fetchPasswords({ limit: size, offset: 0 })
   }
 
+
   return {
     // Estado
     passwords,
@@ -327,6 +380,12 @@ export const usePasswordsStore = defineStore('passwords', () => {
     passwordsByFolder,
     totalCount,
     searchResults,
+    
+    // Estatísticas completas
+    allFavoritePasswords,
+    allTotpEnabledPasswords,
+    statsLoaded,
+    loadCompleteStats,
     
     // Actions
     fetchPasswords,

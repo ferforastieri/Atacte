@@ -1,0 +1,340 @@
+<template>
+  <BaseModal :show="show" @close="$emit('close')" size="lg">
+    <template #header>
+      <h3 class="text-lg font-semibold text-gray-900">Editar Senha</h3>
+    </template>
+
+    <form @submit.prevent="handleSubmit" class="space-y-6">
+      <!-- Nome -->
+      <div>
+        <BaseInput
+          v-model="form.name"
+          label="Nome"
+          placeholder="Nome da senha"
+          required
+          :error="errors.name"
+        />
+      </div>
+
+      <!-- Website e Username -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <BaseInput
+            v-model="form.website"
+            label="Website"
+            type="url"
+            placeholder="https://exemplo.com"
+            :error="errors.website"
+          />
+        </div>
+        
+        <div>
+          <BaseInput
+            v-model="form.username"
+            label="Username/Email"
+            type="text"
+            placeholder="seu@email.com"
+          />
+        </div>
+      </div>
+
+      <!-- Senha -->
+      <div>
+        <BaseInput
+          v-model="form.password"
+          label="Senha"
+          type="password"
+          placeholder="Digite a senha"
+          required
+          :error="errors.password"
+          showPasswordToggle
+        />
+        
+        <div class="mt-2 flex justify-between">
+          <BaseButton
+            type="button"
+            variant="ghost"
+            size="sm"
+            @click="generatePassword"
+          >
+            <KeyIcon class="w-4 h-4 mr-1" />
+            Gerar Senha
+          </BaseButton>
+          
+          <div class="text-sm text-gray-500">
+            <PasswordStrength v-if="form.password" :password="form.password" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Pasta e Favorito -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <BaseInput
+            v-model="form.folder"
+            label="Pasta"
+            placeholder="Pasta (opcional)"
+          />
+        </div>
+        
+        <div class="flex items-center space-x-2">
+          <input
+            id="isFavorite"
+            v-model="form.isFavorite"
+            type="checkbox"
+            class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+          />
+          <label for="isFavorite" class="text-sm font-medium text-gray-700">
+            Marcar como favorita
+          </label>
+        </div>
+      </div>
+
+      <!-- TOTP -->
+      <div class="space-y-4">
+        <div class="flex items-center space-x-2">
+          <input
+            id="totpEnabled"
+            v-model="form.totpEnabled"
+            type="checkbox"
+            class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+          />
+          <label for="totpEnabled" class="text-sm font-medium text-gray-700">
+            Habilitar TOTP (2FA)
+          </label>
+        </div>
+
+        <div v-if="form.totpEnabled" class="space-y-4">
+          <!-- TOTP Secret -->
+          <div>
+            <BaseInput
+              v-model="form.totpSecret"
+              label="Chave Secreta TOTP"
+              type="text"
+              placeholder="Digite a chave secreta do app autenticador"
+              :error="errors.totpSecret"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              Cole a chave secreta do seu app autenticador (Google Authenticator, Authy, etc.)
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Notas -->
+      <div>
+        <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">
+          Notas
+        </label>
+        <textarea
+          id="notes"
+          v-model="form.notes"
+          rows="3"
+          class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          placeholder="Notas adicionais (opcional)"
+        ></textarea>
+      </div>
+    </form>
+
+    <template #footer>
+      <div class="flex justify-end space-x-3">
+        <BaseButton variant="ghost" @click="$emit('close')">
+          Cancelar
+        </BaseButton>
+        <BaseButton 
+          variant="primary" 
+          @click="handleSubmit"
+          :loading="isSubmitting"
+          :disabled="!isFormValid"
+        >
+          Salvar Alterações
+        </BaseButton>
+      </div>
+    </template>
+  </BaseModal>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
+import { useToast } from 'vue-toastification'
+import { KeyIcon } from '@heroicons/vue/24/outline'
+import { BaseModal, BaseInput, BaseButton, PasswordStrength } from '@/components/ui'
+import { type PasswordEntry } from '@/api/passwords'
+import { usePasswordsStore } from '@/stores/passwords'
+
+interface Props {
+  show: boolean
+  password: PasswordEntry | null
+}
+
+interface Emits {
+  (e: 'close'): void
+  (e: 'updated'): void
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
+const toast = useToast()
+const passwordsStore = usePasswordsStore()
+
+// Form data
+const form = ref({
+  name: '',
+  website: '',
+  username: '',
+  password: '',
+  folder: '',
+  notes: '',
+  totpEnabled: false,
+  totpSecret: '',
+  isFavorite: false
+})
+
+// UI state
+const isSubmitting = ref(false)
+
+// Validation errors
+const errors = ref<Record<string, string>>({})
+
+// Computed
+const isFormValid = computed(() => {
+  return form.value.name.trim() && form.value.password.trim()
+})
+
+// Watch for TOTP secret changes to generate QR code
+watch(() => form.value.totpSecret, (newSecret) => {
+  if (newSecret && form.value.name) {
+    generateQrCode()
+  }
+}, { immediate: false })
+
+// Methods
+const generatePassword = () => {
+  // Gerar senha segura
+  const length = 16
+  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
+  let password = ''
+  
+  for (let i = 0; i < length; i++) {
+    password += charset.charAt(Math.floor(Math.random() * charset.length))
+  }
+  
+  form.value.password = password
+}
+
+
+const validateForm = () => {
+  errors.value = {}
+  
+  if (!form.value.name.trim()) {
+    errors.value.name = 'Nome é obrigatório'
+  }
+  
+  if (!form.value.password.trim()) {
+    errors.value.password = 'Senha é obrigatória'
+  }
+  
+  if (form.value.website && !isValidUrl(form.value.website)) {
+    errors.value.website = 'URL inválida'
+  }
+  
+  if (form.value.totpEnabled && !form.value.totpSecret.trim()) {
+    errors.value.totpSecret = 'Chave secreta é obrigatória quando TOTP está habilitado'
+  }
+  
+  return Object.keys(errors.value).length === 0
+}
+
+const isValidUrl = (string: string) => {
+  try {
+    new URL(string)
+    return true
+  } catch (_) {
+    return false
+  }
+}
+
+const handleSubmit = async () => {
+  if (!validateForm()) {
+    toast.error('Por favor, corrija os erros no formulário')
+    return
+  }
+  
+  if (!props.password?.id) {
+    toast.error('Senha não encontrada')
+    return
+  }
+  
+  isSubmitting.value = true
+  
+  try {
+    await passwordsStore.updatePassword(props.password.id, {
+      name: form.value.name.trim(),
+      website: form.value.website.trim() || undefined,
+      username: form.value.username.trim() || undefined,
+      password: form.value.password,
+      folder: form.value.folder.trim() || undefined,
+      notes: form.value.notes.trim() || undefined,
+      totpEnabled: form.value.totpEnabled,
+      totpSecret: form.value.totpEnabled ? form.value.totpSecret.trim() : undefined,
+      isFavorite: form.value.isFavorite
+    })
+    
+    toast.success('Senha atualizada com sucesso!')
+    emit('updated')
+    emit('close')
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || 'Erro ao atualizar senha')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const resetForm = () => {
+  form.value = {
+    name: '',
+    website: '',
+    username: '',
+    password: '',
+    folder: '',
+    notes: '',
+    totpEnabled: false,
+    totpSecret: '',
+    isFavorite: false
+  }
+  errors.value = {}
+}
+
+const loadPasswordData = () => {
+  if (props.password) {
+    form.value = {
+      name: props.password.name || '',
+      website: props.password.website || '',
+      username: props.password.username || '',
+      password: props.password.password || '',
+      folder: props.password.folder || '',
+      notes: props.password.notes || '',
+      totpEnabled: props.password.totpEnabled || false,
+      totpSecret: '', // Não carregamos o secret por segurança
+      isFavorite: props.password.isFavorite || false
+    }
+  }
+}
+
+// Carregar dados quando o modal abrir
+watch(() => props.show, (show) => {
+  if (show && props.password) {
+    loadPasswordData()
+  } else if (!show) {
+    resetForm()
+  }
+})
+
+// Carregar dados quando a senha mudar
+watch(() => props.password, () => {
+  if (props.password && props.show) {
+    loadPasswordData()
+  }
+})
+</script>

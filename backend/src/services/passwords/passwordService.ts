@@ -55,6 +55,7 @@ export interface SearchFilters {
   query?: string;
   folder?: string;
   isFavorite?: boolean;
+  totpEnabled?: boolean;
   limit?: number;
   offset?: number;
   sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'lastUsed';
@@ -79,6 +80,7 @@ export class PasswordService {
       query,
       folder,
       isFavorite,
+      totpEnabled,
       limit,
       offset,
       sortBy,
@@ -93,6 +95,7 @@ export class PasswordService {
     if (query) searchFilters.search = query;
     if (folder) searchFilters.folder = folder;
     if (isFavorite !== undefined) searchFilters.isFavorite = isFavorite;
+    if (totpEnabled !== undefined) searchFilters.totpEnabled = totpEnabled;
     if (limit) searchFilters.limit = limit;
     if (offset) searchFilters.offset = offset;
 
@@ -108,9 +111,17 @@ export class PasswordService {
     }
 
     // Descriptografar senhas
-    const decryptedPasswords = await Promise.all(
-      passwords.map(password => this.decryptPasswordEntry(password, user.encryptionKeyHash))
-    );
+    const decryptedPasswords = [];
+    for (const password of passwords) {
+      try {
+        const decryptedPassword = await this.decryptPasswordEntry(password, user.encryptionKeyHash);
+        decryptedPasswords.push(decryptedPassword);
+      } catch (error) {
+        console.error('🔐 PasswordService: ERRO ao descriptografar senha, pulando:', password.name, error.message);
+        // Pula senhas que não conseguem ser descriptografadas
+        continue;
+      }
+    }
 
     return {
       passwords: decryptedPasswords,
@@ -318,121 +329,6 @@ export class PasswordService {
     return [...new Set(folders)] as string[];
   }
 
-  // Adicionar TOTP a uma entrada existente
-  async addTotpToEntry(
-    userId: string, 
-    passwordId: string, 
-    totpSecret: string, 
-    req?: Request
-  ): Promise<PasswordEntryDto | null> {
-    // Verificar se a entrada existe
-    const existingEntry = await this.passwordRepository.findById(passwordId, userId);
-
-    if (!existingEntry) {
-      return null;
-    }
-
-    // Buscar chave de criptografia
-    const user = await this.passwordRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
-    // Validar secret TOTP
-    if (!TOTPService.isValidSecret(totpSecret)) {
-      throw new Error('Secret TOTP inválido');
-    }
-
-    // Criptografar e salvar
-    const encryptedSecret = TOTPService.encryptSecret(totpSecret, user.encryptionKeyHash);
-
-    const updatedEntry = await this.passwordRepository.update(passwordId, {
-      totpSecret: encryptedSecret,
-      totpEnabled: true
-    });
-
-    await AuditUtil.log(
-      userId,
-      'PASSWORD_UPDATED',
-      'PASSWORD_ENTRY',
-      passwordId,
-      { action: 'TOTP_ADDED' },
-      req
-    );
-
-    return this.decryptPasswordEntry(updatedEntry, user.encryptionKeyHash);
-  }
-
-  // Remover TOTP de uma entrada
-  async removeTotpFromEntry(
-    userId: string, 
-    passwordId: string, 
-    req?: Request
-  ): Promise<PasswordEntryDto | null> {
-    const existingEntry = await this.passwordRepository.findById(passwordId, userId);
-
-    if (!existingEntry) {
-      return null;
-    }
-
-    const user = await this.passwordRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
-    const updatedEntry = await this.passwordRepository.update(passwordId, {
-      totpSecret: undefined,
-      totpEnabled: false
-    } as any);
-
-    await AuditUtil.log(
-      userId,
-      'PASSWORD_UPDATED',
-      'PASSWORD_ENTRY',
-      passwordId,
-      { action: 'TOTP_REMOVED' },
-      req
-    );
-
-    return this.decryptPasswordEntry(updatedEntry, user.encryptionKeyHash);
-  }
-
-  // Buscar apenas código TOTP atual (sem dados sensíveis)
-  async getTotpCode(userId: string, passwordId: string, req?: Request): Promise<TOTPCode | null> {
-    const entry = await this.passwordRepository.findById(passwordId, userId);
-    
-    if (!entry || !entry.totpEnabled || !entry.totpSecret) {
-      return null;
-    }
-
-    const user = await this.passwordRepository.getUserEncryptionKey(userId);
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
-    try {
-      const decryptedSecret = TOTPService.decryptSecret(entry.totpSecret, user.encryptionKeyHash);
-      const totpCode = TOTPService.generateCurrentCode(decryptedSecret);
-
-      // Log do acesso ao TOTP
-      await AuditUtil.log(
-        userId,
-        'PASSWORD_VIEWED',
-        'PASSWORD_ENTRY',
-        passwordId,
-        { action: 'TOTP_CODE_ACCESSED' },
-        req
-      );
-
-      return totpCode;
-    } catch (error) {
-      console.error('Erro ao descriptografar TOTP secret:', error);
-      return null;
-    }
-  }
 
   // Descriptografar entrada de senha
   private async decryptPasswordEntry(password: PasswordEntry, encryptionKey: string): Promise<PasswordEntryDto> {

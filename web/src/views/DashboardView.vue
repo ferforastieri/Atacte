@@ -89,7 +89,7 @@
             </div>
             <div class="ml-4">
               <p class="text-green-100">Favoritas</p>
-              <p class="text-2xl font-bold">{{ passwordsStore.favoritePasswords.length }}</p>
+              <p class="text-2xl font-bold">{{ passwordsStore.allFavoritePasswords.length }}</p>
             </div>
           </div>
         </BaseCard>
@@ -350,7 +350,7 @@ const isRefreshing = ref(false)
 
 // Computed
 const totpEnabledCount = computed(() => {
-  return passwordsStore.passwords.filter(p => p.totpEnabled).length
+  return passwordsStore.allTotpEnabledPasswords.length
 })
 
 const filteredPasswords = computed(() => {
@@ -381,6 +381,7 @@ const refreshPasswords = async () => {
   isRefreshing.value = true
   try {
     await passwordsStore.fetchPasswords()
+    await passwordsStore.loadCompleteStats() // Recarregar estatísticas também
     toast.success('Senhas atualizadas!')
   } catch (error) {
     toast.error('Erro ao atualizar senhas')
@@ -471,6 +472,11 @@ onMounted(async () => {
       console.error('Erro ao carregar dados:', error)
       toast.error('Erro ao carregar dados')
     }
+  }
+  
+  // Carregar estatísticas completas
+  if (!passwordsStore.statsLoaded) {
+    await passwordsStore.loadCompleteStats()
   }
 })
 

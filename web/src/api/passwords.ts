@@ -50,6 +50,7 @@ export interface PasswordSearchFilters {
   query?: string
   folder?: string
   isFavorite?: boolean
+  totpEnabled?: boolean
   limit?: number
   offset?: number
   sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'lastUsed'
@@ -132,23 +133,7 @@ const passwordsApi = {
   },
 
   // === TOTP ===
-  // Buscar código TOTP atual
-  async getTotpCode(id: string) {
-    const response = await api.get(`/passwords/${id}/totp`)
-    return response.data
-  },
 
-  // Adicionar TOTP a entrada
-  async addTotp(id: string, totpSecret: string) {
-    const response = await api.post(`/passwords/${id}/totp`, { totpSecret })
-    return response.data
-  },
-
-  // Remover TOTP de entrada
-  async removeTotp(id: string) {
-    const response = await api.delete(`/passwords/${id}/totp`)
-    return response.data
-  },
 
   // === IMPORTAÇÃO ===
   // Importar senhas do Bitwarden

@@ -84,8 +84,8 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       const response = await authApi.verifyToken()
-      if (response.success && response.data.user) {
-        user.value = response.data.user
+      if (response.success && response.data) {
+        user.value = response.data
         return true
       }
     } catch (error) {

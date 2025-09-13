@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 
 interface Props {
@@ -130,5 +130,11 @@ const inputClasses = computed(() => {
 const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value
 }
+
+watch(() => props.type, (newType) => {
+  if (newType !== 'password') {
+    passwordVisible.value = false
+  }
+})
 </script>
 

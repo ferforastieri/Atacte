@@ -35,7 +35,7 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
         <div class="flex items-center space-x-2">
           <BaseInput
-            :value="password.password"
+            v-model="passwordValue"
             type="password"
             readonly
             showPasswordToggle
@@ -102,15 +102,35 @@
       </div>
     </template>
   </BaseModal>
+
+  <!-- Modal de Edição -->
+  <EditPasswordModal
+    :show="showEditModal"
+    :password="password"
+    @close="handleEditClose"
+    @updated="handleEditUpdated"
+  />
+
+  <!-- Modal de Confirmação de Exclusão -->
+  <ConfirmModal
+    :show="showDeleteConfirm"
+    title="Excluir Senha"
+    :message="`Tem certeza que deseja excluir a senha '${password?.name || ''}'? Esta ação não pode ser desfeita.`"
+    confirm-text="Excluir"
+    :loading="isDeleting"
+    @confirm="confirmDelete"
+    @cancel="cancelDelete"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { HeartIcon, KeyIcon } from '@heroicons/vue/24/outline'
-import { BaseModal, BaseInput, BaseButton, TotpCode } from '@/components/ui'
+import { BaseModal, BaseInput, BaseButton, TotpCode, ConfirmModal } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 import { usePasswordsStore } from '@/stores/passwords'
+import EditPasswordModal from './EditPasswordModal.vue'
 
 interface Props {
   show: boolean
@@ -130,6 +150,10 @@ const passwordsStore = usePasswordsStore()
 
 const isDeleting = ref(false)
 const totpCode = ref<{ code: string; timeRemaining: number; period: number } | null>(null)
+let totpTimer: number | null = null
+const showEditModal = ref(false)
+const passwordValue = ref('')
+const showDeleteConfirm = ref(false)
 
 const copyPassword = async () => {
   if (!props.password) return
@@ -143,26 +167,43 @@ const copyPassword = async () => {
 }
 
 const handleEdit = () => {
-  // TODO: Implementar edição
-  toast.info('Funcionalidade de edição em desenvolvimento')
+  showEditModal.value = true
 }
 
-const handleDelete = async () => {
+const handleEditUpdated = () => {
+  // Recarregar dados da senha atual
+  emit('updated')
+  toast.success('Senha atualizada com sucesso!')
+}
+
+const handleEditClose = () => {
+  showEditModal.value = false
+}
+
+const handleDelete = () => {
+  showDeleteConfirm.value = true
+}
+
+const confirmDelete = async () => {
   if (!props.password) return
-  
-  if (!confirm('Tem certeza que deseja excluir esta senha?')) return
   
   isDeleting.value = true
   
   try {
-    // TODO: Implementar exclusão via API
-    toast.success('Senha excluída!')
+    await passwordsStore.deletePassword(props.password.id)
+    toast.success('Senha excluída com sucesso!')
     emit('deleted')
-  } catch (error) {
-    toast.error('Erro ao excluir senha')
+    emit('close')
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || 'Erro ao excluir senha')
   } finally {
     isDeleting.value = false
+    showDeleteConfirm.value = false
   }
+}
+
+const cancelDelete = () => {
+  showDeleteConfirm.value = false
 }
 
 const loadTotpCode = async () => {
@@ -180,17 +221,55 @@ const refreshTotpCode = async () => {
   await loadTotpCode()
 }
 
+const startTotpTimer = () => {
+  if (totpTimer) clearInterval(totpTimer)
+  
+  totpTimer = window.setInterval(() => {
+    if (totpCode.value) {
+      totpCode.value.timeRemaining--
+      
+      if (totpCode.value.timeRemaining <= 0) {
+        // Recarregar código TOTP quando o tempo expirar
+        refreshTotpCode()
+      }
+    }
+  }, 1000)
+}
+
+const stopTotpTimer = () => {
+  if (totpTimer) {
+    clearInterval(totpTimer)
+    totpTimer = null
+  }
+}
+
 // Carregar código TOTP quando o modal abrir e a senha tiver TOTP habilitado
 watch(() => props.show, async (show) => {
   if (show && props.password?.totpEnabled) {
     await loadTotpCode()
+    startTotpTimer()
+  } else {
+    stopTotpTimer()
   }
 })
+
+// Atualizar passwordValue quando a senha mudar
+watch(() => props.password?.password, (newPassword) => {
+  if (newPassword) {
+    passwordValue.value = newPassword
+  }
+}, { immediate: true })
 
 watch(() => props.password?.id, async (id) => {
   if (id && props.password?.totpEnabled) {
     await loadTotpCode()
+    startTotpTimer()
   }
+})
+
+// Limpar timer quando o componente for desmontado
+onUnmounted(() => {
+  stopTotpTimer()
 })
 </script>
 
