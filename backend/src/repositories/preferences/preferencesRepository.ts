@@ -18,7 +18,7 @@ export interface UpdateUserPreferencesData {
 export class PreferencesRepository {
   async create(data: CreateUserPreferencesData): Promise<UserPreferences> {
     return await prisma.userPreferences.create({
-      data,
+      data: data as any,
     });
   }
 
@@ -32,8 +32,9 @@ export class PreferencesRepository {
     return await prisma.userPreferences.update({
       where: { userId },
       data: {
-        ...data,
-        autoLock: data.autoLock?.toString(),
+        theme: data.theme,
+        language: data.language,
+        autoLock: data.autoLock,
         updatedAt: new Date(),
       },
     });
@@ -51,12 +52,14 @@ export class PreferencesRepository {
       update: {
         theme: data.theme,
         language: data.language,
-        autoLock: data.autoLock?.toString(),
+        autoLock: data.autoLock,
         updatedAt: new Date(),
       },
       create: {
-        ...data,
-        autoLock: data.autoLock?.toString(),
+        userId: data.userId,
+        theme: data.theme,
+        language: data.language,
+        autoLock: data.autoLock,
       },
     });
   }

@@ -11,6 +11,8 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 config.env
+backend/config.env
+web/.env
 
 # Build outputs
 dist/
@@ -79,4 +81,16 @@ generated/
 
 # Docker
 docker-compose.override.yml
+.dockerignore
+docker-compose.*.yml
+!docker-compose.yml
+
+# SSL certificates (if you add them later)
+nginx/ssl/
+*.pem
+*.key
+*.crt
+
+# Deployment logs
+deploy.log
 

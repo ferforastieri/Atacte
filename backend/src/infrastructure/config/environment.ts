@@ -111,7 +111,7 @@ class Environment {
     }
 
     if (this.config.ENCRYPTION_KEY.length !== 32) {
-      throw new Error('ENCRYPTION_KEY must be exactly 32 characters long')
+      throw new Error(`ENCRYPTION_KEY must be exactly 32 characters long, got ${this.config.ENCRYPTION_KEY.length}`)
     }
 
     if (!this.config.DATABASE_URL.startsWith('postgresql://')) {
