@@ -84,6 +84,12 @@ docker-compose.override.yml
 .dockerignore
 docker-compose.*.yml
 !docker-compose.yml
+docker-compose.yml
+Dockerfile
+supervisord.conf
+nginx/nginx.conf
+web/.env
+backend/.env
 
 # SSL certificates (if you add them later)
 nginx/ssl/
@@ -93,4 +99,5 @@ nginx/ssl/
 
 # Deployment logs
 deploy.log
+deploy.sh
 
