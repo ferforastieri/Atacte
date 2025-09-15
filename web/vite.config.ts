@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   // URL da API do backend (sempre usar localhost para proxy)
-  const apiUrl = 'http://localhost:3001'
+  const apiUrl = 'http://localhost:3002'
   
   return {
     plugins: [vue()],
