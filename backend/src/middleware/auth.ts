@@ -55,7 +55,13 @@ export const authenticateToken = async (
         tokenHash: tokenHash,
         expiresAt: { gt: new Date() }
       },
-      include: { user: true }
+      include: { 
+        user: {
+          include: {
+            preferences: true
+          }
+        }
+      }
     });
 
     if (!session || !session.user.isActive) {
@@ -64,6 +70,26 @@ export const authenticateToken = async (
         message: 'Sessão inválida ou expirada' 
       });
       return;
+    }
+
+    // Verificar auto-lock se configurado
+    if (session.user.preferences?.autoLock && session.user.preferences.autoLock > 0) {
+      const lastUsed = new Date(session.lastUsed);
+      const now = new Date();
+      const minutesSinceLastUse = (now.getTime() - lastUsed.getTime()) / (1000 * 60);
+      
+      if (minutesSinceLastUse > session.user.preferences.autoLock) {
+        // Sessão expirada por inatividade
+        await prisma.userSession.delete({
+          where: { id: session.id }
+        });
+        
+        res.status(401).json({ 
+          success: false, 
+          message: 'Sessão expirada por inatividade' 
+        });
+        return;
+      }
     }
 
     // Atualizar último uso da sessão
@@ -117,7 +143,13 @@ export const optionalAuth = async (
         tokenHash: crypto.SHA256(token).toString(),
         expiresAt: { gt: new Date() }
       },
-      include: { user: true }
+      include: { 
+        user: {
+          include: {
+            preferences: true
+          }
+        }
+      }
     });
 
     if (session && session.user.isActive) {

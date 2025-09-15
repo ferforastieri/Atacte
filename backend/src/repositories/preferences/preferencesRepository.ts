@@ -1,6 +1,5 @@
-import { PrismaClient, UserPreferences } from '../../../node_modules/.prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../infrastructure/prisma';
+import { UserPreferences } from '@prisma/client';
 
 export interface CreateUserPreferencesData {
   userId: string;
@@ -23,13 +22,15 @@ export class PreferencesRepository {
   }
 
   async findByUserId(userId: string): Promise<UserPreferences | null> {
-    return await prisma.userPreferences.findUnique({
+    const result = await prisma.userPreferences.findUnique({
       where: { userId },
     });
+    return result;
   }
 
   async update(userId: string, data: UpdateUserPreferencesData): Promise<UserPreferences> {
-    return await prisma.userPreferences.update({
+    
+    const result = await prisma.userPreferences.update({
       where: { userId },
       data: {
         theme: data.theme,
@@ -38,6 +39,8 @@ export class PreferencesRepository {
         updatedAt: new Date(),
       },
     });
+    
+    return result;
   }
 
   async delete(userId: string): Promise<void> {
@@ -47,7 +50,8 @@ export class PreferencesRepository {
   }
 
   async upsert(userId: string, data: CreateUserPreferencesData): Promise<UserPreferences> {
-    return await prisma.userPreferences.upsert({
+    
+    const result = await prisma.userPreferences.upsert({
       where: { userId },
       update: {
         theme: data.theme,
@@ -62,5 +66,7 @@ export class PreferencesRepository {
         autoLock: data.autoLock,
       },
     });
+    
+    return result;
   }
 }

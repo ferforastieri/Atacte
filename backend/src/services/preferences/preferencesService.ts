@@ -39,6 +39,7 @@ export class PreferencesService {
   }
 
   async updateUserPreferences(userId: string, data: UpdateUserPreferencesData): Promise<UserPreferencesDto | null> {
+    
     const existingPreferences = await this.preferencesRepository.findByUserId(userId);
     
     if (!existingPreferences) {
@@ -46,10 +47,12 @@ export class PreferencesService {
     }
 
     const preferences = await this.preferencesRepository.update(userId, data);
+    
     return this.mapToDto(preferences);
   }
 
   async upsertUserPreferences(userId: string, data: CreateUserPreferencesData): Promise<UserPreferencesDto> {
+    
     const preferences = await this.preferencesRepository.upsert(userId, {
       userId,
       theme: data.theme || 'light',

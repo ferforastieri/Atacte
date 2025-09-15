@@ -99,18 +99,18 @@
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div class="flex-1">
                   <h3 class="text-sm font-medium text-gray-900 dark:text-white">Auto-lock</h3>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">Bloquear automaticamente após inatividade</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Bloquear automaticamente após inatividade (0 = nunca trancar)</p>
                 </div>
                 <select 
                   v-model="autoLock" 
                   @change="changeAutoLock"
-                  class="input-field w-32 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  class="input-field w-40 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 >
                   <option value="5">5 minutos</option>
                   <option value="15">15 minutos</option>
                   <option value="30">30 minutos</option>
                   <option value="60">1 hora</option>
-                  <option value="0">Desabilitado</option>
+                  <option value="0">Nunca trancar</option>
                 </select>
               </div>
             </div>
@@ -190,6 +190,7 @@ import { useThemeStore } from '@/stores/theme'
 import { usePasswordsStore } from '@/stores/passwords'
 import { useAuthStore } from '@/stores/auth'
 import importExportApi from '@/api/importExport'
+import preferencesApi from '@/api/preferences'
 
 // Components
 import ImportPasswordModal from '@/components/passwords/ImportPasswordModal.vue'
@@ -210,24 +211,46 @@ const language = ref('pt-BR')
 const autoLock = ref('15')
 
 // Carregar configurações salvas
-onMounted(() => {
-  loadSettings()
+onMounted(async () => {
+  await loadSettings()
 })
 
-const loadSettings = () => {
-  // Carregar tema do store (já inicializado)
-  theme.value = themeStore.isDarkMode ? 'dark' : 'light'
-  
-  // Carregar outras configurações
-  const savedLanguage = localStorage.getItem('language')
-  const savedAutoLock = localStorage.getItem('autoLock')
-  
-  if (savedLanguage) {
-    language.value = savedLanguage
-  }
-  
-  if (savedAutoLock) {
-    autoLock.value = savedAutoLock
+const loadSettings = async () => {
+  try {
+    // Carregar tema do store (já inicializado)
+    theme.value = themeStore.isDarkMode ? 'dark' : 'light'
+    
+    // Carregar preferências do backend
+    const response = await preferencesApi.getPreferences()
+    if (response.success && response.data) {
+      language.value = response.data.language || 'pt-BR'
+      autoLock.value = response.data.autoLock?.toString() || '15'
+    } else {
+      // Fallback para localStorage se não houver preferências no backend
+      const savedLanguage = localStorage.getItem('language')
+      const savedAutoLock = localStorage.getItem('autoLock')
+      
+      if (savedLanguage) {
+        language.value = savedLanguage
+      }
+      
+      if (savedAutoLock) {
+        autoLock.value = savedAutoLock
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao carregar configurações:', error)
+    // Fallback para localStorage
+    const savedLanguage = localStorage.getItem('language')
+    const savedAutoLock = localStorage.getItem('autoLock')
+    
+    if (savedLanguage) {
+      language.value = savedLanguage
+    }
+    
+    if (savedAutoLock) {
+      autoLock.value = savedAutoLock
+    }
   }
 }
 
@@ -246,14 +269,33 @@ const changeTheme = () => {
   toast.success('Tema alterado!')
 }
 
-const changeLanguage = () => {
-  localStorage.setItem('language', language.value)
-  toast.success('Idioma alterado!')
+const changeLanguage = async () => {
+  try {
+    await preferencesApi.upsertPreferences({
+      language: language.value
+    })
+    localStorage.setItem('language', language.value)
+    toast.success('Idioma alterado!')
+  } catch (error) {
+    console.error('Erro ao alterar idioma:', error)
+    toast.error('Erro ao alterar idioma')
+  }
 }
 
-const changeAutoLock = () => {
-  localStorage.setItem('autoLock', autoLock.value)
-  toast.success('Auto-lock configurado!')
+const changeAutoLock = async () => {
+  try {
+    
+    const response = await preferencesApi.upsertPreferences({
+      autoLock: parseInt(autoLock.value)
+    })
+    
+    
+    localStorage.setItem('autoLock', autoLock.value)
+    toast.success('Auto-lock configurado!')
+  } catch (error) {
+    console.error('Erro ao configurar auto-lock:', error)
+    toast.error('Erro ao configurar auto-lock')
+  }
 }
 
 const exportData = async () => {

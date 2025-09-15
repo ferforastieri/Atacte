@@ -58,13 +58,16 @@ router.post('/', authenticateToken, async (req: any, res) => {
 // PUT /api/preferences - Atualizar preferências do usuário
 router.put('/', authenticateToken, async (req: any, res) => {
   try {
+    
     const { theme, language, autoLock } = req.body;
+    
     
     const preferences = await preferencesService.updateUserPreferences(req.user.id, {
       theme,
       language,
       autoLock,
     });
+
 
     if (!preferences) {
       return res.status(404).json({
@@ -79,6 +82,7 @@ router.put('/', authenticateToken, async (req: any, res) => {
       message: 'Preferências atualizadas com sucesso'
     });
   } catch (error: any) {
+    console.error('Erro ao atualizar preferências:', error);
     res.status(400).json({
       success: false,
       message: 'Erro ao atualizar preferências',
@@ -90,7 +94,9 @@ router.put('/', authenticateToken, async (req: any, res) => {
 // PATCH /api/preferences - Atualizar ou criar preferências (upsert)
 router.patch('/', authenticateToken, async (req: any, res) => {
   try {
+    
     const { theme, language, autoLock } = req.body;
+    
     
     const preferences = await preferencesService.upsertUserPreferences(req.user.id, {
       userId: req.user.id,
@@ -99,12 +105,14 @@ router.patch('/', authenticateToken, async (req: any, res) => {
       autoLock,
     });
 
+
     res.json({
       success: true,
       data: preferences,
       message: 'Preferências salvas com sucesso'
     });
   } catch (error: any) {
+    console.error('Erro ao fazer upsert das preferências:', error);
     res.status(400).json({
       success: false,
       message: 'Erro ao salvar preferências',

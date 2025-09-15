@@ -2,12 +2,14 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 import authApi, { type User, type LoginRequest, type RegisterRequest } from '@/api/auth'
+import preferencesApi from '@/api/preferences'
 
 export const useAuthStore = defineStore('auth', () => {
   // Estado
   const user = ref<User | null>(null)
   const token = ref<string | null>(localStorage.getItem('auth_token'))
   const isLoading = ref(false)
+  const userPreferences = ref<any>(null)
 
   // Getters
   const isAuthenticated = computed(() => !!token.value && !!user.value)
@@ -25,8 +27,25 @@ export const useAuthStore = defineStore('auth', () => {
   const clearAuth = () => {
     token.value = null
     user.value = null
+    userPreferences.value = null
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
+  }
+
+  const loadUserPreferences = async () => {
+    if (!isAuthenticated.value) return null
+    
+    try {
+      const response = await preferencesApi.getPreferences()
+      if (response.success && response.data) {
+        userPreferences.value = response.data
+        return response.data
+      }
+    } catch (error) {
+      console.error('Erro ao carregar preferências:', error)
+    }
+    
+    return null
   }
 
   const loadUserFromStorage = () => {
@@ -46,6 +65,8 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await authApi.login(credentials)
       if (response.success) {
         setAuth(response.data.token, response.data.user)
+        // Carregar preferências do usuário após login
+        await loadUserPreferences()
         return response
       }
       throw new Error(response.message || 'Erro no login')
@@ -106,6 +127,9 @@ export const useAuthStore = defineStore('auth', () => {
         const isValid = await verifyToken()
         if (!isValid) {
           clearAuth()
+        } else {
+          // Carregar preferências se o token for válido
+          await loadUserPreferences()
         }
       } catch (error) {
         clearAuth()
@@ -118,6 +142,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     token,
     isLoading,
+    userPreferences,
     
     // Getters
     isAuthenticated,
@@ -131,6 +156,7 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     logout,
     verifyToken,
+    loadUserPreferences,
     initialize
   }
 })
