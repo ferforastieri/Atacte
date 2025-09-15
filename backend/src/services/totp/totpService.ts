@@ -52,7 +52,6 @@ export class TOTPService {
    * Gerar código TOTP atual baseado no secret
    */
   static generateCurrentCode(secret: string): TOTPCode {
-    console.log('🔍 TOTP Service - generateCurrentCode chamado com secret:', secret);
     
     // Limpar e normalizar o secret
     const cleanSecret = secret.trim().replace(/\s/g, '').toUpperCase();
@@ -61,7 +60,6 @@ export class TOTPService {
       throw new Error('Secret TOTP vazio');
     }
 
-    console.log('🔍 TOTP Service - Secret limpo:', cleanSecret);
     
     const token = speakeasy.totp({
       secret: cleanSecret,
@@ -69,8 +67,6 @@ export class TOTPService {
       step: this.TOTP_PERIOD
     });
 
-    console.log('🔍 TOTP Service - Código gerado:', token);
-    console.log('🔍 TOTP Service - Timestamp atual:', Math.floor(Date.now() / 1000));
 
     const timeRemaining = this.TOTP_PERIOD - (Math.floor(Date.now() / 1000) % this.TOTP_PERIOD);
 
@@ -186,14 +182,12 @@ export class TOTPService {
     accountName: string;
   } | null {
     try {
-      console.log('🔍 Parsing URL:', otpauthUrl);
       
       // Remover espaços e normalizar
       const cleanUrl = otpauthUrl.trim();
       
       // Verificar se é uma URL otpauth válida
       if (!cleanUrl.startsWith('otpauth://totp/')) {
-        console.log('🔍 Invalid otpauth URL format');
         return null;
       }
       
@@ -204,7 +198,6 @@ export class TOTPService {
       const [pathname, queryString] = urlPart.split('?');
       
       if (!queryString) {
-        console.log('🔍 No query parameters found');
         return null;
       }
       
@@ -213,7 +206,6 @@ export class TOTPService {
       const secret = params.get('secret');
       
       if (!secret) {
-        console.log('🔍 No secret parameter found');
         return null;
       }
       
@@ -228,10 +220,8 @@ export class TOTPService {
         accountName
       };
       
-      console.log('🔍 Parsed result:', result);
       return result;
     } catch (error) {
-      console.log('🔍 Error parsing URL:', error);
       return null;
     }
   }
@@ -279,7 +269,6 @@ export class TOTPService {
 
     // Verificar se é uma URL otpauth://
     if (totpInput.startsWith('otpauth://')) {
-      console.log('🔍 Detectada URL otpauth, fazendo parse...');
       const parsed = TOTPService.parseOtpAuthUrl(totpInput);
       
       if (!parsed) {
@@ -287,7 +276,6 @@ export class TOTPService {
       }
       
       totpSecret = parsed.secret;
-      console.log('🔍 Secret extraído da URL:', totpSecret);
     } else {
       // É uma chave TOTP direta
       totpSecret = totpInput;
@@ -377,7 +365,6 @@ export class TOTPService {
 
     try {
       const decryptedSecret = TOTPService.decryptSecret(entry.totpSecret, user.encryptionKeyHash);
-      console.log('🔍 TOTP Service - Secret descriptografado:', decryptedSecret);
       
       const totpCode = TOTPService.generateCurrentCode(decryptedSecret);
 

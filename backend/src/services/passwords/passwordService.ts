@@ -98,6 +98,10 @@ export class PasswordService {
     if (totpEnabled !== undefined) searchFilters.totpEnabled = totpEnabled;
     if (limit) searchFilters.limit = limit;
     if (offset) searchFilters.offset = offset;
+    
+    // Sempre definir ordenação, mesmo que não seja fornecida
+    searchFilters.sortBy = sortBy || 'name';
+    searchFilters.sortOrder = sortOrder || 'asc';
 
     const result = await this.passwordRepository.search(searchFilters);
     const passwords = result.items;

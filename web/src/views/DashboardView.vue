@@ -5,10 +5,10 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <!-- Logo -->
-          <Logo :size="32" text-size="text-xl" />
+          <Logo :size="32" text-size="text-lg sm:text-xl" />
 
           <!-- User Menu -->
-          <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-2 sm:space-x-3">
             <ThemeToggle />
             
             <BaseButton
@@ -16,21 +16,33 @@
               size="sm"
               @click="refreshPasswords"
               :loading="isRefreshing"
+              class="hidden sm:flex"
             >
               <ArrowPathIcon class="w-4 h-4 mr-1" />
               <span class="hidden sm:inline">Atualizar</span>
             </BaseButton>
 
+            <!-- Mobile refresh button -->
+            <BaseButton
+              variant="ghost"
+              size="sm"
+              @click="refreshPasswords"
+              :loading="isRefreshing"
+              class="sm:hidden"
+            >
+              <ArrowPathIcon class="w-4 h-4" />
+            </BaseButton>
+
             <div class="relative">
               <button
                 @click="showUserMenu = !showUserMenu"
-                class="flex items-center space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500"
+                class="flex items-center space-x-1 sm:space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
-                <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                  <UserIcon class="h-5 w-5 text-primary-600" />
+                <div class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                  <UserIcon class="h-5 w-5 text-primary-600 dark:text-primary-400" />
                 </div>
-                <span class="text-gray-700">{{ authStore.userEmail }}</span>
-                <ChevronDownIcon class="h-4 w-4 text-gray-400" />
+                <span class="text-gray-700 dark:text-gray-300 hidden sm:inline">{{ authStore.userEmail }}</span>
+                <ChevronDownIcon class="h-4 w-4 text-gray-400 dark:text-gray-500" />
               </button>
 
               <!-- Dropdown Menu -->
@@ -69,15 +81,15 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Stats Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
         <BaseCard class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <LockClosedIcon class="h-8 w-8" />
+              <LockClosedIcon class="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <div class="ml-4">
-              <p class="text-blue-100">Total de Senhas</p>
-              <p class="text-2xl font-bold">{{ passwordsStore.totalCount }}</p>
+            <div class="ml-3 sm:ml-4">
+              <p class="text-blue-100 text-xs sm:text-sm">Total de Senhas</p>
+              <p class="text-lg sm:text-2xl font-bold">{{ passwordsStore.totalCount }}</p>
             </div>
           </div>
         </BaseCard>
@@ -85,11 +97,11 @@
         <BaseCard class="bg-gradient-to-r from-green-500 to-green-600 text-white">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <HeartIcon class="h-8 w-8" />
+              <HeartIcon class="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <div class="ml-4">
-              <p class="text-green-100">Favoritas</p>
-              <p class="text-2xl font-bold">{{ passwordsStore.allFavoritePasswords.length }}</p>
+            <div class="ml-3 sm:ml-4">
+              <p class="text-green-100 text-xs sm:text-sm">Favoritas</p>
+              <p class="text-lg sm:text-2xl font-bold">{{ passwordsStore.allFavoritePasswords.length }}</p>
             </div>
           </div>
         </BaseCard>
@@ -97,11 +109,11 @@
         <BaseCard class="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <FolderIcon class="h-8 w-8" />
+              <FolderIcon class="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <div class="ml-4">
-              <p class="text-purple-100">Pastas</p>
-              <p class="text-2xl font-bold">{{ passwordsStore.folders.length }}</p>
+            <div class="ml-3 sm:ml-4">
+              <p class="text-purple-100 text-xs sm:text-sm">Pastas</p>
+              <p class="text-lg sm:text-2xl font-bold">{{ passwordsStore.folders.length }}</p>
             </div>
           </div>
         </BaseCard>
@@ -109,80 +121,89 @@
         <BaseCard class="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <KeyIcon class="h-8 w-8" />
+              <KeyIcon class="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <div class="ml-4">
-              <p class="text-orange-100">Com TOTP</p>
-              <p class="text-2xl font-bold">{{ totpEnabledCount }}</p>
+            <div class="ml-3 sm:ml-4">
+              <p class="text-orange-100 text-xs sm:text-sm">Com TOTP</p>
+              <p class="text-lg sm:text-2xl font-bold">{{ totpEnabledCount }}</p>
             </div>
           </div>
         </BaseCard>
       </div>
 
       <!-- Quick Actions -->
-      <div class="flex flex-wrap gap-4 mb-8">
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
         <BaseButton
           variant="primary"
           @click="showCreateModal = true"
+          class="w-full sm:w-auto"
         >
           <PlusIcon class="w-4 h-4 mr-2" />
           Nova Senha
         </BaseButton>
 
-        <BaseButton
-          variant="secondary"
-          @click="showImportModal = true"
-        >
-          <ArrowUpTrayIcon class="w-4 h-4 mr-2" />
-          Importar
-        </BaseButton>
+        <div class="flex gap-3 sm:gap-4">
+          <BaseButton
+            variant="secondary"
+            @click="showImportModal = true"
+            class="flex-1 sm:flex-none"
+          >
+            <ArrowUpTrayIcon class="w-4 h-4 mr-2" />
+            <span class="hidden sm:inline">Importar</span>
+            <span class="sm:hidden">Importar</span>
+          </BaseButton>
 
-        <BaseButton
-          variant="secondary"
-          @click="exportPasswords"
-        >
-          <ArrowDownTrayIcon class="w-4 h-4 mr-2" />
-          Exportar
-        </BaseButton>
+          <BaseButton
+            variant="secondary"
+            @click="exportPasswords"
+            class="flex-1 sm:flex-none"
+          >
+            <ArrowDownTrayIcon class="w-4 h-4 mr-2" />
+            <span class="hidden sm:inline">Exportar</span>
+            <span class="sm:hidden">Exportar</span>
+          </BaseButton>
+        </div>
       </div>
 
       <!-- Search and Filters -->
       <BaseCard class="mb-6">
-        <div class="flex flex-col sm:flex-row gap-4">
+        <div class="flex flex-col gap-4">
           <div class="flex-1">
             <BaseInput
               v-model="searchQuery"
               type="text"
               placeholder="Buscar senhas..."
               left-icon="MagnifyingGlassIcon"
-              @input="handleSearch"
             />
           </div>
           
-          <select
-            v-model="selectedFolder"
-            @change="handleFolderFilter"
-            class="input-field w-full sm:w-48"
-          >
-            <option value="">Todas as pastas</option>
-            <option v-for="folder in passwordsStore.folders" :key="folder" :value="folder">
-              {{ folder }}
-            </option>
-          </select>
+          <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <select
+              v-model="selectedFolder"
+              @change="handleFolderFilter"
+              class="w-full sm:w-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
+            >
+              <option value="">Todas as pastas</option>
+              <option v-for="folder in passwordsStore.folders" :key="folder" :value="folder">
+                {{ folder }}
+              </option>
+            </select>
 
-          <BaseButton
-            variant="ghost"
-            @click="toggleFavorites"
-            :class="{ 'bg-primary-100 text-primary-700': showOnlyFavorites }"
-          >
-            <HeartIcon class="w-4 h-4 mr-1" />
-            {{ showOnlyFavorites ? 'Todas' : 'Favoritas' }}
-          </BaseButton>
+            <BaseButton
+              variant="ghost"
+              @click="toggleFavorites"
+              :class="{ 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300': showOnlyFavorites }"
+              class="w-full sm:w-auto"
+            >
+              <HeartIcon class="w-4 h-4 mr-1" />
+              {{ showOnlyFavorites ? 'Todas' : 'Favoritas' }}
+            </BaseButton>
+          </div>
         </div>
       </BaseCard>
 
       <!-- Passwords List -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <BaseCard
           v-for="password in filteredPasswords"
           :key="password.id"
@@ -190,36 +211,38 @@
           @click="viewPassword(password)"
         >
           <div class="flex items-start justify-between">
-            <div class="flex-1">
+            <div class="flex-1 min-w-0">
               <div class="flex items-center space-x-2">
-                <h3 class="font-semibold text-gray-900">{{ password.name }}</h3>
-                <HeartIcon
-                  v-if="password.isFavorite"
-                  class="h-4 w-4 text-red-500"
-                />
-                <KeyIcon
-                  v-if="password.totpEnabled"
-                  class="h-4 w-4 text-blue-500"
-                />
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 truncate">{{ password.name }}</h3>
+                <div class="flex space-x-1">
+                  <HeartIcon
+                    v-if="password.isFavorite"
+                    class="h-4 w-4 text-red-500 flex-shrink-0"
+                  />
+                  <KeyIcon
+                    v-if="password.totpEnabled"
+                    class="h-4 w-4 text-blue-500 flex-shrink-0"
+                  />
+                </div>
               </div>
               
-              <p v-if="password.website" class="text-sm text-gray-600 mt-1">
+              <p v-if="password.website" class="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">
                 {{ password.website }}
               </p>
               
-              <p v-if="password.username" class="text-sm text-gray-500 mt-1">
+              <p v-if="password.username" class="text-sm text-gray-500 dark:text-gray-500 mt-1 truncate">
                 @{{ password.username }}
               </p>
               
-              <p v-if="password.folder" class="text-xs text-gray-400 mt-2">
+              <p v-if="password.folder" class="text-xs text-gray-400 dark:text-gray-500 mt-2 truncate">
                 📁 {{ password.folder }}
               </p>
             </div>
             
-            <div class="flex flex-col space-y-1">
+            <div class="flex flex-col space-y-1 ml-2">
               <button
                 @click.stop="copyPassword(password)"
-                class="text-gray-400 hover:text-gray-600"
+                class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
                 title="Copiar senha"
               >
                 <ClipboardIcon class="h-4 w-4" />
@@ -227,7 +250,7 @@
               
               <button
                 @click.stop="toggleFavorite(password)"
-                class="text-gray-400 hover:text-red-500"
+                class="text-gray-400 dark:text-gray-500 hover:text-red-500 p-1"
                 :class="{ 'text-red-500': password.isFavorite }"
                 title="Marcar como favorita"
               >
@@ -239,23 +262,23 @@
       </div>
 
       <!-- Paginação -->
-      <div v-if="passwordsStore.pagination.total > passwordsStore.pagination.limit" class="mt-8">
-        <div class="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-          <div class="text-sm text-gray-700">
+      <div v-if="passwordsStore.pagination.total > passwordsStore.pagination.limit" class="mt-6 sm:mt-8">
+        <div class="flex flex-col sm:flex-row items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 gap-4">
+          <div class="text-sm text-gray-700 dark:text-gray-300 text-center sm:text-left">
             Mostrando {{ passwordsStore.pagination.offset + 1 }} a {{ Math.min(passwordsStore.pagination.offset + passwordsStore.pagination.limit, passwordsStore.pagination.total) }} de {{ passwordsStore.pagination.total }} senhas
           </div>
           <div class="flex space-x-2">
             <button
               @click="passwordsStore.fetchPasswords({ offset: passwordsStore.pagination.offset - passwordsStore.pagination.limit })"
               :disabled="passwordsStore.pagination.offset === 0"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ← Anterior
             </button>
             <button
               @click="passwordsStore.fetchPasswords({ offset: passwordsStore.pagination.offset + passwordsStore.pagination.limit })"
               :disabled="passwordsStore.pagination.offset + passwordsStore.pagination.limit >= passwordsStore.pagination.total"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Próximo →
             </button>
@@ -265,9 +288,9 @@
 
       <!-- Empty State -->
       <div v-if="filteredPasswords.length === 0" class="text-center py-12">
-        <LockClosedIcon class="mx-auto h-12 w-12 text-gray-400" />
-        <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma senha encontrada</h3>
-        <p class="mt-1 text-sm text-gray-500">
+        <LockClosedIcon class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">Nenhuma senha encontrada</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
           {{ passwordsStore.totalCount === 0 ? 'Comece criando sua primeira senha.' : 'Tente ajustar os filtros de busca.' }}
         </p>
         <div class="mt-6">
@@ -305,7 +328,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import {
@@ -326,6 +349,7 @@ import { useAuthStore } from '@/stores/auth'
 import { usePasswordsStore } from '@/stores/passwords'
 import { BaseButton, BaseInput, BaseCard, ThemeToggle, Logo } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
+import { copyToClipboard } from '@/utils/clipboard'
 
 // Components
 import CreatePasswordModal from '@/components/passwords/CreatePasswordModal.vue'
@@ -353,28 +377,8 @@ const totpEnabledCount = computed(() => {
   return passwordsStore.allTotpEnabledPasswords.length
 })
 
-const filteredPasswords = computed(() => {
-  let filtered = passwordsStore.searchResults
-
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(p =>
-      p.name.toLowerCase().includes(query) ||
-      p.website?.toLowerCase().includes(query) ||
-      p.username?.toLowerCase().includes(query)
-    )
-  }
-
-  if (selectedFolder.value) {
-    filtered = filtered.filter(p => p.folder === selectedFolder.value)
-  }
-
-  if (showOnlyFavorites.value) {
-    filtered = filtered.filter(p => p.isFavorite)
-  }
-
-  return filtered
-})
+// Usar diretamente os resultados do store (já filtrados pelo backend)
+const filteredPasswords = computed(() => passwordsStore.searchResults)
 
 // Methods
 const refreshPasswords = async () => {
@@ -390,17 +394,47 @@ const refreshPasswords = async () => {
   }
 }
 
-const handleSearch = () => {
-  passwordsStore.setSearchFilters({ query: searchQuery.value })
+// Debounce para busca
+let searchTimeout: number | null = null
+
+const handleSearch = async () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  
+  searchTimeout = setTimeout(async () => {
+    try {
+      await passwordsStore.fetchPasswords({ 
+        query: searchQuery.value,
+        offset: 0 // Resetar para primeira página ao buscar
+      })
+    } catch (error) {
+      toast.error('Erro ao buscar senhas')
+    }
+  }, 500) // 500ms de debounce
 }
 
-const handleFolderFilter = () => {
-  passwordsStore.setSearchFilters({ folder: selectedFolder.value })
+const handleFolderFilter = async () => {
+  try {
+    await passwordsStore.fetchPasswords({ 
+      folder: selectedFolder.value,
+      offset: 0 // Resetar para primeira página ao filtrar
+    })
+  } catch (error) {
+    toast.error('Erro ao filtrar senhas')
+  }
 }
 
-const toggleFavorites = () => {
+const toggleFavorites = async () => {
   showOnlyFavorites.value = !showOnlyFavorites.value
-  passwordsStore.setSearchFilters({ isFavorite: showOnlyFavorites.value })
+  try {
+    await passwordsStore.fetchPasswords({ 
+      isFavorite: showOnlyFavorites.value,
+      offset: 0 // Resetar para primeira página ao filtrar
+    })
+  } catch (error) {
+    toast.error('Erro ao filtrar favoritos')
+  }
 }
 
 const viewPassword = (password: PasswordEntry) => {
@@ -409,21 +443,36 @@ const viewPassword = (password: PasswordEntry) => {
 }
 
 const copyPassword = async (password: PasswordEntry) => {
-  try {
-    await navigator.clipboard.writeText(password.password)
-    toast.success('Senha copiada!')
-  } catch (error) {
-    toast.error('Erro ao copiar senha')
+  const result = await copyToClipboard(password.password)
+  if (result.success) {
+    toast.success(result.message)
+  } else {
+    toast.error(result.message)
   }
 }
 
 const toggleFavorite = async (password: PasswordEntry) => {
   try {
+    const newFavoriteStatus = !password.isFavorite
     await passwordsStore.updatePassword(password.id, {
-      isFavorite: !password.isFavorite
+      id: password.id,
+      isFavorite: newFavoriteStatus
     })
-    toast.success(password.isFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos')
+    
+    // Atualizar a senha na lista local para refletir a mudança imediatamente
+    const index = passwordsStore.passwords.findIndex(p => p.id === password.id)
+    if (index !== -1) {
+      passwordsStore.passwords[index].isFavorite = newFavoriteStatus
+    }
+    
+    // Atualizar estatísticas se necessário
+    if (passwordsStore.statsLoaded) {
+      await passwordsStore.loadCompleteStats()
+    }
+    
+    toast.success(newFavoriteStatus ? 'Adicionado aos favoritos' : 'Removido dos favoritos')
   } catch (error) {
+    console.error('Erro ao atualizar favorito:', error)
     toast.error('Erro ao atualizar favorito')
   }
 }
@@ -460,6 +509,11 @@ const handlePasswordDeleted = () => {
   showDetailModal.value = false
   refreshPasswords()
 }
+
+// Watchers
+watch(searchQuery, () => {
+  handleSearch()
+})
 
 // Lifecycle
 onMounted(async () => {

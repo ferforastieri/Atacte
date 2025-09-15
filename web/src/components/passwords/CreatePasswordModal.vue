@@ -1,13 +1,13 @@
 <template>
   <BaseModal :show="show" @close="$emit('close')" size="lg">
     <template #header>
-      <h3 class="text-lg font-semibold text-gray-900">Nova Senha</h3>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Nova Senha</h3>
     </template>
 
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <!-- Nome/Title -->
       <div>
-        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Nome *
         </label>
         <BaseInput
@@ -22,7 +22,7 @@
 
       <!-- Website -->
       <div>
-        <label for="website" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="website" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Website
         </label>
         <BaseInput
@@ -36,7 +36,7 @@
 
       <!-- Username/Email -->
       <div>
-        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Username/Email
         </label>
         <BaseInput
@@ -51,7 +51,7 @@
       <!-- Senha -->
       <div>
         <div class="flex justify-between items-center mb-1">
-          <label for="password" class="block text-sm font-medium text-gray-700">
+          <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Senha *
           </label>
           <button
@@ -88,7 +88,7 @@
 
       <!-- Pasta -->
       <div>
-        <label for="folder" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="folder" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Pasta
         </label>
         <BaseInput
@@ -102,38 +102,38 @@
 
       <!-- Notas -->
       <div>
-        <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Notas
         </label>
         <textarea
           id="notes"
           v-model="form.notes"
           rows="3"
-          class="input-field w-full"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500"
           placeholder="Informações adicionais sobre esta senha..."
-          :class="{ 'border-red-300': errors.notes }"
+          :class="{ 'border-red-300 dark:border-red-600': errors.notes }"
         ></textarea>
-        <p v-if="errors.notes" class="mt-1 text-sm text-red-600">{{ errors.notes }}</p>
+        <p v-if="errors.notes" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.notes }}</p>
       </div>
 
       <!-- TOTP Section -->
-      <div class="border-t pt-6">
+      <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
         <div class="flex items-center justify-between mb-4">
-          <h4 class="text-md font-medium text-gray-900">Autenticação de Dois Fatores (TOTP)</h4>
+          <h4 class="text-md font-medium text-gray-900 dark:text-gray-100">Autenticação de Dois Fatores (TOTP)</h4>
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
               v-model="form.totpEnabled"
               class="sr-only peer"
             />
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+            <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
           </label>
         </div>
 
         <div v-if="form.totpEnabled" class="space-y-4">
           <!-- TOTP Secret -->
           <div>
-            <label for="totpSecret" class="block text-sm font-medium text-gray-700 mb-1">
+            <label for="totpSecret" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Chave Secreta TOTP
             </label>
             <div class="flex space-x-2">
@@ -148,27 +148,27 @@
               <button
                 type="button"
                 @click="generateTotpSecret"
-                class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md border border-gray-300"
+                class="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600"
               >
                 Gerar
               </button>
             </div>
-            <p class="mt-1 text-xs text-gray-500">
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Cole a chave secreta do seu app autenticador (Google Authenticator, Authy, etc.)
             </p>
           </div>
 
           <!-- TOTP QR Code -->
           <div v-if="totpQrCode" class="text-center">
-            <p class="text-sm text-gray-600 mb-2">Escaneie com seu app autenticador:</p>
-            <div class="inline-block p-4 bg-white rounded-lg border">
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Escaneie com seu app autenticador:</p>
+            <div class="inline-block p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
               <img :src="totpQrCode" alt="QR Code TOTP" class="w-32 h-32" />
             </div>
           </div>
 
           <!-- Test TOTP -->
           <div v-if="form.totpSecret" class="space-y-2">
-            <label for="totpTest" class="block text-sm font-medium text-gray-700">
+            <label for="totpTest" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Teste o código TOTP
             </label>
             <div class="flex space-x-2">
@@ -184,12 +184,12 @@
                 type="button"
                 @click="testTotpCode"
                 :disabled="!totpTestCode || totpTestCode.length !== 6"
-                class="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300"
+                class="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600"
               >
                 Testar
               </button>
             </div>
-            <p v-if="totpTestResult" class="text-sm" :class="totpTestResult.success ? 'text-green-600' : 'text-red-600'">
+            <p v-if="totpTestResult" class="text-sm" :class="totpTestResult.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
               {{ totpTestResult.message }}
             </p>
           </div>
@@ -202,9 +202,9 @@
           id="isFavorite"
           v-model="form.isFavorite"
           type="checkbox"
-          class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+          class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
         />
-        <label for="isFavorite" class="ml-2 block text-sm text-gray-700">
+        <label for="isFavorite" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
           Marcar como favorita
         </label>
       </div>
@@ -401,17 +401,34 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   
   try {
-    await passwordsStore.createPassword({
+    const passwordData: any = {
       name: form.value.name.trim(),
-      website: form.value.website.trim() || undefined,
-      username: form.value.username.trim() || undefined,
       password: form.value.password,
-      folder: form.value.folder.trim() || undefined,
-      notes: form.value.notes.trim() || undefined,
       totpEnabled: form.value.totpEnabled,
-      totpSecret: form.value.totpEnabled ? form.value.totpSecret.trim() : undefined,
       isFavorite: form.value.isFavorite
-    })
+    }
+    
+    if (form.value.website.trim()) {
+      passwordData.website = form.value.website.trim()
+    }
+    
+    if (form.value.username.trim()) {
+      passwordData.username = form.value.username.trim()
+    }
+    
+    if (form.value.folder.trim()) {
+      passwordData.folder = form.value.folder.trim()
+    }
+    
+    if (form.value.notes.trim()) {
+      passwordData.notes = form.value.notes.trim()
+    }
+    
+    if (form.value.totpEnabled && form.value.totpSecret.trim()) {
+      passwordData.totpSecret = form.value.totpSecret.trim()
+    }
+    
+    await passwordsStore.createPassword(passwordData)
     
     toast.success('Senha criada com sucesso!')
     emit('created')

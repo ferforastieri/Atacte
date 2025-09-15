@@ -3,7 +3,7 @@
     <label 
       v-if="label" 
       :for="inputId"
-      class="block text-sm font-medium text-gray-700"
+      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       {{ label }}
       <span v-if="required" class="text-red-500 ml-1">*</span>
@@ -24,8 +24,8 @@
       />
       
       <!-- Ícone à esquerda -->
-      <div v-if="leftIcon" class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <component :is="leftIcon" class="h-4 w-4 text-gray-400" />
+      <div v-if="leftIcon" class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+        <component :is="leftIcon" class="h-4 w-4 text-gray-400 dark:text-gray-500" />
       </div>
       
       <!-- Ícone à direita -->
@@ -33,7 +33,7 @@
         <button
           v-if="showPasswordToggle"
           type="button"
-          class="text-gray-400 hover:text-gray-600 focus:outline-none"
+          class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
           @click="togglePasswordVisibility"
         >
           <component 
@@ -44,16 +44,16 @@
         <component 
           v-else-if="rightIcon" 
           :is="rightIcon" 
-          class="h-4 w-4 text-gray-400" 
+          class="h-4 w-4 text-gray-400 dark:text-gray-500" 
         />
       </div>
     </div>
     
-    <p v-if="error" class="text-sm text-red-600">
+    <p v-if="error" class="text-sm text-red-600 dark:text-red-400">
       {{ error }}
     </p>
     
-    <p v-else-if="help" class="text-sm text-gray-500">
+    <p v-else-if="help" class="text-sm text-gray-500 dark:text-gray-400">
       {{ help }}
     </p>
   </div>
@@ -104,19 +104,19 @@ const inputType = computed(() => {
 })
 
 const inputClasses = computed(() => {
-  const baseClasses = 'block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500'
+  const baseClasses = 'block w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400'
   
   const sizeClasses = props.leftIcon || props.rightIcon || props.showPasswordToggle 
-    ? 'pl-10 pr-10' 
+    ? 'pl-8 pr-10' 
     : 'px-3'
   
   const errorClasses = props.error 
-    ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+    ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500' 
     : ''
   
   const readonlyClasses = props.readonly 
-    ? 'bg-gray-50 cursor-not-allowed' 
-    : 'bg-white'
+    ? 'bg-gray-50 dark:bg-gray-700 cursor-not-allowed' 
+    : 'bg-white dark:bg-gray-800'
   
   return [
     baseClasses,

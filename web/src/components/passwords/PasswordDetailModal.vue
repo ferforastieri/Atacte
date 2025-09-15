@@ -1,38 +1,38 @@
 <template>
   <BaseModal :show="show" @close="$emit('close')" size="lg">
     <template #header>
-      <h3 class="text-lg font-semibold text-gray-900">{{ password?.name || 'Detalhes da Senha' }}</h3>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ password?.name || 'Detalhes da Senha' }}</h3>
     </template>
 
     <div v-if="password" class="space-y-6">
       <!-- Informações básicas -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-          <p class="text-sm text-gray-900">{{ password.name }}</p>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
+          <p class="text-sm text-gray-900 dark:text-gray-100">{{ password.name }}</p>
         </div>
         
         <div v-if="password.website">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
-          <a :href="password.website" target="_blank" class="text-sm text-primary-600 hover:text-primary-700">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Website</label>
+          <a :href="password.website" target="_blank" class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
             {{ password.website }}
           </a>
         </div>
         
         <div v-if="password.username">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-          <p class="text-sm text-gray-900">{{ password.username }}</p>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
+          <p class="text-sm text-gray-900 dark:text-gray-100">{{ password.username }}</p>
         </div>
         
         <div v-if="password.folder">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Pasta</label>
-          <p class="text-sm text-gray-900">📁 {{ password.folder }}</p>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pasta</label>
+          <p class="text-sm text-gray-900 dark:text-gray-100">📁 {{ password.folder }}</p>
         </div>
       </div>
 
       <!-- Senha -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha</label>
         <div class="flex items-center space-x-2">
           <BaseInput
             v-model="passwordValue"
@@ -52,7 +52,7 @@
 
       <!-- TOTP -->
       <div v-if="password.totpEnabled">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Código TOTP</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Código TOTP</label>
         <TotpCode 
           :code="totpCode?.code"
           :time-remaining="totpCode?.timeRemaining"
@@ -63,8 +63,8 @@
 
       <!-- Notas -->
       <div v-if="password.notes">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
-        <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ password.notes }}</p>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notas</label>
+        <p class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{{ password.notes }}</p>
       </div>
 
       <!-- Status -->
@@ -130,6 +130,7 @@ import { HeartIcon, KeyIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, TotpCode, ConfirmModal } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 import { usePasswordsStore } from '@/stores/passwords'
+import { copyToClipboard } from '@/utils/clipboard'
 import EditPasswordModal from './EditPasswordModal.vue'
 
 interface Props {
@@ -158,11 +159,11 @@ const showDeleteConfirm = ref(false)
 const copyPassword = async () => {
   if (!props.password) return
   
-  try {
-    await navigator.clipboard.writeText(props.password.password)
-    toast.success('Senha copiada!')
-  } catch (error) {
-    toast.error('Erro ao copiar senha')
+  const result = await copyToClipboard(props.password.password)
+  if (result.success) {
+    toast.success(result.message)
+  } else {
+    toast.error(result.message)
   }
 }
 

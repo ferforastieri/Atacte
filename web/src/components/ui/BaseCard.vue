@@ -1,6 +1,6 @@
 <template>
   <div :class="cardClasses">
-    <div v-if="$slots.header" class="px-6 py-4 border-b border-gray-200">
+    <div v-if="$slots.header" class="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
       <slot name="header" />
     </div>
     
@@ -8,7 +8,7 @@
       <slot />
     </div>
     
-    <div v-if="$slots.footer" class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+    <div v-if="$slots.footer" class="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
       <slot name="footer" />
     </div>
   </div>
@@ -30,16 +30,16 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const cardClasses = computed(() => {
-  const baseClasses = 'bg-white rounded-lg overflow-hidden'
+  const baseClasses = 'bg-white dark:bg-gray-800 rounded-lg overflow-hidden transition-colors duration-200'
   
   const variantClasses = {
-    default: 'shadow-sm border border-gray-200',
-    elevated: 'shadow-lg border border-gray-100',
-    outlined: 'border-2 border-gray-200'
+    default: 'shadow-sm border border-gray-200 dark:border-gray-700',
+    elevated: 'shadow-lg border border-gray-100 dark:border-gray-600',
+    outlined: 'border-2 border-gray-200 dark:border-gray-700'
   }
   
   const hoverClasses = props.hover 
-    ? 'transition-shadow duration-200 hover:shadow-md' 
+    ? 'transition-all duration-200 hover:shadow-md dark:hover:shadow-lg' 
     : ''
   
   return [
@@ -52,9 +52,9 @@ const cardClasses = computed(() => {
 const bodyClasses = computed(() => {
   const paddingClasses = {
     none: '',
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8'
+    sm: 'p-3 sm:p-4',
+    md: 'p-4 sm:p-6',
+    lg: 'p-6 sm:p-8'
   }
   
   return paddingClasses[props.padding]

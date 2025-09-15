@@ -7,9 +7,9 @@
         <h2 class="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
           Entre na sua conta
         </h2>
-        <p class="mt-2 text-sm text-gray-600">
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
           Ou
-          <router-link to="/register" class="font-medium text-primary-600 hover:text-primary-500">
+          <router-link to="/register" class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
             crie uma nova conta
           </router-link>
         </p>
@@ -49,7 +49,7 @@
 
           <div class="flex items-center justify-between">
             <div class="text-sm">
-              <a href="#" class="font-medium text-primary-600 hover:text-primary-500">
+              <a href="#" class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
                 Esqueceu sua senha?
               </a>
             </div>
@@ -67,19 +67,6 @@
         </form>
       </BaseCard>
 
-      <!-- Demo Info -->
-      <BaseCard variant="outlined" class="bg-blue-50 border-blue-200">
-        <div class="text-center">
-          <h3 class="text-sm font-medium text-blue-800">Demonstração</h3>
-          <p class="mt-1 text-sm text-blue-600">
-            Use estas credenciais para testar:
-          </p>
-          <div class="mt-2 text-xs text-blue-500 font-mono">
-            Email: admin@atacte.com<br>
-            Senha: MasterPassword123!
-          </div>
-        </div>
-      </BaseCard>
     </div>
   </div>
 </template>
@@ -132,11 +119,5 @@ const handleLogin = async () => {
   }
 }
 
-// Preencher dados de demo
-const fillDemoData = () => {
-  form.email = 'admin@atacte.com'
-  form.masterPassword = 'MasterPassword123!'
-  form.deviceName = 'Demo Web'
-}
 </script>
 

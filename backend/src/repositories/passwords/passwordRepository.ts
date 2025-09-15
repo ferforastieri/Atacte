@@ -48,6 +48,8 @@ export interface SearchFilters {
   totpEnabled?: boolean;
   limit?: number;
   offset?: number;
+  sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'lastUsed';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface PaginationResult {
@@ -130,15 +132,20 @@ export class PasswordRepository {
     const limit = filters.limit || 50;
     const offset = filters.offset || 0;
 
+    // Configurar ordenação
+    const sortBy = filters.sortBy || 'name';
+    const sortOrder = filters.sortOrder || 'asc';
+    
+    const orderBy: any = {};
+    orderBy[sortBy] = sortOrder;
+
     const [items, total] = await Promise.all([
       prisma.passwordEntry.findMany({
         where,
         include: {
           customFields: true,
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy,
         take: limit,
         skip: offset,
       }),

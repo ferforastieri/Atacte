@@ -106,8 +106,8 @@ watch(() => props.show, (show) => {
 }
 
 .modal-container {
-  @apply bg-white rounded-lg shadow-xl max-h-full overflow-hidden flex flex-col;
-  width: 90vw;
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl max-h-full overflow-hidden flex flex-col;
+  width: 95vw;
   max-width: 32rem;
 }
 
@@ -124,23 +124,23 @@ watch(() => props.show, (show) => {
 }
 
 .modal-header {
-  @apply flex items-center justify-between p-6 border-b border-gray-200;
+  @apply flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700;
 }
 
 .modal-title {
-  @apply text-lg font-semibold text-gray-900;
+  @apply text-lg font-semibold text-gray-900 dark:text-gray-100;
 }
 
 .modal-close {
-  @apply text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600;
+  @apply text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:text-gray-600 dark:focus:text-gray-300;
 }
 
 .modal-body {
-  @apply p-6 overflow-y-auto flex-1;
+  @apply p-4 sm:p-6 overflow-y-auto flex-1;
 }
 
 .modal-footer {
-  @apply flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50;
+  @apply flex items-center justify-end space-x-3 p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800;
 }
 
 /* Transições */

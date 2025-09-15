@@ -70,7 +70,7 @@
                   <div class="flex items-center space-x-2">
                     <p class="text-gray-900">{{ password.username }}</p>
                     <button
-                      @click="copyToClipboard(password.username)"
+                      @click="handleCopyToClipboard(password.username)"
                       class="text-gray-400 hover:text-gray-600"
                     >
                       <ClipboardIcon class="h-4 w-4" />
@@ -104,7 +104,7 @@
                   <BaseButton
                     variant="ghost"
                     size="sm"
-                    @click="copyToClipboard(password.password)"
+                    @click="handleCopyToClipboard(password.password)"
                   >
                     <ClipboardIcon class="w-4 h-4 mr-1" />
                     Copiar
@@ -171,7 +171,7 @@
                   </div>
                   
                   <button
-                    @click="copyToClipboard(field.value)"
+                    @click="handleCopyToClipboard(field.value)"
                     class="text-gray-400 hover:text-gray-600 ml-2"
                   >
                     <ClipboardIcon class="h-4 w-4" />
@@ -199,7 +199,7 @@
               <BaseButton
                 variant="primary"
                 class="w-full justify-start"
-                @click="copyToClipboard(password.password)"
+                @click="handleCopyToClipboard(password.password)"
               >
                 <ClipboardIcon class="w-4 h-4 mr-2" />
                 Copiar Senha
@@ -209,7 +209,7 @@
                 v-if="password.username"
                 variant="secondary"
                 class="w-full justify-start"
-                @click="copyToClipboard(password.username)"
+                @click="handleCopyToClipboard(password.username)"
               >
                 <UserIcon class="w-4 h-4 mr-2" />
                 Copiar Usuário
@@ -295,6 +295,7 @@ import {
 import { usePasswordsStore } from '@/stores/passwords'
 import { BaseButton, BaseCard, TotpCode } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
+import { copyToClipboard } from '@/utils/clipboard'
 
 // Components (serão criados depois)
 // import EditPasswordModal from '@/components/passwords/EditPasswordModal.vue'
@@ -318,12 +319,12 @@ const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value
 }
 
-const copyToClipboard = async (text: string) => {
-  try {
-    await navigator.clipboard.writeText(text)
-    toast.success('Copiado!')
-  } catch (error) {
-    toast.error('Erro ao copiar')
+const handleCopyToClipboard = async (text: string) => {
+  const result = await copyToClipboard(text)
+  if (result.success) {
+    toast.success(result.message)
+  } else {
+    toast.error(result.message)
   }
 }
 
@@ -332,6 +333,7 @@ const toggleFavorite = async () => {
   
   try {
     await passwordsStore.updatePassword(password.value.id, {
+      id: password.value.id,
       isFavorite: !password.value.isFavorite
     })
     toast.success(password.value.isFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos')

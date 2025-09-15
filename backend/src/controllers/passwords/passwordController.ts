@@ -87,15 +87,12 @@ const createPasswordValidation = [
         try {
           const speakeasy = require('speakeasy');
           const cleanSecret = value.replace(/\s/g, '').toUpperCase();
-          console.log('🔍 Validando chave TOTP:', cleanSecret);
           const testCode = speakeasy.totp({
             secret: cleanSecret,
             encoding: 'base32',
             step: 30
           });
-          console.log('🔍 Código de teste gerado:', testCode);
         } catch (error) {
-          console.log('🔍 Erro ao validar chave TOTP:', error);
           throw new Error('Chave TOTP inválida. Verifique se a chave está correta.');
         }
       }
@@ -142,7 +139,7 @@ router.get('/', searchValidation, async (req: Request<{}, {}, {}, SearchQuery>, 
     const filters = {
       query: req.query.query,
       folder: req.query.folder,
-      isFavorite: req.query.isFavorite === 'true',
+      isFavorite: req.query.isFavorite ? req.query.isFavorite === 'true' : undefined,
       totpEnabled: req.query.totpEnabled ? req.query.totpEnabled === 'true' : undefined,
       limit: parseInt(req.query.limit || '50'),
       offset: parseInt(req.query.offset || '0'),
@@ -230,7 +227,7 @@ router.post('/', createPasswordValidation, async (req: Request<{}, {}, CreatePas
 });
 
 // PUT /api/passwords/:id - Atualizar senha
-router.put('/:id', createPasswordValidation, async (req: Request<{id: string}, {}, UpdatePasswordRequest>, res: Response) => {
+router.put('/:id', async (req: Request<{id: string}, {}, UpdatePasswordRequest>, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
