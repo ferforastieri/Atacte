@@ -10,21 +10,20 @@ interface LoginScreenProps {
 
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [masterPassword, setMasterPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [name, setName] = useState('');
   const { showSuccess, showError } = useToast();
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!email || !masterPassword) {
       showError('Por favor, preencha todos os campos');
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await authService.login({ email, password });
+      const response = await authService.login({ email, masterPassword });
       
       if (response.success) {
         showSuccess('Login realizado com sucesso!');
@@ -40,14 +39,14 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
   };
 
   const handleRegister = async () => {
-    if (!name || !email || !password) {
+    if (!email || !masterPassword) {
       showError('Por favor, preencha todos os campos');
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await authService.register({ name, email, password });
+      const response = await authService.register({ email, masterPassword });
       
       if (response.success) {
         showSuccess('Conta criada com sucesso!');
@@ -74,15 +73,6 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
           {isRegisterMode ? 'Criar Conta' : 'Fazer Login'}
         </Text>
 
-        {isRegisterMode && (
-          <Input
-            label="Nome"
-            placeholder="Seu nome completo"
-            value={name}
-            onChangeText={setName}
-          />
-        )}
-
         <Input
           label="Email"
           placeholder="seu@email.com"
@@ -92,10 +82,10 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
         />
 
         <Input
-          label="Senha"
-          placeholder="Sua senha"
-          value={password}
-          onChangeText={setPassword}
+          label="Senha Mestra"
+          placeholder="Sua senha mestra"
+          value={masterPassword}
+          onChangeText={setMasterPassword}
           secureTextEntry
         />
 
