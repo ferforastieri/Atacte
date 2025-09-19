@@ -17,14 +17,15 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   size = 'md',
 }) => {
-  const getModalSize = () => {
+  const getModalStyle = () => {
+    const baseStyle = styles.modal;
     switch (size) {
       case 'sm':
-        return { width: '80%', maxHeight: '60%' };
+        return [baseStyle, styles.modalSm];
       case 'lg':
-        return { width: '95%', maxHeight: '90%' };
+        return [baseStyle, styles.modalLg];
       default:
-        return { width: '90%', maxHeight: '80%' };
+        return [baseStyle, styles.modalMd];
     }
   };
 
@@ -36,7 +37,7 @@ export const Modal: React.FC<ModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={[styles.modal, getModalSize()]}>
+        <View style={getModalStyle()}>
           <View style={styles.header}>
             <Text style={styles.title}>{title}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -63,7 +64,23 @@ const styles = StyleSheet.create({
   modal: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  modalSm: {
+    width: '80%',
+    maxHeight: '60%',
+  },
+  modalMd: {
+    width: '90%',
     maxHeight: '80%',
+  },
+  modalLg: {
+    width: '95%',
+    maxHeight: '90%',
   },
   header: {
     flexDirection: 'row',
@@ -76,7 +93,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#111827',
   },
   closeButton: {
     padding: 4,

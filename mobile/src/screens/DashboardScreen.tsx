@@ -207,7 +207,7 @@ export default function DashboardScreen({ onLogout }: DashboardScreenProps) {
                   <Ionicons
                     name={password.isFavorite ? 'heart' : 'heart-outline'}
                     size={20}
-                    color={password.isFavorite ? '#ef4444' : '#6b7280'}
+                    color={password.isFavorite ? '#dc2626' : '#6b7280'}
                   />
                 </TouchableOpacity>
               </View>
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#111827',
   },
   subtitle: {
     fontSize: 16,
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#111827',
   },
   statLabel: {
     fontSize: 12,
@@ -346,11 +346,11 @@ const styles = StyleSheet.create({
   passwordName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#111827',
   },
   passwordWebsite: {
     fontSize: 14,
-    color: '#3b82f6',
+    color: '#16a34a',
     marginTop: 2,
   },
   passwordUsername: {

@@ -38,13 +38,13 @@ export const Button: React.FC<ButtonProps> = ({
 
     const variantStyles: Record<string, ViewStyle> = {
       primary: {
-        backgroundColor: '#3b82f6',
+        backgroundColor: '#16a34a',
       },
       secondary: {
-        backgroundColor: '#6b7280',
+        backgroundColor: '#e5e7eb',
       },
       danger: {
-        backgroundColor: '#ef4444',
+        backgroundColor: '#dc2626',
       },
       ghost: {
         backgroundColor: 'transparent',
@@ -74,7 +74,7 @@ export const Button: React.FC<ButtonProps> = ({
 
     const variantStyles: Record<string, TextStyle> = {
       primary: { color: '#ffffff' },
-      secondary: { color: '#ffffff' },
+      secondary: { color: '#111827' },
       danger: { color: '#ffffff' },
       ghost: { color: '#374151' },
     };

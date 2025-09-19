@@ -59,7 +59,7 @@ export const Input: React.FC<InputProps> = ({
           style={[{
             flex: 1,
             borderWidth: 1,
-            borderColor: error ? '#ef4444' : '#d1d5db',
+            borderColor: error ? '#dc2626' : '#d1d5db',
             borderRadius: 8,
             paddingHorizontal: 12,
             paddingVertical: 12,
@@ -101,7 +101,7 @@ export const Input: React.FC<InputProps> = ({
       {error && (
         <Text style={{
           fontSize: 12,
-          color: '#ef4444',
+          color: '#dc2626',
           marginTop: 4,
         }}>
           {error}

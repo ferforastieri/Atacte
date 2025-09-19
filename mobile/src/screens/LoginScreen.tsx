@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Alert, StyleSheet } from 'react-native';
-import { Button, Input, Card } from '../components/shared';
+import { Button, Input, Card, Logo } from '../components/shared';
 import { authService } from '../services/auth/authService';
 import { useToast } from '../hooks/useToast';
 
@@ -65,7 +65,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.title}>Atacte</Text>
+        <Logo size={48} showText={true} textSize={32} />
         <Text style={styles.subtitle}>Gerenciador de Senhas</Text>
       </View>
 
@@ -131,12 +131,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 8,
-  },
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
@@ -147,7 +141,7 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#111827',
     textAlign: 'center',
     marginBottom: 24,
   },

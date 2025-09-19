@@ -26,10 +26,12 @@ export const Card: React.FC<CardProps> = ({
         shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 1,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
       },
       outlined: {
         backgroundColor: '#ffffff',
-        borderWidth: 1,
+        borderWidth: 2,
         borderColor: '#e5e7eb',
       },
       elevated: {
@@ -39,6 +41,8 @@ export const Card: React.FC<CardProps> = ({
         shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 4,
+        borderWidth: 1,
+        borderColor: '#f3f4f6',
       },
     };
 
