@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { Logo } from './Logo';
 
 interface HeaderProps {
@@ -14,9 +15,10 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ 
   title, 
   showThemeToggle = true, 
-  onThemeToggle 
+  onThemeToggle
 }) => {
   const { isDark } = useTheme();
+  const { logout } = useAuth();
 
   const styles = StyleSheet.create({
     container: {
@@ -61,6 +63,12 @@ export const Header: React.FC<HeaderProps> = ({
       padding: 8,
       borderRadius: 8,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      marginRight: 8,
+    },
+    logoutButton: {
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
     },
   });
 
@@ -87,6 +95,16 @@ export const Header: React.FC<HeaderProps> = ({
               />
             </TouchableOpacity>
           )}
+          <TouchableOpacity 
+            style={styles.logoutButton}
+            onPress={logout}
+          >
+            <Ionicons 
+              name="log-out-outline" 
+              size={20} 
+              color="#dc2626" 
+            />
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>

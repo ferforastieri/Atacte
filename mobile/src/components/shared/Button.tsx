@@ -41,13 +41,15 @@ export const Button: React.FC<ButtonProps> = ({
 
     const variantStyles: Record<string, ViewStyle> = {
       primary: {
-        backgroundColor: '#16a34a',
+        backgroundColor: '#16a34a', // Verde para ações principais (criar, editar)
       },
       secondary: {
-        backgroundColor: isDark ? '#374151' : '#e5e7eb',
+        backgroundColor: isDark ? '#374151' : '#ffffff',
+        borderWidth: 1,
+        borderColor: isDark ? '#4b5563' : '#d1d5db',
       },
       danger: {
-        backgroundColor: '#dc2626',
+        backgroundColor: '#dc2626', // Vermelho para excluir
       },
       ghost: {
         backgroundColor: 'transparent',

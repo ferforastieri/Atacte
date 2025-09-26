@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Header } from '../components/shared';
+import { Card, Header, Button } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
 import { passwordService } from '../services/passwords/passwordService';
 import { useTheme } from '../contexts/ThemeContext';
@@ -176,22 +176,6 @@ export default function ProfileScreen() {
       color: isDark ? '#f9fafb' : '#111827',
       marginLeft: 12,
     },
-    logoutButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 16,
-      paddingHorizontal: 16,
-      borderRadius: 12,
-      backgroundColor: '#ef4444',
-      marginTop: 20,
-    },
-    logoutButtonText: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: '#ffffff',
-      marginLeft: 8,
-    },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -293,11 +277,6 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </Card>
 
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={24} color="#ffffff" />
-          <Text style={styles.logoutButtonText}>Sair</Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );

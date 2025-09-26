@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Header } from '../components/shared';
+import { Card, Header, TotpCode, Button } from '../components/shared';
 import { passwordService } from '../services/passwords/passwordService';
+import { totpService } from '../services/totp/totpService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import * as Clipboard from 'expo-clipboard';
@@ -38,12 +39,20 @@ export default function PasswordDetailScreen() {
   const [password, setPassword] = useState<PasswordEntry | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [totpCode, setTotpCode] = useState<{ code: string; timeRemaining: number; period: number } | null>(null);
+  const [isLoadingTotp, setIsLoadingTotp] = useState(false);
   const { showSuccess, showError } = useToast();
   const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     loadPassword();
   }, [passwordId]);
+
+  useEffect(() => {
+    if (password?.totpEnabled) {
+      loadTotpCode();
+    }
+  }, [password?.totpEnabled]);
 
   const loadPassword = async () => {
     try {
@@ -59,6 +68,32 @@ export default function PasswordDetailScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const loadTotpCode = async () => {
+    if (!password?.totpEnabled) return;
+    
+    setIsLoadingTotp(true);
+    try {
+      const response = await totpService.getTotpCode(passwordId);
+      if (response.success && response.data) {
+        setTotpCode(response.data);
+      } else {
+        showError(response.message || 'Erro ao carregar código TOTP');
+      }
+    } catch (error) {
+      showError('Erro ao carregar código TOTP');
+    } finally {
+      setIsLoadingTotp(false);
+    }
+  };
+
+  const refreshTotpCode = async () => {
+    await loadTotpCode();
+  };
+
+  const handleTotpCopy = () => {
+    showSuccess('Código TOTP copiado!');
   };
 
   const copyToClipboard = async (text: string, label: string) => {
@@ -201,6 +236,14 @@ export default function PasswordDetailScreen() {
       textAlign: 'right',
       fontFamily: 'monospace',
     },
+    actionsContainer: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 20,
+    },
+    actionButton: {
+      flex: 1,
+    },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -216,7 +259,6 @@ export default function PasswordDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Header title="Detalhes da Senha" onThemeToggle={toggleTheme} />
         <View style={styles.loadingContainer}>
           <Ionicons name="key-outline" size={48} color={isDark ? '#9ca3af' : '#6b7280'} />
           <Text style={styles.loadingText}>Carregando senha...</Text>
@@ -228,7 +270,6 @@ export default function PasswordDetailScreen() {
   if (!password) {
     return (
       <View style={styles.container}>
-        <Header title="Detalhes da Senha" onThemeToggle={toggleTheme} />
         <View style={styles.loadingContainer}>
           <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
           <Text style={styles.loadingText}>Senha não encontrada</Text>
@@ -239,7 +280,6 @@ export default function PasswordDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Detalhes da Senha" onThemeToggle={toggleTheme} />
       <ScrollView style={styles.content}>
         {/* Header */}
         <Card style={styles.headerCard}>
@@ -340,6 +380,35 @@ export default function PasswordDetailScreen() {
             ))}
           </Card>
         )}
+
+        {/* TOTP Code - Above Actions */}
+        {password.totpEnabled && totpCode && (
+          <TotpCode
+            code={totpCode.code}
+            timeRemaining={totpCode.timeRemaining}
+            period={totpCode.period}
+            onRefresh={refreshTotpCode}
+            onCopy={handleTotpCopy}
+          />
+        )}
+
+        {/* Actions */}
+        <View style={styles.actionsContainer}>
+          <Button
+            title="Editar"
+            onPress={() => Alert.alert('Editar Senha')}
+            size="md"
+            variant="primary"
+            style={styles.actionButton}
+          />
+          <Button
+            title="Excluir"
+            onPress={() => Alert.alert('Excluir Senha')}
+            size="md"
+            variant="danger"
+            style={styles.actionButton}
+          />
+        </View>
       </ScrollView>
     </View>
   );

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, RefreshCon
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Header } from '../components/shared';
+import { TotpCard } from '../components/totp/TotpCard';
 import { passwordService } from '../services/passwords/passwordService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
@@ -77,6 +78,7 @@ export default function TotpScreen() {
       flex: 1,
       padding: 20,
       paddingTop: 60,
+      paddingBottom: 100, // Espaço para a navegação inferior
     },
     emptyContainer: {
       flex: 1,
@@ -202,50 +204,15 @@ export default function TotpScreen() {
         ) : (
           <View style={styles.passwordsList}>
             {passwords.map((password) => (
-              <Card key={password.id} style={styles.passwordCard}>
-                <View style={styles.passwordHeader}>
-                  <View style={styles.passwordInfo}>
-                    <Text style={styles.passwordName}>{password.name}</Text>
-                    {password.website && (
-                      <Text style={styles.passwordWebsite}>{password.website}</Text>
-                    )}
-                    {password.username && (
-                      <Text style={styles.passwordUsername}>{password.username}</Text>
-                    )}
-                  </View>
-                  <View style={styles.totpBadge}>
-                    <Ionicons name="time" size={12} color="#ffffff" />
-                    <Text style={styles.totpBadgeText}>TOTP</Text>
-                  </View>
-                </View>
-                
-                <View style={styles.passwordActions}>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => copyToClipboard(password.password, 'Senha')}
-                  >
-                    <Ionicons name="copy-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
-                  </TouchableOpacity>
-                  
-                  {password.username && (
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => copyToClipboard(password.username!, 'Usuário')}
-                    >
-                      <Ionicons name="person-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
-                    </TouchableOpacity>
-                  )}
-                  
-                  {password.website && (
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => copyToClipboard(password.website!, 'Website')}
-                    >
-                      <Ionicons name="globe-outline" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </Card>
+              <TotpCard
+                key={password.id}
+                password={password}
+                onPress={() => {}}
+                onEdit={() => {}}
+                onToggleFavorite={() => {}}
+                onCopyPassword={() => copyToClipboard(password.password, 'Senha')}
+                onCopyUsername={() => copyToClipboard(password.username!, 'Usuário')}
+              />
             ))}
           </View>
         )}

@@ -86,16 +86,16 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   modalSm: {
-    width: '80%',
+    width: '85%',
     maxHeight: '60%',
   },
   modalMd: {
-    width: '90%',
-    maxHeight: '80%',
+    width: '95%',
+    maxHeight: '85%',
   },
   modalLg: {
-    width: '95%',
-    maxHeight: '90%',
+    width: '98%',
+    maxHeight: '95%',
   },
   header: {
     flexDirection: 'row',

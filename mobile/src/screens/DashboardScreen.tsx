@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card, Header } from '../components/shared';
 import { PasswordModal } from '../components/passwords/PasswordModal';
+import { TotpCard } from '../components/totp/TotpCard';
 import { passwordService } from '../services/passwords/passwordService';
 import { authService } from '../services/auth/authService';
 import { useToast } from '../hooks/useToast';
@@ -126,10 +127,21 @@ export default function DashboardScreen() {
     },
     passwordActions: {
       flexDirection: 'row',
+      alignItems: 'center',
       gap: 8,
       marginTop: 12,
     },
-    actionButton: {
+    copyButton: {
+      padding: 8,
+      borderRadius: 6,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+    },
+    favoriteButton: {
+      padding: 8,
+      borderRadius: 6,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+    },
+    editButton: {
       flex: 1,
     },
     emptyCard: {
@@ -275,10 +287,10 @@ export default function DashboardScreen() {
     navigation.navigate('PasswordDetail', { passwordId: password.id });
   };
 
-  const copyToClipboard = async (text: string) => {
+  const copyToClipboard = async (text: string, label: string = 'Texto') => {
     try {
       await Clipboard.setStringAsync(text);
-      showSuccess('Texto copiado para a área de transferência');
+      showSuccess(`${label} copiado para a área de transferência`);
     } catch (error) {
       showError('Erro ao copiar texto');
     }
@@ -325,55 +337,14 @@ export default function DashboardScreen() {
   };
 
   const renderPasswordItem = ({ item }: { item: PasswordEntry }) => (
-    <Card style={styles.passwordCard}>
-      <TouchableOpacity onPress={() => handlePasswordPress(item)}>
-        <View style={styles.passwordHeader}>
-          <View style={styles.passwordInfo}>
-            <Text style={styles.passwordName}>{item.name}</Text>
-            {item.website && (
-              <Text style={styles.passwordWebsite}>{item.website}</Text>
-            )}
-            {item.username && (
-              <Text style={styles.passwordUsername}>@{item.username}</Text>
-            )}
-            {item.folder && (
-              <Text style={styles.passwordFolder}>📁 {item.folder}</Text>
-            )}
-          </View>
-          <View style={{ flexDirection: 'row', gap: 4 }}>
-            {item.isFavorite && (
-              <Ionicons name="heart" size={16} color="#dc2626" />
-            )}
-            {item.totpEnabled && (
-              <Ionicons name="shield-checkmark" size={16} color="#2563eb" />
-            )}
-          </View>
-        </View>
-      </TouchableOpacity>
-      
-      <View style={styles.passwordActions}>
-        <Button
-          title="Copiar"
-          onPress={() => copyToClipboard(item.password)}
-          size="sm"
-          variant="secondary"
-          style={styles.actionButton}
-        />
-        <Button
-          title={item.isFavorite ? "Desfavoritar" : "Favoritar"}
-          onPress={() => toggleFavorite(item)}
-          size="sm"
-          variant={item.isFavorite ? "danger" : "secondary"}
-          style={styles.actionButton}
-        />
-        <Button
-          title="Editar"
-          onPress={() => handleEditPassword(item)}
-          size="sm"
-          style={styles.actionButton}
-        />
-      </View>
-    </Card>
+    <TotpCard
+      password={item}
+      onPress={() => handlePasswordPress(item)}
+      onEdit={() => handleEditPassword(item)}
+      onToggleFavorite={() => toggleFavorite(item)}
+      onCopyPassword={() => copyToClipboard(item.password, 'Senha')}
+      onCopyUsername={() => copyToClipboard(item.username!, 'Usuário')}
+    />
   );
 
   const renderFooter = () => {
