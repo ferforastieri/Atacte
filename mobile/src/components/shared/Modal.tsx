@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Modal as RNModal, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface ModalProps {
   visible: boolean;
@@ -17,8 +18,13 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   size = 'md',
 }) => {
+  const { isDark } = useTheme();
+
   const getModalStyle = () => {
-    const baseStyle = styles.modal;
+    const baseStyle = {
+      ...styles.modal,
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+    };
     switch (size) {
       case 'sm':
         return [baseStyle, styles.modalSm];
@@ -29,6 +35,16 @@ export const Modal: React.FC<ModalProps> = ({
     }
   };
 
+  const getHeaderStyle = () => ({
+    ...styles.header,
+    borderBottomColor: isDark ? '#374151' : '#e5e7eb',
+  });
+
+  const getTitleStyle = () => ({
+    ...styles.title,
+    color: isDark ? '#f9fafb' : '#111827',
+  });
+
   return (
     <RNModal
       visible={visible}
@@ -38,10 +54,10 @@ export const Modal: React.FC<ModalProps> = ({
     >
       <View style={styles.overlay}>
         <View style={getModalStyle()}>
-          <View style={styles.header}>
-            <Text style={styles.title}>{title}</Text>
+          <View style={getHeaderStyle()}>
+            <Text style={getTitleStyle()}>{title}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#6b7280" />
+              <Ionicons name="close" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
             </TouchableOpacity>
           </View>
           
@@ -62,7 +78,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modal: {
-    backgroundColor: '#ffffff',
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -88,12 +103,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
   },
   closeButton: {
     padding: 4,

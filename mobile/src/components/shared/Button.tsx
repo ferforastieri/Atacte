@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface ButtonProps {
   title: string;
@@ -22,6 +23,8 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
 }) => {
+  const { isDark } = useTheme();
+
   const getButtonStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
       borderRadius: 8,
@@ -41,7 +44,7 @@ export const Button: React.FC<ButtonProps> = ({
         backgroundColor: '#16a34a',
       },
       secondary: {
-        backgroundColor: '#e5e7eb',
+        backgroundColor: isDark ? '#374151' : '#e5e7eb',
       },
       danger: {
         backgroundColor: '#dc2626',
@@ -49,7 +52,7 @@ export const Button: React.FC<ButtonProps> = ({
       ghost: {
         backgroundColor: 'transparent',
         borderWidth: 1,
-        borderColor: '#d1d5db',
+        borderColor: isDark ? '#4b5563' : '#d1d5db',
       },
     };
 
@@ -74,9 +77,9 @@ export const Button: React.FC<ButtonProps> = ({
 
     const variantStyles: Record<string, TextStyle> = {
       primary: { color: '#ffffff' },
-      secondary: { color: '#111827' },
+      secondary: { color: isDark ? '#f9fafb' : '#111827' },
       danger: { color: '#ffffff' },
-      ghost: { color: '#374151' },
+      ghost: { color: isDark ? '#d1d5db' : '#374151' },
     };
 
     return {
@@ -95,7 +98,7 @@ export const Button: React.FC<ButtonProps> = ({
       {loading && (
         <ActivityIndicator
           size="small"
-          color={variant === 'ghost' ? '#374151' : '#ffffff'}
+          color={variant === 'ghost' ? (isDark ? '#d1d5db' : '#374151') : '#ffffff'}
           style={{ marginRight: 8 }}
         />
       )}

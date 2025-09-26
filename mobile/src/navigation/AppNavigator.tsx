@@ -3,8 +3,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme, View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -43,8 +44,7 @@ function AuthNavigator() {
 }
 
 function MainTabNavigator() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useTheme();
 
   return (
     <Tab.Navigator
@@ -94,8 +94,7 @@ function MainTabNavigator() {
 
 export default function AppNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useTheme();
 
   if (isLoading) {
     return (

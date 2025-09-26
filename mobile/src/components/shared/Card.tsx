@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface CardProps {
   children: React.ReactNode;
@@ -12,6 +13,8 @@ export const Card: React.FC<CardProps> = ({
   variant = 'default',
   style,
 }) => {
+  const { isDark } = useTheme();
+
   const getCardStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
       borderRadius: 12,
@@ -20,29 +23,29 @@ export const Card: React.FC<CardProps> = ({
 
     const variantStyles: Record<string, ViewStyle> = {
       default: {
-        backgroundColor: '#ffffff',
+        backgroundColor: isDark ? '#1f2937' : '#ffffff',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
+        shadowOpacity: isDark ? 0.3 : 0.05,
         shadowRadius: 2,
         elevation: 1,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: isDark ? '#374151' : '#e5e7eb',
       },
       outlined: {
-        backgroundColor: '#ffffff',
+        backgroundColor: isDark ? '#1f2937' : '#ffffff',
         borderWidth: 2,
-        borderColor: '#e5e7eb',
+        borderColor: isDark ? '#374151' : '#e5e7eb',
       },
       elevated: {
-        backgroundColor: '#ffffff',
+        backgroundColor: isDark ? '#1f2937' : '#ffffff',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
+        shadowOpacity: isDark ? 0.4 : 0.1,
         shadowRadius: 8,
         elevation: 4,
         borderWidth: 1,
-        borderColor: '#f3f4f6',
+        borderColor: isDark ? '#374151' : '#f3f4f6',
       },
     };
 

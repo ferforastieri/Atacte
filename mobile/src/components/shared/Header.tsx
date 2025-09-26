@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from 'react-native';
+import { useTheme } from '../../contexts/ThemeContext';
 import { Logo } from './Logo';
 
 interface HeaderProps {
@@ -16,8 +16,7 @@ export const Header: React.FC<HeaderProps> = ({
   showThemeToggle = true, 
   onThemeToggle 
 }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useTheme();
 
   const styles = StyleSheet.create({
     container: {

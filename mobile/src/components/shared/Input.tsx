@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, TouchableOpacity, ViewStyle, TextStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface InputProps {
   label?: string;
@@ -31,6 +32,7 @@ export const Input: React.FC<InputProps> = ({
   style,
   inputStyle,
 }) => {
+  const { isDark } = useTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -43,7 +45,7 @@ export const Input: React.FC<InputProps> = ({
         <Text style={{
           fontSize: 14,
           fontWeight: '500',
-          color: '#374151',
+          color: isDark ? '#d1d5db' : '#374151',
           marginBottom: 8,
         }}>
           {label}
@@ -59,18 +61,18 @@ export const Input: React.FC<InputProps> = ({
           style={[{
             flex: 1,
             borderWidth: 1,
-            borderColor: error ? '#dc2626' : '#d1d5db',
+            borderColor: error ? '#dc2626' : (isDark ? '#4b5563' : '#d1d5db'),
             borderRadius: 8,
             paddingHorizontal: 12,
             paddingVertical: 12,
             fontSize: 16,
-            color: '#111827',
-            backgroundColor: disabled ? '#f9fafb' : '#ffffff',
+            color: isDark ? '#f9fafb' : '#111827',
+            backgroundColor: disabled ? (isDark ? '#374151' : '#f9fafb') : (isDark ? '#1f2937' : '#ffffff'),
             minHeight: multiline ? 80 : 44,
             textAlignVertical: multiline ? 'top' : 'center',
           }, inputStyle]}
           placeholder={placeholder}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
@@ -92,7 +94,7 @@ export const Input: React.FC<InputProps> = ({
             <Ionicons
               name={isPasswordVisible ? 'eye-off' : 'eye'}
               size={20}
-              color="#6b7280"
+              color={isDark ? '#9ca3af' : '#6b7280'}
             />
           </TouchableOpacity>
         )}
