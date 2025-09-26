@@ -2,22 +2,31 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import Toast from 'react-native-toast-message';
+import FlashMessage from 'react-native-flash-message';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
+import { ToastProvider } from './src/contexts/ToastContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <AuthProvider>
-          <View style={styles.container}>
-            <StatusBar style="auto" />
-            <AppNavigator />
-            <Toast />
-          </View>
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <View style={styles.container}>
+              <StatusBar style="auto" />
+              <AppNavigator />
+              <FlashMessage 
+                position="top" 
+                floating={true}
+                style={{
+                  zIndex: 9999,
+                }}
+              />
+            </View>
+          </AuthProvider>
+        </ToastProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
