@@ -16,6 +16,7 @@ interface InputProps {
   numberOfLines?: number;
   style?: ViewStyle;
   inputStyle?: TextStyle;
+  rightIcon?: React.ReactNode;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -31,6 +32,7 @@ export const Input: React.FC<InputProps> = ({
   numberOfLines = 1,
   style,
   inputStyle,
+  rightIcon,
 }) => {
   const { isDark } = useTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -82,7 +84,17 @@ export const Input: React.FC<InputProps> = ({
           numberOfLines={numberOfLines}
         />
         
-        {secureTextEntry && (
+        {rightIcon && (
+          <View style={{
+            position: 'absolute',
+            right: 12,
+            padding: 4,
+          }}>
+            {rightIcon}
+          </View>
+        )}
+        
+        {secureTextEntry && !rightIcon && (
           <TouchableOpacity
             style={{
               position: 'absolute',

@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Card, Header } from '../components/shared';
-import { PasswordModal } from '../components/passwords/PasswordModal';
+import { Button, Card, Header, PasswordGeneratorModal } from '../components/shared';
+import { Modal } from '../components/shared/Modal';
+import { Input } from '../components/shared/Input';
+import { Switch } from 'react-native';
 import { TotpCard } from '../components/totp/TotpCard';
 import { passwordService } from '../services/passwords/passwordService';
 import { authService } from '../services/auth/authService';
@@ -36,7 +38,24 @@ export default function DashboardScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState<any>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showPasswordGeneratorModal, setShowPasswordGeneratorModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingPassword, setEditingPassword] = useState<PasswordEntry | null>(null);
+  const [deletingPassword, setDeletingPassword] = useState<PasswordEntry | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    website: '',
+    username: '',
+    password: '',
+    folder: '',
+    notes: '',
+    isFavorite: false,
+    totpEnabled: false,
+    totpSecret: '',
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showTotpSecret, setShowTotpSecret] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentOffset, setCurrentOffset] = useState(0);
   const [allPasswordsStats, setAllPasswordsStats] = useState({
@@ -92,6 +111,70 @@ export default function DashboardScreen() {
     },
     addButton: {
       marginBottom: 20,
+    },
+    form: {
+      gap: 16,
+    },
+    passwordSection: {
+      gap: 8,
+    },
+    passwordHeaderForm: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    sectionLabel: {
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    generateButton: {
+      backgroundColor: '#16a34a',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 6,
+    },
+    generateButtonText: {
+      color: '#ffffff',
+      fontSize: 12,
+      fontWeight: '500',
+    },
+    totpSection: {
+      gap: 12,
+    },
+    totpHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    totpSecretSection: {
+      gap: 8,
+    },
+    totpSecretHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    helpText: {
+      fontSize: 12,
+      lineHeight: 16,
+    },
+    favoriteSection: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    actions: {
+      marginTop: 8,
+    },
+    saveActions: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    cancelButton: {
+      flex: 1,
+    },
+    saveButton: {
+      flex: 1,
     },
     passwordCard: {
       marginBottom: 12,
@@ -321,12 +404,110 @@ export default function DashboardScreen() {
 
   const handleCreatePassword = () => {
     setEditingPassword(null);
+    setFormData({
+      name: '',
+      website: '',
+      username: '',
+      password: '',
+      folder: '',
+      notes: '',
+      isFavorite: false,
+      totpEnabled: false,
+      totpSecret: '',
+    });
     setShowPasswordModal(true);
   };
 
   const handleEditPassword = (password: PasswordEntry) => {
     setEditingPassword(password);
+    setFormData({
+      name: password.name,
+      website: password.website || '',
+      username: password.username || '',
+      password: password.password,
+      folder: password.folder || '',
+      notes: '',
+      isFavorite: password.isFavorite,
+      totpEnabled: password.totpEnabled,
+      totpSecret: '',
+    });
     setShowPasswordModal(true);
+  };
+
+  const handlePasswordGenerated = (generatedPassword: string) => {
+    setFormData({ ...formData, password: generatedPassword });
+    setShowPasswordGeneratorModal(false);
+  };
+
+  const generateTotpSecret = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let secret = '';
+    for (let i = 0; i < 32; i++) {
+      secret += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setFormData({ ...formData, totpSecret: secret });
+  };
+
+  const handleSavePassword = async () => {
+    if (!formData.name || !formData.password) {
+      showError('Nome e senha são obrigatórios');
+      return;
+    }
+
+    if (formData.totpEnabled && !formData.totpSecret) {
+      showError('Chave secreta TOTP é obrigatória quando TOTP está habilitado');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      let response;
+      
+      // Preparar dados para envio (igual ao web)
+      const passwordData: any = {
+        name: formData.name.trim(),
+        password: formData.password,
+        totpEnabled: formData.totpEnabled,
+        isFavorite: formData.isFavorite
+      };
+      
+      if (formData.website.trim()) {
+        passwordData.website = formData.website.trim();
+      }
+      
+      if (formData.username.trim()) {
+        passwordData.username = formData.username.trim();
+      }
+      
+      if (formData.folder.trim()) {
+        passwordData.folder = formData.folder.trim();
+      }
+      
+      if (formData.notes.trim()) {
+        passwordData.notes = formData.notes.trim();
+      }
+      
+      if (formData.totpEnabled && formData.totpSecret.trim()) {
+        passwordData.totpSecret = formData.totpSecret.trim();
+      }
+      
+      if (editingPassword) {
+        response = await passwordService.updatePassword(editingPassword.id, passwordData);
+      } else {
+        response = await passwordService.createPassword(passwordData);
+      }
+
+      if (response.success) {
+        showSuccess(editingPassword ? 'Senha atualizada!' : 'Senha criada!');
+        handlePasswordSaved();
+      } else {
+        showError(response.message || 'Erro ao salvar senha');
+      }
+    } catch (error) {
+      showError('Erro de conexão. Tente novamente.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePasswordSaved = () => {
@@ -336,11 +517,37 @@ export default function DashboardScreen() {
     loadAllPasswordsStats();
   };
 
+  const handleDeletePassword = (password: PasswordEntry) => {
+    setDeletingPassword(password);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeletePassword = async () => {
+    if (!deletingPassword) return;
+    
+    try {
+      const response = await passwordService.deletePassword(deletingPassword.id);
+      if (response.success) {
+        showSuccess('Senha excluída!');
+        loadPasswords(0, false);
+        loadAllPasswordsStats();
+      } else {
+        showError(response.message || 'Erro ao excluir senha');
+      }
+    } catch (error) {
+      showError('Erro de conexão. Tente novamente.');
+    } finally {
+      setShowDeleteModal(false);
+      setDeletingPassword(null);
+    }
+  };
+
   const renderPasswordItem = ({ item }: { item: PasswordEntry }) => (
     <TotpCard
       password={item}
       onPress={() => handlePasswordPress(item)}
       onEdit={() => handleEditPassword(item)}
+      onDelete={() => handleDeletePassword(item)}
       onToggleFavorite={() => toggleFavorite(item)}
       onCopyPassword={() => copyToClipboard(item.password, 'Senha')}
       onCopyUsername={() => copyToClipboard(item.username!, 'Usuário')}
@@ -435,6 +642,7 @@ export default function DashboardScreen() {
         <Button
           title="Adicionar Nova Senha"
           onPress={handleCreatePassword}
+          variant="primary"
           style={styles.addButton}
         />
 
@@ -454,12 +662,185 @@ export default function DashboardScreen() {
         />
       </View>
 
-      {/* Password Modal */}
-      <PasswordModal
+      {/* Password Form Modal */}
+      <Modal
         visible={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
-        onSuccess={handlePasswordSaved}
-        password={editingPassword}
+        onClose={() => {
+          setShowPasswordModal(false);
+          setEditingPassword(null);
+        }}
+        title={editingPassword ? 'Editar Senha' : 'Nova Senha'}
+        size="lg"
+      >
+        <View style={styles.form}>
+          <Input
+            label="Nome *"
+            placeholder="Nome da senha"
+            value={formData.name}
+            onChangeText={(text) => setFormData({ ...formData, name: text })}
+          />
+
+          <Input
+            label="Website"
+            placeholder="https://exemplo.com"
+            value={formData.website}
+            onChangeText={(text) => setFormData({ ...formData, website: text })}
+            keyboardType="url"
+          />
+
+          <Input
+            label="Username"
+            placeholder="Nome de usuário"
+            value={formData.username}
+            onChangeText={(text) => setFormData({ ...formData, username: text })}
+          />
+
+          <View style={styles.passwordSection}>
+            <View style={styles.passwordHeaderForm}>
+              <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
+                Senha *
+              </Text>
+              <TouchableOpacity onPress={() => setShowPasswordGeneratorModal(true)} style={styles.generateButton}>
+                <Text style={styles.generateButtonText}>Gerar</Text>
+              </TouchableOpacity>
+            </View>
+            <Input
+              placeholder="Digite ou gere uma senha"
+              value={formData.password}
+              onChangeText={(text) => setFormData({ ...formData, password: text })}
+              secureTextEntry={!showPassword}
+              rightIcon={
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={isDark ? '#9ca3af' : '#6b7280'}
+                  />
+                </TouchableOpacity>
+              }
+            />
+          </View>
+
+          <Input
+            label="Pasta"
+            placeholder="Pasta (opcional)"
+            value={formData.folder}
+            onChangeText={(text) => setFormData({ ...formData, folder: text })}
+          />
+
+          <Input
+            label="Notas"
+            placeholder="Notas adicionais"
+            value={formData.notes}
+            onChangeText={(text) => setFormData({ ...formData, notes: text })}
+            multiline
+            numberOfLines={3}
+          />
+
+          {/* TOTP Section */}
+          <View style={styles.totpSection}>
+            <View style={styles.totpHeader}>
+              <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
+                Autenticação de Dois Fatores (TOTP)
+              </Text>
+              <Switch
+                value={formData.totpEnabled}
+                onValueChange={(value) => setFormData({ ...formData, totpEnabled: value })}
+                trackColor={{ false: isDark ? '#374151' : '#e5e7eb', true: '#16a34a' }}
+                thumbColor={formData.totpEnabled ? '#ffffff' : '#f4f3f4'}
+              />
+            </View>
+
+            {formData.totpEnabled && (
+              <View style={styles.totpSecretSection}>
+                <View style={styles.totpSecretHeader}>
+                  <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
+                    Chave Secreta TOTP
+                  </Text>
+                  <TouchableOpacity onPress={generateTotpSecret} style={styles.generateButton}>
+                    <Text style={styles.generateButtonText}>Gerar</Text>
+                  </TouchableOpacity>
+                </View>
+                <Input
+                  placeholder="Digite a chave secreta do app autenticador"
+                  value={formData.totpSecret}
+                  onChangeText={(text) => setFormData({ ...formData, totpSecret: text })}
+                  secureTextEntry={!showTotpSecret}
+                  rightIcon={
+                    <TouchableOpacity onPress={() => setShowTotpSecret(!showTotpSecret)}>
+                      <Ionicons
+                        name={showTotpSecret ? "eye-off-outline" : "eye-outline"}
+                        size={20}
+                        color={isDark ? '#9ca3af' : '#6b7280'}
+                      />
+                    </TouchableOpacity>
+                  }
+                />
+                <Text style={[styles.helpText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
+                  Cole a chave secreta do seu app autenticador (Google Authenticator, Authy, etc.)
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Favorite Section */}
+          <View style={styles.favoriteSection}>
+            <Text style={[styles.sectionLabel, { color: isDark ? '#f9fafb' : '#111827' }]}>
+              Marcar como favorita
+            </Text>
+            <Switch
+              value={formData.isFavorite}
+              onValueChange={(value) => setFormData({ ...formData, isFavorite: value })}
+              trackColor={{ false: isDark ? '#374151' : '#e5e7eb', true: '#16a34a' }}
+              thumbColor={formData.isFavorite ? '#ffffff' : '#f4f3f4'}
+            />
+          </View>
+
+          <View style={styles.actions}>
+            <View style={styles.saveActions}>
+              <Button
+                title="Cancelar"
+                onPress={() => {
+                  setShowPasswordModal(false);
+                  setEditingPassword(null);
+                }}
+                variant="ghost"
+                style={styles.cancelButton}
+              />
+              <Button
+                title={editingPassword ? 'Atualizar' : 'Criar'}
+                onPress={handleSavePassword}
+                loading={isSaving}
+                variant="primary"
+                style={styles.saveButton}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Password Generator Modal */}
+      <PasswordGeneratorModal
+        visible={showPasswordGeneratorModal}
+        onClose={() => setShowPasswordGeneratorModal(false)}
+        onPasswordGenerated={handlePasswordGenerated}
+        initialPassword={formData.password}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeletingPassword(null);
+        }}
+        title="Excluir Senha"
+        type="confirm"
+        message="Tem certeza que deseja excluir esta senha?"
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        confirmVariant="danger"
+        onConfirm={confirmDeletePassword}
       />
     </View>
   );

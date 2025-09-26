@@ -20,6 +20,7 @@ interface TotpCardProps {
   password: PasswordEntry;
   onPress: () => void;
   onEdit: () => void;
+  onDelete: () => void;
   onToggleFavorite: () => void;
   onCopyPassword: () => void;
   onCopyUsername: () => void;
@@ -29,6 +30,7 @@ export const TotpCard: React.FC<TotpCardProps> = ({
   password,
   onPress,
   onEdit,
+  onDelete,
   onToggleFavorite,
   onCopyPassword,
   onCopyUsername,
@@ -112,6 +114,11 @@ export const TotpCard: React.FC<TotpCardProps> = ({
       gap: 8,
       marginTop: 12,
     },
+    deleteButton: {
+      padding: 8,
+      borderRadius: 6,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+    },
     copyButton: {
       padding: 8,
       borderRadius: 6,
@@ -171,6 +178,12 @@ export const TotpCard: React.FC<TotpCardProps> = ({
       )}
       
       <View style={styles.actions}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={onDelete}
+        >
+          <Ionicons name="trash-outline" size={16} color="#dc2626" />
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.copyButton}
           onPress={onCopyPassword}

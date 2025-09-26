@@ -1,0 +1,124 @@
+import { useState, useCallback } from 'react';
+import { PasswordGenerator, PasswordGeneratorOptions, PasswordStrength } from '../utils/passwordGenerator';
+
+export interface UsePasswordGeneratorReturn {
+  // Estado
+  password: string;
+  strength: PasswordStrength;
+  options: PasswordGeneratorOptions;
+  isGenerating: boolean;
+  
+  // Ações
+  generatePassword: () => void;
+  updateOptions: (newOptions: Partial<PasswordGeneratorOptions>) => void;
+  setPassword: (password: string) => void;
+  generateMemorable: (wordCount?: number, separator?: string, capitalize?: boolean) => void;
+  generateMultiple: (count: number) => string[];
+  
+  // Utilitários
+  validateOptions: (options: Partial<PasswordGeneratorOptions>) => { isValid: boolean; errors: string[] };
+  resetToDefaults: () => void;
+}
+
+const DEFAULT_OPTIONS: PasswordGeneratorOptions = {
+  length: 16,
+  includeUppercase: true,
+  includeLowercase: true,
+  includeNumbers: true,
+  includeSymbols: true,
+  excludeSimilar: false,
+  excludeAmbiguous: false,
+};
+
+export const usePasswordGenerator = (initialOptions?: Partial<PasswordGeneratorOptions>): UsePasswordGeneratorReturn => {
+  const [generator] = useState(() => new PasswordGenerator(initialOptions));
+  const [password, setPassword] = useState('');
+  const [strength, setStrength] = useState<PasswordStrength>({ score: 0, label: 'Fraca', color: '#ef4444' });
+  const [options, setOptions] = useState<PasswordGeneratorOptions>(() => ({
+    ...DEFAULT_OPTIONS,
+    ...initialOptions,
+  }));
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const generatePassword = useCallback(() => {
+    setIsGenerating(true);
+    try {
+      const newPassword = generator.generate();
+      setPassword(newPassword);
+      setStrength(generator.evaluateStrength(newPassword));
+    } catch (error) {
+      console.error('Erro ao gerar senha:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [generator]);
+
+  const updateOptions = useCallback((newOptions: Partial<PasswordGeneratorOptions>) => {
+    const updatedOptions = { ...options, ...newOptions };
+    setOptions(updatedOptions);
+    generator.updateOptions(updatedOptions);
+    
+    // Re-avaliar a senha atual se existir
+    if (password) {
+      setStrength(generator.evaluateStrength(password));
+    }
+  }, [generator, options, password]);
+
+  const handleSetPassword = useCallback((newPassword: string) => {
+    setPassword(newPassword);
+    setStrength(generator.evaluateStrength(newPassword));
+  }, [generator]);
+
+  const generateMemorable = useCallback((wordCount: number = 4, separator: string = '-', capitalize: boolean = true) => {
+    setIsGenerating(true);
+    try {
+      const memorablePassword = generator.generateMemorable(wordCount, separator, capitalize);
+      setPassword(memorablePassword);
+      setStrength(generator.evaluateStrength(memorablePassword));
+    } catch (error) {
+      console.error('Erro ao gerar senha memorável:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [generator]);
+
+  const generateMultiple = useCallback((count: number): string[] => {
+    try {
+      return generator.generateMultiple(count);
+    } catch (error) {
+      console.error('Erro ao gerar múltiplas senhas:', error);
+      return [];
+    }
+  }, [generator]);
+
+  const validateOptions = useCallback((optionsToValidate: Partial<PasswordGeneratorOptions>) => {
+    return generator.validateOptions(optionsToValidate);
+  }, [generator]);
+
+  const resetToDefaults = useCallback(() => {
+    const defaultOptions = { ...DEFAULT_OPTIONS };
+    setOptions(defaultOptions);
+    generator.updateOptions(defaultOptions);
+    setPassword('');
+    setStrength({ score: 0, label: 'Fraca', color: '#ef4444' });
+  }, [generator]);
+
+  return {
+    // Estado
+    password,
+    strength,
+    options,
+    isGenerating,
+    
+    // Ações
+    generatePassword,
+    updateOptions,
+    setPassword: handleSetPassword,
+    generateMemorable,
+    generateMultiple,
+    
+    // Utilitários
+    validateOptions,
+    resetToDefaults,
+  };
+};

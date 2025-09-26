@@ -29,6 +29,7 @@ interface CreatePasswordRequest {
   folder?: string;
   notes?: string;
   isFavorite?: boolean;
+  totpEnabled?: boolean;
   totpSecret?: string;
   customFields?: Array<{
     name: string;
@@ -44,6 +45,7 @@ interface UpdatePasswordRequest {
   folder?: string;
   notes?: string;
   isFavorite?: boolean;
+  totpEnabled?: boolean;
   totpSecret?: string;
   customFields?: Array<{
     name: string;

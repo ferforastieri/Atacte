@@ -209,6 +209,7 @@ export default function TotpScreen() {
                 password={password}
                 onPress={() => {}}
                 onEdit={() => {}}
+                onDelete={() => {}}
                 onToggleFavorite={() => {}}
                 onCopyPassword={() => copyToClipboard(password.password, 'Senha')}
                 onCopyUsername={() => copyToClipboard(password.username!, 'Usuário')}

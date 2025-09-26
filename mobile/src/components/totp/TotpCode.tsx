@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Button } from './Button';
+import { Button } from '../shared/Button';
 import * as Clipboard from 'expo-clipboard';
 
 interface TotpCodeProps {
