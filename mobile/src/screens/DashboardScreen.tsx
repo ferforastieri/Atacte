@@ -51,9 +51,12 @@ export default function DashboardScreen({ onLogout }: DashboardScreenProps) {
       });
       
       if (response.success && response.data) {
-        setPasswords(response.data.passwords);
+        setPasswords(Array.isArray(response.data) ? response.data : []);
+      } else {
+        setPasswords([]);
       }
     } catch (error) {
+      setPasswords([]);
       Alert.alert('Erro', 'Erro ao carregar senhas');
     } finally {
       setIsLoading(false);
