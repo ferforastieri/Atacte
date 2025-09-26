@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Alert, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, Card, Logo } from '../components/shared';
-import { authService } from '../services/auth/authService';
+import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast';
 
-interface LoginScreenProps {
-  onLogin: () => void;
-}
-
-export default function LoginScreen({ onLogin }: LoginScreenProps) {
+export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [masterPassword, setMasterPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const { showSuccess, showError } = useToast();
+  const { login, register } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !masterPassword) {
@@ -23,13 +21,12 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
 
     setIsLoading(true);
     try {
-      const response = await authService.login({ email, masterPassword });
+      const result = await login(email, masterPassword);
       
-      if (response.success) {
+      if (result.success) {
         showSuccess('Login realizado com sucesso!');
-        onLogin();
       } else {
-        showError(response.message || 'Erro ao fazer login');
+        showError(result.message || 'Erro ao fazer login');
       }
     } catch (error) {
       showError('Erro de conexão. Tente novamente.');
@@ -46,13 +43,12 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
 
     setIsLoading(true);
     try {
-      const response = await authService.register({ email, masterPassword });
+      const result = await register(email, masterPassword);
       
-      if (response.success) {
+      if (result.success) {
         showSuccess('Conta criada com sucesso!');
-        onLogin();
       } else {
-        showError(response.message || 'Erro ao criar conta');
+        showError(result.message || 'Erro ao criar conta');
       }
     } catch (error) {
       showError('Erro de conexão. Tente novamente.');
@@ -62,7 +58,8 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Logo size={48} showText={true} textSize={32} />
         <Text style={styles.subtitle}>Gerenciador de Senhas</Text>
@@ -103,7 +100,8 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
           style={styles.toggleButton}
         />
       </Card>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

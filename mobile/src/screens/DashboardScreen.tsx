@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card } from '../components/shared';
 import { PasswordModal } from '../components/passwords/PasswordModal';
 import { passwordService } from '../services/passwords/passwordService';
 import { authService } from '../services/auth/authService';
 import { useToast } from '../hooks/useToast';
+import { useColorScheme } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
 import * as Clipboard from 'expo-clipboard';
 
 interface PasswordEntry {
@@ -19,11 +24,10 @@ interface PasswordEntry {
   totpEnabled: boolean;
 }
 
-interface DashboardScreenProps {
-  onLogout: () => void;
-}
+type DashboardScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Main'>;
 
-export default function DashboardScreen({ onLogout }: DashboardScreenProps) {
+export default function DashboardScreen() {
+  const navigation = useNavigation<DashboardScreenNavigationProp>();
   const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -32,6 +36,111 @@ export default function DashboardScreen({ onLogout }: DashboardScreenProps) {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [editingPassword, setEditingPassword] = useState<PasswordEntry | null>(null);
   const { showSuccess, showError } = useToast();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? '#111827' : '#f9fafb',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      fontSize: 16,
+      color: isDark ? '#9ca3af' : '#6b7280',
+    },
+    content: {
+      flex: 1,
+      padding: 20,
+      paddingTop: 60,
+    },
+    statsCard: {
+      marginBottom: 20,
+    },
+    actionsHeader: {
+      marginBottom: 20,
+    },
+    createButton: {
+      alignSelf: 'flex-start',
+    },
+    statsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+    },
+    statItem: {
+      alignItems: 'center',
+    },
+    statNumber: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: isDark ? '#f9fafb' : '#111827',
+    },
+    statLabel: {
+      fontSize: 12,
+      color: isDark ? '#9ca3af' : '#6b7280',
+      marginTop: 4,
+    },
+    passwordsList: {
+      gap: 12,
+    },
+    passwordCard: {
+      marginBottom: 12,
+    },
+    passwordHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 12,
+    },
+    passwordInfo: {
+      flex: 1,
+    },
+    passwordName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: isDark ? '#f9fafb' : '#111827',
+    },
+    passwordWebsite: {
+      fontSize: 14,
+      color: '#16a34a',
+      marginTop: 2,
+    },
+    passwordUsername: {
+      fontSize: 14,
+      color: isDark ? '#9ca3af' : '#6b7280',
+      marginTop: 2,
+    },
+    favoriteButton: {
+      padding: 4,
+    },
+    passwordActions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    actionButton: {
+      flex: 1,
+    },
+    emptyCard: {
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: isDark ? '#f9fafb' : '#6b7280',
+      marginTop: 16,
+    },
+    emptySubtitle: {
+      fontSize: 14,
+      color: isDark ? '#9ca3af' : '#6b7280',
+      marginTop: 8,
+      textAlign: 'center',
+    },
+  });
 
   useEffect(() => {
     loadUser();
@@ -73,15 +182,8 @@ export default function DashboardScreen({ onLogout }: DashboardScreenProps) {
     loadPasswords();
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Sair',
-      'Tem certeza que deseja sair?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Sair', onPress: onLogout },
-      ]
-    );
+  const handlePasswordPress = (password: PasswordEntry) => {
+    navigation.navigate('PasswordDetail', { passwordId: password.id });
   };
 
   const copyToClipboard = async (text: string) => {
@@ -144,17 +246,7 @@ export default function DashboardScreen({ onLogout }: DashboardScreenProps) {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Olá, {user?.name || 'Usuário'}!</Text>
-          <Text style={styles.subtitle}>Suas senhas seguras</Text>
-        </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color="#6b7280" />
-        </TouchableOpacity>
-      </View>
-
+    <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.content}
         refreshControl={
@@ -260,131 +352,6 @@ export default function DashboardScreen({ onLogout }: DashboardScreenProps) {
         onSuccess={handlePasswordSuccess}
         password={editingPassword}
       />
-    </View>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 60,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  logoutButton: {
-    padding: 8,
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
-  statsCard: {
-    marginBottom: 20,
-  },
-  actionsHeader: {
-    marginBottom: 20,
-  },
-  createButton: {
-    alignSelf: 'flex-start',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  passwordsList: {
-    gap: 12,
-  },
-  passwordCard: {
-    marginBottom: 12,
-  },
-  passwordHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  passwordInfo: {
-    flex: 1,
-  },
-  passwordName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  passwordWebsite: {
-    fontSize: 14,
-    color: '#16a34a',
-    marginTop: 2,
-  },
-  passwordUsername: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 2,
-  },
-  favoriteButton: {
-    padding: 4,
-  },
-  passwordActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
-    flex: 1,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#6b7280',
-    marginTop: 16,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: '#9ca3af',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-});
