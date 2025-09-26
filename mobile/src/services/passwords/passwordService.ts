@@ -53,11 +53,11 @@ interface UpdatePasswordRequest {
 
 interface PasswordListResponse {
   success: boolean;
-  data?: {
-    passwords: PasswordEntry[];
+  data?: PasswordEntry[];
+  pagination?: {
     total: number;
-    page: number;
     limit: number;
+    offset: number;
   };
   message?: string;
 }
@@ -83,16 +83,24 @@ class PasswordService {
     query?: string;
     folder?: string;
     isFavorite?: boolean;
+    totpEnabled?: boolean;
     page?: number;
     limit?: number;
+    offset?: number;
+    sortBy?: string;
+    sortOrder?: string;
   }): Promise<PasswordListResponse> {
     const searchParams = new URLSearchParams();
     
     if (params?.query) searchParams.append('query', params.query);
     if (params?.folder) searchParams.append('folder', params.folder);
     if (params?.isFavorite !== undefined) searchParams.append('isFavorite', params.isFavorite.toString());
+    if (params?.totpEnabled !== undefined) searchParams.append('totpEnabled', params.totpEnabled.toString());
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.offset) searchParams.append('offset', params.offset.toString());
+    if (params?.sortBy) searchParams.append('sortBy', params.sortBy);
+    if (params?.sortOrder) searchParams.append('sortOrder', params.sortOrder);
 
     const queryString = searchParams.toString();
     const endpoint = `/passwords${queryString ? `?${queryString}` : ''}`;

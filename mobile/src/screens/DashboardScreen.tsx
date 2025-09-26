@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card } from '../components/shared';
@@ -31,10 +31,19 @@ export default function DashboardScreen() {
   const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState<any>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [editingPassword, setEditingPassword] = useState<PasswordEntry | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentOffset, setCurrentOffset] = useState(0);
+  const [allPasswordsStats, setAllPasswordsStats] = useState({
+    total: 0,
+    favorites: 0,
+    totp: 0
+  });
+  const [totalFromAPI, setTotalFromAPI] = useState(0);
   const { showSuccess, showError } = useToast();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -44,28 +53,25 @@ export default function DashboardScreen() {
       flex: 1,
       backgroundColor: isDark ? '#111827' : '#f9fafb',
     },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      fontSize: 16,
-      color: isDark ? '#9ca3af' : '#6b7280',
-    },
     content: {
       flex: 1,
       padding: 20,
-      paddingTop: 60,
+    },
+    searchContainer: {
+      marginBottom: 20,
+    },
+    searchInput: {
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+      borderColor: isDark ? '#374151' : '#e5e7eb',
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: isDark ? '#f9fafb' : '#111827',
     },
     statsCard: {
       marginBottom: 20,
-    },
-    actionsHeader: {
-      marginBottom: 20,
-    },
-    createButton: {
-      alignSelf: 'flex-start',
     },
     statsRow: {
       flexDirection: 'row',
@@ -84,8 +90,8 @@ export default function DashboardScreen() {
       color: isDark ? '#9ca3af' : '#6b7280',
       marginTop: 4,
     },
-    passwordsList: {
-      gap: 12,
+    addButton: {
+      marginBottom: 20,
     },
     passwordCard: {
       marginBottom: 12,
@@ -114,12 +120,15 @@ export default function DashboardScreen() {
       color: isDark ? '#9ca3af' : '#6b7280',
       marginTop: 2,
     },
-    favoriteButton: {
-      padding: 4,
+    passwordFolder: {
+      fontSize: 12,
+      color: isDark ? '#9ca3af' : '#6b7280',
+      marginTop: 4,
     },
     passwordActions: {
       flexDirection: 'row',
       gap: 8,
+      marginTop: 12,
     },
     actionButton: {
       flex: 1,
@@ -140,6 +149,14 @@ export default function DashboardScreen() {
       marginTop: 8,
       textAlign: 'center',
     },
+    loadingMore: {
+      paddingVertical: 20,
+      alignItems: 'center',
+    },
+    loadingText: {
+      color: isDark ? '#9ca3af' : '#6b7280',
+      fontSize: 14,
+    },
   });
 
   useEffect(() => {
@@ -147,40 +164,113 @@ export default function DashboardScreen() {
     loadPasswords();
   }, []);
 
+  useEffect(() => {
+    if (totalFromAPI > 0) {
+      loadAllPasswordsStats();
+    }
+  }, [totalFromAPI]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setCurrentOffset(0);
+      loadPasswords(0, false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
   const loadUser = async () => {
     const userData = await authService.getStoredUser();
     setUser(userData);
   };
 
-  const loadPasswords = async () => {
+  const loadPasswords = useCallback(async (offset = 0, append = false) => {
+    if (offset === 0) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
+    }
+
     try {
       const response = await passwordService.getPasswords({
         query: searchQuery,
+        offset: offset,
         limit: 50,
       });
       
       if (response.success && response.data) {
-        setPasswords(Array.isArray(response.data) ? response.data : []);
+        if (append) {
+          setPasswords(prev => {
+            // Filtrar duplicatas baseado no ID
+            const existingIds = new Set(prev.map(p => p.id));
+            const newPasswords = response.data!.filter(p => !existingIds.has(p.id));
+            return [...prev, ...newPasswords];
+          });
+        } else {
+          setPasswords(response.data);
+        }
+        
+        if (response.pagination) {
+          // Verificar se há mais dados baseado no total e offset atual
+          const currentTotal = offset + response.data.length;
+          const hasMoreData = currentTotal < response.pagination.total;
+          setHasMore(hasMoreData);
+          setCurrentOffset(offset + response.data.length);
+          
+          // Atualizar total da API para estatísticas
+          if (response.pagination.total > totalFromAPI) {
+            setTotalFromAPI(response.pagination.total);
+          }
+        } else {
+          // Fallback: se não há paginação, assumir que não há mais dados
+          setHasMore(false);
+          setCurrentOffset(offset + response.data.length);
+        }
       } else {
-        setPasswords([]);
+        if (!append) {
+          setPasswords([]);
+        }
+        setHasMore(false);
       }
     } catch (error) {
-      setPasswords([]);
+      if (!append) {
+        setPasswords([]);
+      }
+      setHasMore(false);
       Alert.alert('Erro', 'Erro ao carregar senhas');
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
+      setIsRefreshing(false);
+    }
+  }, [searchQuery]);
+
+  const loadAllPasswordsStats = async () => {
+    try {
+      // Buscar todas as senhas para contar favoritas e TOTP
+      const allResponse = await passwordService.getPasswords({ limit: 10000 });
+      if (allResponse.success && allResponse.data) {
+        setAllPasswordsStats({
+          total: totalFromAPI || allResponse.data.length, // Usar total da API se disponível
+          favorites: allResponse.data.filter(p => p.isFavorite).length,
+          totp: allResponse.data.filter(p => p.totpEnabled).length
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
     }
   };
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadPasswords();
-    setIsRefreshing(false);
-  };
+    setCurrentOffset(0);
+    await Promise.all([loadPasswords(0, false), loadAllPasswordsStats()]);
+  }, [loadPasswords]);
 
-  const handleSearch = () => {
-    loadPasswords();
-  };
+  const handleLoadMore = useCallback(() => {
+    if (!isLoadingMore && hasMore && passwords.length > 0) {
+      loadPasswords(currentOffset, true);
+    }
+  }, [isLoadingMore, hasMore, currentOffset, loadPasswords, passwords.length]);
 
   const handlePasswordPress = (password: PasswordEntry) => {
     navigation.navigate('PasswordDetail', { passwordId: password.id });
@@ -201,7 +291,7 @@ export default function DashboardScreen() {
         isFavorite: !password.isFavorite,
       });
       
-      if (response.success) {
+      if (response.success && response.data) {
         setPasswords(prev => 
           prev.map(p => 
             p.id === password.id 
@@ -209,9 +299,9 @@ export default function DashboardScreen() {
               : p
           )
         );
-        showSuccess(password.isFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos');
+        showSuccess(response.data.isFavorite ? 'Adicionado aos favoritos' : 'Removido dos favoritos');
       } else {
-        showError('Erro ao atualizar favorito');
+        showError(response.message || 'Erro ao atualizar favorito');
       }
     } catch (error) {
       showError('Erro ao atualizar favorito');
@@ -228,128 +318,174 @@ export default function DashboardScreen() {
     setShowPasswordModal(true);
   };
 
-  const handlePasswordModalClose = () => {
+  const handlePasswordSaved = () => {
     setShowPasswordModal(false);
     setEditingPassword(null);
+    loadPasswords(0, false);
+    loadAllPasswordsStats();
   };
 
-  const handlePasswordSuccess = () => {
-    loadPasswords();
+  const renderPasswordItem = ({ item }: { item: PasswordEntry }) => (
+    <Card style={styles.passwordCard}>
+      <TouchableOpacity onPress={() => handlePasswordPress(item)}>
+        <View style={styles.passwordHeader}>
+          <View style={styles.passwordInfo}>
+            <Text style={styles.passwordName}>{item.name}</Text>
+            {item.website && (
+              <Text style={styles.passwordWebsite}>{item.website}</Text>
+            )}
+            {item.username && (
+              <Text style={styles.passwordUsername}>@{item.username}</Text>
+            )}
+            {item.folder && (
+              <Text style={styles.passwordFolder}>📁 {item.folder}</Text>
+            )}
+          </View>
+          <View style={{ flexDirection: 'row', gap: 4 }}>
+            {item.isFavorite && (
+              <Ionicons name="heart" size={16} color="#dc2626" />
+            )}
+            {item.totpEnabled && (
+              <Ionicons name="shield-checkmark" size={16} color="#2563eb" />
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+      
+      <View style={styles.passwordActions}>
+        <Button
+          title="Copiar"
+          onPress={() => copyToClipboard(item.password)}
+          size="sm"
+          variant="secondary"
+          style={styles.actionButton}
+        />
+        <Button
+          title={item.isFavorite ? "Desfavoritar" : "Favoritar"}
+          onPress={() => toggleFavorite(item)}
+          size="sm"
+          variant={item.isFavorite ? "danger" : "secondary"}
+          style={styles.actionButton}
+        />
+        <Button
+          title="Editar"
+          onPress={() => handleEditPassword(item)}
+          size="sm"
+          style={styles.actionButton}
+        />
+      </View>
+    </Card>
+  );
+
+  const renderFooter = () => {
+    if (!isLoadingMore && hasMore) {
+      return (
+        <View style={styles.loadingMore}>
+          <Text style={styles.loadingText}>Puxe para carregar mais senhas</Text>
+        </View>
+      );
+    }
+    
+    if (isLoadingMore) {
+      return (
+        <View style={styles.loadingMore}>
+          <Text style={styles.loadingText}>Carregando mais senhas...</Text>
+        </View>
+      );
+    }
+    
+    if (!hasMore && passwords.length > 0) {
+      return (
+        <View style={styles.loadingMore}>
+          <Text style={styles.loadingText}>Todas as senhas foram carregadas</Text>
+        </View>
+      );
+    }
+    
+    return null;
   };
+
+  const renderEmpty = () => (
+    <Card style={styles.emptyCard}>
+      <Ionicons name="key-outline" size={48} color="#9ca3af" />
+      <Text style={styles.emptyTitle}>Nenhuma senha encontrada</Text>
+      <Text style={styles.emptySubtitle}>
+        {searchQuery ? 'Tente ajustar sua busca' : 'Adicione sua primeira senha'}
+      </Text>
+    </Card>
+  );
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Carregando senhas...</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={[styles.content, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={styles.loadingText}>Carregando senhas...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-        }
-      >
+      <View style={styles.content}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar senhas..."
+            placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+          />
+        </View>
+
+        {/* Stats */}
         <Card style={styles.statsCard}>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{passwords.length}</Text>
+              <Text style={styles.statNumber}>{allPasswordsStats.total}</Text>
               <Text style={styles.statLabel}>Total</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {passwords.filter(p => p.isFavorite).length}
-              </Text>
+              <Text style={styles.statNumber}>{allPasswordsStats.favorites}</Text>
               <Text style={styles.statLabel}>Favoritas</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {passwords.filter(p => p.totpEnabled).length}
-              </Text>
+              <Text style={styles.statNumber}>{allPasswordsStats.totp}</Text>
               <Text style={styles.statLabel}>TOTP</Text>
             </View>
           </View>
         </Card>
 
-        <View style={styles.actionsHeader}>
-          <Button
-            title="Nova Senha"
-            onPress={handleCreatePassword}
-            style={styles.createButton}
-          />
-        </View>
+        {/* Add Password Button */}
+        <Button
+          title="Adicionar Nova Senha"
+          onPress={handleCreatePassword}
+          style={styles.addButton}
+        />
 
-        <View style={styles.passwordsList}>
-          {passwords.map((password) => (
-            <Card key={password.id} style={styles.passwordCard}>
-              <View style={styles.passwordHeader}>
-                <View style={styles.passwordInfo}>
-                  <Text style={styles.passwordName}>{password.name}</Text>
-                  {password.website && (
-                    <Text style={styles.passwordWebsite}>{password.website}</Text>
-                  )}
-                  {password.username && (
-                    <Text style={styles.passwordUsername}>{password.username}</Text>
-                  )}
-                </View>
-                <TouchableOpacity
-                  onPress={() => toggleFavorite(password)}
-                  style={styles.favoriteButton}
-                >
-                  <Ionicons
-                    name={password.isFavorite ? 'heart' : 'heart-outline'}
-                    size={20}
-                    color={password.isFavorite ? '#dc2626' : '#6b7280'}
-                  />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.passwordActions}>
-                <Button
-                  title="Copiar"
-                  onPress={() => copyToClipboard(password.password)}
-                  size="sm"
-                  style={styles.actionButton}
-                />
-                <Button
-                  title="Editar"
-                  onPress={() => handleEditPassword(password)}
-                  size="sm"
-                  variant="secondary"
-                  style={styles.actionButton}
-                />
-                {password.totpEnabled && (
-                  <Button
-                    title="TOTP"
-                    onPress={() => {}}
-                    size="sm"
-                    variant="ghost"
-                    style={styles.actionButton}
-                  />
-                )}
-              </View>
-            </Card>
-          ))}
-        </View>
+        {/* Passwords List */}
+        <FlatList
+          data={passwords}
+          renderItem={renderPasswordItem}
+          keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          }
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.1}
+          ListFooterComponent={renderFooter}
+          ListEmptyComponent={renderEmpty}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
 
-        {passwords.length === 0 && (
-          <Card style={styles.emptyCard}>
-            <Ionicons name="lock-closed-outline" size={48} color="#9ca3af" />
-            <Text style={styles.emptyTitle}>Nenhuma senha encontrada</Text>
-            <Text style={styles.emptySubtitle}>
-              Adicione sua primeira senha para começar
-            </Text>
-          </Card>
-        )}
-      </ScrollView>
-
+      {/* Password Modal */}
       <PasswordModal
         visible={showPasswordModal}
-        onClose={handlePasswordModalClose}
-        onSuccess={handlePasswordSuccess}
+        onClose={() => setShowPasswordModal(false)}
+        onSuccess={handlePasswordSaved}
         password={editingPassword}
       />
     </SafeAreaView>
