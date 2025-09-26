@@ -4,18 +4,21 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { AuthProvider } from './src/contexts/AuthContext';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <View style={styles.container}>
-          <StatusBar style="auto" />
-          <AppNavigator />
-          <Toast />
-        </View>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <View style={styles.container}>
+            <StatusBar style="auto" />
+            <AppNavigator />
+            <Toast />
+          </View>
+        </AuthProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Card } from '../components/shared';
+import { Button, Card, Header } from '../components/shared';
 import { PasswordModal } from '../components/passwords/PasswordModal';
 import { passwordService } from '../services/passwords/passwordService';
 import { authService } from '../services/auth/authService';
 import { useToast } from '../hooks/useToast';
-import { useColorScheme } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -45,8 +45,7 @@ export default function DashboardScreen() {
   });
   const [totalFromAPI, setTotalFromAPI] = useState(0);
   const { showSuccess, showError } = useToast();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark, toggleTheme } = useTheme();
 
   const styles = StyleSheet.create({
     container: {
@@ -417,16 +416,19 @@ export default function DashboardScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <Header title="Dashboard" onThemeToggle={toggleTheme} />
         <View style={[styles.content, { justifyContent: 'center', alignItems: 'center' }]}>
           <Text style={styles.loadingText}>Carregando senhas...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <Header title="Dashboard" onThemeToggle={toggleTheme} />
+      
       <View style={styles.content}>
         {/* Search Bar */}
         <View style={styles.searchContainer}>
@@ -488,6 +490,6 @@ export default function DashboardScreen() {
         onSuccess={handlePasswordSaved}
         password={editingPassword}
       />
-    </SafeAreaView>
+    </View>
   );
 }

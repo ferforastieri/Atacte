@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '../components/shared';
+import { Card, Header } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
 import { passwordService } from '../services/passwords/passwordService';
-import { useColorScheme } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface User {
   id: string;
@@ -27,8 +27,7 @@ export default function ProfileScreen() {
     totpPasswords: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     loadStats();
@@ -207,12 +206,13 @@ export default function ProfileScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <Header title="Perfil" onThemeToggle={toggleTheme} />
         <View style={styles.loadingContainer}>
           <Ionicons name="person-outline" size={48} color={isDark ? '#9ca3af' : '#6b7280'} />
           <Text style={styles.loadingText}>Carregando perfil...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -221,7 +221,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <Header title="Perfil" onThemeToggle={toggleTheme} />
       <ScrollView style={styles.content}>
         {/* Profile Info */}
         <Card style={styles.profileCard}>
@@ -298,6 +299,6 @@ export default function ProfileScreen() {
           <Text style={styles.logoutButtonText}>Sair</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

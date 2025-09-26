@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '../components/shared';
+import { Card, Header } from '../components/shared';
 import { passwordService } from '../services/passwords/passwordService';
 import { useToast } from '../hooks/useToast';
+import { useTheme } from '../contexts/ThemeContext';
 import * as Clipboard from 'expo-clipboard';
-import { useColorScheme } from 'react-native';
 
 interface PasswordEntry {
   id: string;
@@ -25,8 +25,7 @@ export default function TotpScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { showSuccess, showError } = useToast();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     loadTotpPasswords();
@@ -168,17 +167,19 @@ export default function TotpScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <Header title="TOTP" onThemeToggle={toggleTheme} />
         <View style={styles.loadingContainer}>
           <Ionicons name="time-outline" size={48} color={isDark ? '#9ca3af' : '#6b7280'} />
           <Text style={styles.loadingText}>Carregando TOTP...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <Header title="TOTP" onThemeToggle={toggleTheme} />
       <ScrollView
         style={styles.content}
         refreshControl={
@@ -249,6 +250,6 @@ export default function TotpScreen() {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

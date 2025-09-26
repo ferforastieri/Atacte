@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, Card, Logo } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -12,6 +13,7 @@ export default function LoginScreen() {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const { showSuccess, showError } = useToast();
   const { login, register } = useAuth();
+  const { isDark } = useTheme();
 
   const handleLogin = async () => {
     if (!email || !masterPassword) {
@@ -57,13 +59,50 @@ export default function LoginScreen() {
     }
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? '#111827' : '#f9fafb',
+    },
+    content: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: 20,
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: 40,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: isDark ? '#9ca3af' : '#6b7280',
+    },
+    formCard: {
+      marginBottom: 20,
+    },
+    formTitle: {
+      fontSize: 24,
+      fontWeight: '600',
+      color: isDark ? '#f9fafb' : '#111827',
+      textAlign: 'center',
+      marginBottom: 24,
+    },
+    submitButton: {
+      marginTop: 16,
+      marginBottom: 12,
+    },
+    toggleButton: {
+      marginTop: 8,
+    },
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Logo size={48} showText={true} textSize={32} />
-        <Text style={styles.subtitle}>Gerenciador de Senhas</Text>
-      </View>
+        <View style={styles.header}>
+          <Logo size={48} showText={true} textSize={32} />
+          <Text style={styles.subtitle}>Gerenciador de Senhas</Text>
+        </View>
 
       <Card style={styles.formCard}>
         <Text style={styles.formTitle}>
@@ -104,40 +143,3 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  formCard: {
-    marginBottom: 20,
-  },
-  formTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#111827',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  submitButton: {
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  toggleButton: {
-    marginTop: 8,
-  },
-});
