@@ -1,6 +1,6 @@
 # 🔐 Atacte - Gerenciador de Senhas Pessoal
 
-**Atacte** é um gerenciador de senhas pessoal desenvolvido com foco em estudo e aprendizado, projetado para rodar em servidor pessoal. O projeto implementa uma solução completa de gerenciamento de senhas com criptografia robusta, autenticação de dois fatores (2FA) e interface moderna.
+**Atacte** é um gerenciador de senhas pessoal desenvolvido com foco em estudo e aprendizado, projetado para rodar em servidor pessoal. O projeto implementa uma solução completa de gerenciamento de senhas com criptografia robusta, autenticação de dois fatores (2FA) e interfaces modernas para web e mobile.
 
 ## 📋 Índice
 
@@ -47,17 +47,21 @@
 
 ## 🏗️ Arquitetura
 
-O projeto segue uma arquitetura de **3 camadas** com separação clara de responsabilidades:
+O projeto segue uma arquitetura de **3 camadas** com separação clara de responsabilidades, suportando múltiplas interfaces:
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │    Backend      │    │   Database      │
-│   (Vue.js 3)    │◄──►│   (Node.js)     │◄──►│  (PostgreSQL)   │
 │                 │    │                 │    │                 │
-│ • Interface     │    │ • API REST      │    │ • Dados         │
-│ • Componentes   │    │ • Autenticação  │    │ • Criptografia  │
-│ • Estado        │    │ • Criptografia  │    │ • Auditoria     │
-│ • Roteamento    │    │ • Validação     │    │ • Sessões       │
+│ ┌─────────────┐ │    │ • API REST      │    │ • Dados         │
+│ │   Web App   │ │◄──►│ • Autenticação  │◄──►│ • Criptografia  │
+│ │ (Vue.js 3)  │ │    │ • Criptografia  │    │ • Auditoria     │
+│ └─────────────┘ │    │ • Validação     │    │ • Sessões       │
+│ ┌─────────────┐ │    │                 │    │                 │
+│ │  Mobile App │ │    │                 │    │                 │
+│ │(React Native│ │    │                 │    │                 │
+│ │   + Expo)   │ │    │                 │    │                 │
+│ └─────────────┘ │    │                 │    │                 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -74,13 +78,23 @@ Atacte/
 │   │   ├── utils/          # Utilitários (crypto, audit)
 │   │   └── infrastructure/ # Configuração (DB, env)
 │   └── package.json
-├── web/                    # Frontend (Vue.js 3)
+├── web/                    # Frontend Web (Vue.js 3)
 │   ├── src/
 │   │   ├── components/     # Componentes Vue
 │   │   ├── views/         # Páginas da aplicação
 │   │   ├── stores/        # Estado global (Pinia)
 │   │   ├── api/           # Cliente HTTP
 │   │   └── router/        # Roteamento
+│   └── package.json
+├── mobile/                 # App Mobile (React Native + Expo)
+│   ├── src/
+│   │   ├── components/     # Componentes React Native
+│   │   ├── screens/       # Telas da aplicação
+│   │   ├── contexts/      # Contextos (Auth, Theme, Toast)
+│   │   ├── services/      # Serviços de API
+│   │   ├── hooks/         # Custom hooks
+│   │   └── navigation/    # Navegação
+│   ├── assets/            # Imagens e recursos
 │   └── package.json
 ├── nginx/                  # Configuração do Nginx
 ├── docker-compose.yml      # Orquestração de containers
@@ -103,7 +117,7 @@ Atacte/
 - **helmet** - Segurança HTTP
 - **express-rate-limit** - Rate limiting
 
-### Frontend
+### Frontend Web
 - **Vue.js 3** - Framework frontend
 - **TypeScript** - Tipagem estática
 - **Vite** - Build tool
@@ -113,6 +127,17 @@ Atacte/
 - **Axios** - Cliente HTTP
 - **@vueuse/core** - Utilitários Vue
 - **@headlessui/vue** - Componentes acessíveis
+
+### Frontend Mobile
+- **React Native** - Framework mobile
+- **Expo** - Plataforma de desenvolvimento
+- **TypeScript** - Tipagem estática
+- **NativeWind** - Tailwind CSS para React Native
+- **React Navigation** - Navegação mobile
+- **React Native Paper** - Componentes Material Design
+- **AsyncStorage** - Armazenamento local
+- **Expo SecureStore** - Armazenamento seguro
+- **React Native Flash Message** - Notificações
 
 ### DevOps
 - **Docker** - Containerização
@@ -127,6 +152,8 @@ Atacte/
 - **PostgreSQL** 13+
 - **Docker** 20+ (opcional)
 - **Git**
+- **Expo CLI** (para desenvolvimento mobile)
+- **Android Studio** / **Xcode** (para build mobile)
 
 ## 🚀 Instalação
 
@@ -165,13 +192,28 @@ cp config.env.example config.env
 # Edite o arquivo config.env com suas configurações
 ```
 
-### 4. Configuração do Frontend
+### 4. Configuração do Frontend Web
 
 ```bash
 cd ../web
 
 # Instalar dependências
 npm install
+```
+
+### 5. Configuração do App Mobile
+
+```bash
+cd ../mobile
+
+# Instalar dependências
+npm install
+
+# Instalar Expo CLI globalmente (se ainda não tiver)
+npm install -g @expo/cli
+
+# Verificar se tudo está funcionando
+npx expo doctor
 ```
 
 ## ⚙️ Configuração
@@ -207,11 +249,43 @@ CORS_ORIGIN=http://localhost:3000
 LOG_LEVEL=info
 ```
 
-### Configuração do Frontend
+### Configuração do Frontend Web
 
-O frontend se conecta automaticamente ao backend via proxy configurado no Vite.
+O frontend web se conecta automaticamente ao backend via proxy configurado no Vite.
+
+### Configuração do App Mobile
+
+O app mobile precisa ser configurado para se conectar ao backend. Edite o arquivo `mobile/src/lib/env.ts` com a URL do seu backend:
+
+```typescript
+export const API_BASE_URL = 'http://seu-servidor:3001/api';
+```
 
 ## 🎯 Uso
+
+### Desenvolvimento Mobile
+
+Para desenvolvimento do app mobile, você precisará:
+
+1. **Instalar o Expo CLI**:
+   ```bash
+   npm install -g @expo/cli
+   ```
+
+2. **Configurar ambiente**:
+   - **Android**: Instale o Android Studio e configure o emulador
+   - **iOS**: Instale o Xcode (apenas no macOS)
+
+3. **Executar o app**:
+   ```bash
+   cd mobile
+   npm start
+   ```
+
+4. **Testar no dispositivo**:
+   - Instale o app **Expo Go** no seu smartphone
+   - Escaneie o QR code que aparece no terminal
+   - Ou use um emulador Android/iOS
 
 ### Desenvolvimento
 
@@ -220,12 +294,17 @@ O frontend se conecta automaticamente ao backend via proxy configurado no Vite.
 cd backend
 npm run dev
 
-# Terminal 2 - Frontend  
+# Terminal 2 - Frontend Web
 cd web
 npm run dev
+
+# Terminal 3 - App Mobile (opcional)
+cd mobile
+npx expo start
 ```
 
-Acesse: http://localhost:3000
+- **Web**: http://localhost:3000
+- **Mobile**: Use o app Expo Go no seu dispositivo ou emulador
 
 ### Produção
 
@@ -234,9 +313,16 @@ Acesse: http://localhost:3000
 cd backend
 npm run build
 
-# Build do frontend
+# Build do frontend web
 cd ../web
 npm run build
+
+# Build do app mobile (Android)
+cd ../mobile
+npx expo build:android
+
+# Build do app mobile (iOS)
+npx expo build:ios
 
 # Iniciar backend
 cd ../backend
@@ -397,12 +483,18 @@ npm run db:push      # Sincronizar schema com DB
 npm run db:migrate   # Executar migrações
 npm run db:studio    # Abrir Prisma Studio
 
-# Frontend
+# Frontend Web
 npm run dev          # Desenvolvimento com hot reload
 npm run build        # Build para produção
 npm run preview      # Preview do build
 npm run type-check   # Verificar tipos TypeScript
 npm run lint         # Linter ESLint
+
+# App Mobile
+npm start            # Iniciar Expo dev server
+npm run android      # Executar no Android
+npm run ios          # Executar no iOS
+npm run web          # Executar versão web (Expo)
 ```
 
 ### Contribuindo
@@ -451,6 +543,9 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 - [Documentação do Vue.js](https://vuejs.org/guide/)
 - [Documentação do Express.js](https://expressjs.com/)
 - [Documentação do Tailwind CSS](https://tailwindcss.com/docs)
+- [Documentação do React Native](https://reactnative.dev/docs/getting-started)
+- [Documentação do Expo](https://docs.expo.dev/)
+- [Documentação do NativeWind](https://www.nativewind.dev/)
 
 ---
 
