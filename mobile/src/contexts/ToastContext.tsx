@@ -21,29 +21,29 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
 
   
   const colors = {
-    success: '#16a34a', 
-    error: '#dc2626',   
-    info: isDark ? '#3b82f6' : '#2563eb',
-    warning: '#eab308',
+    success: isDark ? '#22c55e' : '#16a34a', 
+    error: isDark ? '#ef4444' : '#dc2626',   
+    info: isDark ? '#60a5fa' : '#3b82f6',
+    warning: isDark ? '#fbbf24' : '#eab308',
     background: isDark ? '#1f2937' : '#ffffff',
     text: isDark ? '#f9fafb' : '#111827',
     border: isDark ? '#374151' : '#e5e7eb',
   };
 
   const baseStyle = {
-    borderRadius: 12,
+    borderRadius: 16,
     marginHorizontal: 16,
     marginTop: 50,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 0,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: isDark ? 0.3 : 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOpacity: isDark ? 0.4 : 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    transform: [{ scale: 1 }],
   };
 
   const showSuccess = (message: string) => {
@@ -63,6 +63,11 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
         fontSize: 14,
         color: '#ffffff',
       },
+      animationDuration: 300,
+      floating: true,
+      position: 'top',
+      autoHide: true,
+      hideOnPress: true,
     });
   };
 
@@ -83,6 +88,11 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
         fontSize: 14,
         color: '#ffffff',
       },
+      animationDuration: 300,
+      floating: true,
+      position: 'top',
+      autoHide: true,
+      hideOnPress: true,
     });
   };
 
@@ -103,6 +113,11 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
         fontSize: 14,
         color: '#ffffff',
       },
+      animationDuration: 300,
+      floating: true,
+      position: 'top',
+      autoHide: true,
+      hideOnPress: true,
     });
   };
 
@@ -123,6 +138,11 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
         fontSize: 14,
         color: '#ffffff',
       },
+      animationDuration: 300,
+      floating: true,
+      position: 'top',
+      autoHide: true,
+      hideOnPress: true,
     });
   };
 
