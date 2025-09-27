@@ -1,6 +1,6 @@
 export default {
   expo: {
-    name: "Atacte Mobile",
+    name: "Atacte",
     slug: "atacte-mobile",
     version: "1.0.0",
     orientation: "portrait",
@@ -34,7 +34,15 @@ export default {
     },
     plugins: [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          android: {
+            usesCleartextTraffic: true
+          }
+        }
+      ]
     ]
   }
 };
