@@ -1,8 +1,8 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// URL base da API - chumbada conforme solicitado
-const API_BASE_URL = 'http://100.70.52.30:3000/api';
+// URL base da API - com fallback para desenvolvimento
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 // Criar instância do axios
 const apiClient: AxiosInstance = axios.create({

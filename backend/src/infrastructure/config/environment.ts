@@ -46,7 +46,7 @@ class Environment {
       NODE_ENV: this.getString('NODE_ENV', 'development') as 'development' | 'production' | 'test',
       
       // Database
-      DATABASE_URL: this.getString('DATABASE_URL', 'postgresql://postgres:123@100.70.52.30:5432/atacte?sslmode=disable'),
+      DATABASE_URL: this.getString('DATABASE_URL', 'postgresql://username:password@localhost:5432/atacte?sslmode=disable'),
       
       // JWT
       JWT_SECRET: this.getString('JWT_SECRET', 'your-super-secret-jwt-key-change-this-in-production'),
@@ -61,7 +61,7 @@ class Environment {
       RATE_LIMIT_MAX_REQUESTS: this.getNumber('RATE_LIMIT_MAX_REQUESTS', 100),
       
       // CORS
-      CORS_ORIGIN: this.getString('CORS_ORIGIN', 'http://localhost:3000'),
+      CORS_ORIGIN: this.getString('CORS_ORIGIN', '*'),
       
       // Logging
       LOG_LEVEL: this.getString('LOG_LEVEL', 'info') as 'error' | 'warn' | 'info' | 'debug'
