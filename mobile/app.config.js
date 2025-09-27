@@ -15,14 +15,20 @@ export default {
       "**/*"
     ],
     ios: {
-      supportsTablet: true
+      supportsTablet: true,
+      infoPlist: {
+        NSAppTransportSecurity: {
+          NSAllowsArbitraryLoads: true
+        }
+      }
     },
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/logo.png",
         backgroundColor: "#ffffff"
       },
-      package: "com.atacte.mobile"
+      package: "com.atacte.mobile",
+      permissions: ["INTERNET"]
     },
     web: {
       favicon: "./assets/logo.png"

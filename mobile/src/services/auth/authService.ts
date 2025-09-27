@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+import apiClient from '../../lib/axios';
 
 interface LoginRequest {
   email: string;
@@ -27,26 +26,22 @@ interface AuthResponse {
 }
 
 class AuthService {
-  private async makeRequest(endpoint: string, options: RequestInit = {}): Promise<AuthResponse> {
-    const token = await AsyncStorage.getItem('auth_token');
-    
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-      ...options,
-    });
-
-    const data = await response.json();
-    return data;
+  private async makeRequest(endpoint: string, options: any = {}): Promise<AuthResponse> {
+    try {
+      const response = await apiClient({
+        url: endpoint,
+        ...options,
+      });
+      return response.data;
+    } catch (error: any) {
+      return error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
   }
 
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     const response = await this.makeRequest('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(credentials),
+      data: credentials,
     });
 
     if (response.success && response.data?.token) {
@@ -60,7 +55,7 @@ class AuthService {
   async register(userData: RegisterRequest): Promise<AuthResponse> {
     const response = await this.makeRequest('/auth/register', {
       method: 'POST',
-      body: JSON.stringify(userData),
+      data: userData,
     });
 
     if (response.success && response.data?.token) {

@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+import apiClient from '../../lib/axios';
 
 interface PasswordEntry {
   id: string;
@@ -65,20 +64,16 @@ interface PasswordListResponse {
 }
 
 class PasswordService {
-  private async makeRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
-    const token = await AsyncStorage.getItem('auth_token');
-    
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-      ...options,
-    });
-
-    const data = await response.json();
-    return data;
+  private async makeRequest(endpoint: string, options: any = {}): Promise<any> {
+    try {
+      const response = await apiClient({
+        url: endpoint,
+        ...options,
+      });
+      return response.data;
+    } catch (error: any) {
+      return error.response?.data || { success: false, message: 'Erro de conexão' };
+    }
   }
 
   async getPasswords(params?: {
@@ -92,35 +87,23 @@ class PasswordService {
     sortBy?: string;
     sortOrder?: string;
   }): Promise<PasswordListResponse> {
-    const searchParams = new URLSearchParams();
-    
-    if (params?.query) searchParams.append('query', params.query);
-    if (params?.folder) searchParams.append('folder', params.folder);
-    if (params?.isFavorite !== undefined) searchParams.append('isFavorite', params.isFavorite.toString());
-    if (params?.totpEnabled !== undefined) searchParams.append('totpEnabled', params.totpEnabled.toString());
-    if (params?.page) searchParams.append('page', params.page.toString());
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
-    if (params?.offset) searchParams.append('offset', params.offset.toString());
-    if (params?.sortBy) searchParams.append('sortBy', params.sortBy);
-    if (params?.sortOrder) searchParams.append('sortOrder', params.sortOrder);
-
-    const queryString = searchParams.toString();
-    const endpoint = `/passwords${queryString ? `?${queryString}` : ''}`;
-
-    return this.makeRequest(endpoint);
+    return this.makeRequest('/passwords', {
+      method: 'GET',
+      params: params,
+    });
   }
 
   async createPassword(passwordData: CreatePasswordRequest): Promise<{ success: boolean; data?: PasswordEntry; message?: string }> {
     return this.makeRequest('/passwords', {
       method: 'POST',
-      body: JSON.stringify(passwordData),
+      data: passwordData,
     });
   }
 
   async updatePassword(id: string, passwordData: UpdatePasswordRequest): Promise<{ success: boolean; data?: PasswordEntry; message?: string }> {
     return this.makeRequest(`/passwords/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(passwordData),
+      data: passwordData,
     });
   }
 
