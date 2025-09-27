@@ -1,6 +1,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { showMessage, hideMessage } from 'react-native-flash-message';
 import { useTheme } from './ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ToastContextType {
   showSuccess: (message: string) => void;
@@ -21,53 +22,85 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
 
   
   const colors = {
-    success: isDark ? '#22c55e' : '#16a34a', 
-    error: isDark ? '#ef4444' : '#dc2626',   
-    info: isDark ? '#60a5fa' : '#3b82f6',
-    warning: isDark ? '#fbbf24' : '#eab308',
-    background: isDark ? '#1f2937' : '#ffffff',
-    text: isDark ? '#f9fafb' : '#111827',
-    border: isDark ? '#374151' : '#e5e7eb',
+    success: {
+      bg: isDark ? '#065f46' : '#dcfce7',
+      border: isDark ? '#10b981' : '#16a34a',
+      text: isDark ? '#d1fae5' : '#166534',
+      icon: isDark ? '#10b981' : '#16a34a',
+    },
+    error: {
+      bg: isDark ? '#7f1d1d' : '#fef2f2',
+      border: isDark ? '#ef4444' : '#dc2626',
+      text: isDark ? '#fecaca' : '#991b1b',
+      icon: isDark ? '#ef4444' : '#dc2626',
+    },
+    info: {
+      bg: isDark ? '#1e3a8a' : '#eff6ff',
+      border: isDark ? '#60a5fa' : '#3b82f6',
+      text: isDark ? '#dbeafe' : '#1e40af',
+      icon: isDark ? '#60a5fa' : '#3b82f6',
+    },
+    warning: {
+      bg: isDark ? '#78350f' : '#fffbeb',
+      border: isDark ? '#fbbf24' : '#eab308',
+      text: isDark ? '#fef3c7' : '#92400e',
+      icon: isDark ? '#fbbf24' : '#eab308',
+    },
   };
 
-  const baseStyle = {
-    borderRadius: 16,
+  const getBaseStyle = (colorScheme: any) => ({
+    borderRadius: 20,
     marginHorizontal: 16,
     marginTop: 50,
-    borderWidth: 0,
-    shadowColor: '#000',
+    borderWidth: 2,
+    borderColor: colorScheme.border,
+    backgroundColor: colorScheme.bg,
+    shadowColor: colorScheme.border,
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 6,
     },
-    shadowOpacity: isDark ? 0.4 : 0.15,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: isDark ? 0.5 : 0.2,
+    shadowRadius: 12,
+    elevation: 12,
     transform: [{ scale: 1 }],
-  };
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  });
 
   const showSuccess = (message: string) => {
     showMessage({
       message,
       type: 'success',
-      backgroundColor: colors.success,
-      color: '#ffffff',
-      duration: 3000,
-      style: baseStyle,
+      backgroundColor: 'transparent',
+      color: colors.success.text,
+      duration: 4000,
+      style: getBaseStyle(colors.success),
       titleStyle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#ffffff',
+        fontSize: 18,
+        fontWeight: '700',
+        color: colors.success.text,
+        marginLeft: 8,
       },
       textStyle: {
-        fontSize: 14,
-        color: '#ffffff',
+        fontSize: 15,
+        color: colors.success.text,
+        marginLeft: 8,
+        lineHeight: 20,
       },
-      animationDuration: 300,
+      icon: {
+        icon: 'success',
+        position: 'left',
+        props: {},
+      },
+      animationDuration: 400,
       floating: true,
       position: 'top',
       autoHide: true,
       hideOnPress: true,
+      renderFlashMessageIcon: () => (
+        <Ionicons name="checkmark-circle" size={24} color={colors.success.icon} />
+      ),
     });
   };
 
@@ -75,24 +108,35 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     showMessage({
       message,
       type: 'danger',
-      backgroundColor: colors.error,
-      color: '#ffffff',
-      duration: 4000,
-      style: baseStyle,
+      backgroundColor: 'transparent',
+      color: colors.error.text,
+      duration: 5000,
+      style: getBaseStyle(colors.error),
       titleStyle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#ffffff',
+        fontSize: 18,
+        fontWeight: '700',
+        color: colors.error.text,
+        marginLeft: 8,
       },
       textStyle: {
-        fontSize: 14,
-        color: '#ffffff',
+        fontSize: 15,
+        color: colors.error.text,
+        marginLeft: 8,
+        lineHeight: 20,
       },
-      animationDuration: 300,
+      icon: {
+        icon: 'danger',
+        position: 'left',
+        props: {},
+      },
+      animationDuration: 400,
       floating: true,
       position: 'top',
       autoHide: true,
       hideOnPress: true,
+      renderFlashMessageIcon: () => (
+        <Ionicons name="close-circle" size={24} color={colors.error.icon} />
+      ),
     });
   };
 
@@ -100,24 +144,35 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     showMessage({
       message,
       type: 'info',
-      backgroundColor: colors.info,
-      color: '#ffffff',
-      duration: 3000,
-      style: baseStyle,
+      backgroundColor: 'transparent',
+      color: colors.info.text,
+      duration: 4000,
+      style: getBaseStyle(colors.info),
       titleStyle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#ffffff',
+        fontSize: 18,
+        fontWeight: '700',
+        color: colors.info.text,
+        marginLeft: 8,
       },
       textStyle: {
-        fontSize: 14,
-        color: '#ffffff',
+        fontSize: 15,
+        color: colors.info.text,
+        marginLeft: 8,
+        lineHeight: 20,
       },
-      animationDuration: 300,
+      icon: {
+        icon: 'info',
+        position: 'left',
+        props: {},
+      },
+      animationDuration: 400,
       floating: true,
       position: 'top',
       autoHide: true,
       hideOnPress: true,
+      renderFlashMessageIcon: () => (
+        <Ionicons name="information-circle" size={24} color={colors.info.icon} />
+      ),
     });
   };
 
@@ -125,24 +180,35 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     showMessage({
       message,
       type: 'warning',
-      backgroundColor: colors.warning,
-      color: '#ffffff',
-      duration: 3000,
-      style: baseStyle,
+      backgroundColor: 'transparent',
+      color: colors.warning.text,
+      duration: 4000,
+      style: getBaseStyle(colors.warning),
       titleStyle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#ffffff',
+        fontSize: 18,
+        fontWeight: '700',
+        color: colors.warning.text,
+        marginLeft: 8,
       },
       textStyle: {
-        fontSize: 14,
-        color: '#ffffff',
+        fontSize: 15,
+        color: colors.warning.text,
+        marginLeft: 8,
+        lineHeight: 20,
       },
-      animationDuration: 300,
+      icon: {
+        icon: 'warning',
+        position: 'left',
+        props: {},
+      },
+      animationDuration: 400,
       floating: true,
       position: 'top',
       autoHide: true,
       hideOnPress: true,
+      renderFlashMessageIcon: () => (
+        <Ionicons name="warning" size={24} color={colors.warning.icon} />
+      ),
     });
   };
 
