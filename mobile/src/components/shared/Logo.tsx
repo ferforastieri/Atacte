@@ -22,7 +22,7 @@ export const Logo: React.FC<LogoProps> = ({
     <View style={[{ flexDirection: 'row', alignItems: 'center' }, style]}>
       {/* Logo Image */}
       <Image
-        source={require('../../../assets/icon.png')}
+        source={require('../../../assets/logo.png')}
         style={{
           width: size,
           height: size,
