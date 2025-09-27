@@ -682,7 +682,7 @@ export default function DashboardScreen() {
 
           <Input
             label="Website"
-            placeholder="https:
+            placeholder="https://exemplo.com"
             value={formData.website}
             onChangeText={(text) => setFormData({ ...formData, website: text })}
             keyboardType="url"
