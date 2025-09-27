@@ -2,7 +2,6 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import FlashMessage from 'react-native-flash-message';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
 import { ToastProvider } from './src/contexts/ToastContext';
@@ -17,13 +16,6 @@ export default function App() {
             <View style={styles.container}>
               <StatusBar style="auto" />
               <AppNavigator />
-              <FlashMessage 
-                position="top" 
-                floating={true}
-                style={{
-                  zIndex: 9999,
-                }}
-              />
             </View>
           </AuthProvider>
         </ToastProvider>
