@@ -1,8 +1,9 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { env } from './env';
 
-// URL base da API - com fallback para desenvolvimento
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+// URL base da API - validada pelo Zod
+const API_BASE_URL = env.EXPO_PUBLIC_API_BASE_URL;
 
 // Criar instância do axios
 const apiClient: AxiosInstance = axios.create({
