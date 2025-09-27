@@ -11,7 +11,7 @@ interface LogoProps {
 }
 
 export const Logo: React.FC<LogoProps> = ({
-  size = 32,
+  size = 48,
   showText = true,
   textColor = '#111827',
   textSize = 20,
