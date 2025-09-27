@@ -1,7 +1,8 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { showMessage, hideMessage } from 'react-native-flash-message';
+import React, { createContext, useContext, ReactNode, useState } from 'react';
+import { View } from 'react-native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import CustomToast from '../components/shared/CustomToast';
 import { useTheme } from './ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
 
 interface ToastContextType {
   showSuccess: (message: string) => void;
@@ -17,203 +18,51 @@ interface ToastProviderProps {
   children: ReactNode;
 }
 
+interface ToastData {
+  id: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+  text1: string;
+  text2: string;
+}
+
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const { isDark } = useTheme();
+  const [toasts, setToasts] = useState<ToastData[]>([]);
 
-  
-  const colors = {
-    success: {
-      bg: isDark ? '#065f46' : '#dcfce7',
-      border: isDark ? '#10b981' : '#16a34a',
-      text: isDark ? '#d1fae5' : '#166534',
-      icon: isDark ? '#10b981' : '#16a34a',
-    },
-    error: {
-      bg: isDark ? '#7f1d1d' : '#fef2f2',
-      border: isDark ? '#ef4444' : '#dc2626',
-      text: isDark ? '#fecaca' : '#991b1b',
-      icon: isDark ? '#ef4444' : '#dc2626',
-    },
-    info: {
-      bg: isDark ? '#1e3a8a' : '#eff6ff',
-      border: isDark ? '#60a5fa' : '#3b82f6',
-      text: isDark ? '#dbeafe' : '#1e40af',
-      icon: isDark ? '#60a5fa' : '#3b82f6',
-    },
-    warning: {
-      bg: isDark ? '#78350f' : '#fffbeb',
-      border: isDark ? '#fbbf24' : '#eab308',
-      text: isDark ? '#fef3c7' : '#92400e',
-      icon: isDark ? '#fbbf24' : '#eab308',
-    },
+  const showToast = (type: 'success' | 'error' | 'info' | 'warning', text1: string, text2: string) => {
+    const id = Date.now().toString();
+    const newToast: ToastData = { id, type, text1, text2 };
+    
+    setToasts(prev => [...prev, newToast]);
+
+    // Auto hide after 4-5 seconds
+    setTimeout(() => {
+      hideToast(id);
+    }, type === 'error' ? 5000 : 4000);
   };
 
-  const getBaseStyle = (colorScheme: any) => ({
-    borderRadius: 20,
-    marginHorizontal: 16,
-    marginTop: 50,
-    borderWidth: 2,
-    borderColor: colorScheme.border,
-    backgroundColor: colorScheme.bg,
-    shadowColor: colorScheme.border,
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: isDark ? 0.5 : 0.2,
-    shadowRadius: 12,
-    elevation: 12,
-    transform: [{ scale: 1 }],
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  });
-
   const showSuccess = (message: string) => {
-    showMessage({
-      message,
-      type: 'success',
-      backgroundColor: 'transparent',
-      color: colors.success.text,
-      duration: 4000,
-      style: getBaseStyle(colors.success),
-      titleStyle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: colors.success.text,
-        marginLeft: 8,
-      },
-      textStyle: {
-        fontSize: 15,
-        color: colors.success.text,
-        marginLeft: 8,
-        lineHeight: 20,
-      },
-      icon: {
-        icon: 'success',
-        position: 'left',
-        props: {},
-      },
-      animationDuration: 400,
-      floating: true,
-      position: 'top',
-      autoHide: true,
-      hideOnPress: true,
-      renderFlashMessageIcon: () => (
-        <Ionicons name="checkmark-circle" size={24} color={colors.success.icon} />
-      ),
-    });
+    showToast('success', 'Sucesso!', message);
   };
 
   const showError = (message: string) => {
-    showMessage({
-      message,
-      type: 'danger',
-      backgroundColor: 'transparent',
-      color: colors.error.text,
-      duration: 5000,
-      style: getBaseStyle(colors.error),
-      titleStyle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: colors.error.text,
-        marginLeft: 8,
-      },
-      textStyle: {
-        fontSize: 15,
-        color: colors.error.text,
-        marginLeft: 8,
-        lineHeight: 20,
-      },
-      icon: {
-        icon: 'danger',
-        position: 'left',
-        props: {},
-      },
-      animationDuration: 400,
-      floating: true,
-      position: 'top',
-      autoHide: true,
-      hideOnPress: true,
-      renderFlashMessageIcon: () => (
-        <Ionicons name="close-circle" size={24} color={colors.error.icon} />
-      ),
-    });
+    showToast('error', 'Erro!', message);
   };
 
   const showInfo = (message: string) => {
-    showMessage({
-      message,
-      type: 'info',
-      backgroundColor: 'transparent',
-      color: colors.info.text,
-      duration: 4000,
-      style: getBaseStyle(colors.info),
-      titleStyle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: colors.info.text,
-        marginLeft: 8,
-      },
-      textStyle: {
-        fontSize: 15,
-        color: colors.info.text,
-        marginLeft: 8,
-        lineHeight: 20,
-      },
-      icon: {
-        icon: 'info',
-        position: 'left',
-        props: {},
-      },
-      animationDuration: 400,
-      floating: true,
-      position: 'top',
-      autoHide: true,
-      hideOnPress: true,
-      renderFlashMessageIcon: () => (
-        <Ionicons name="information-circle" size={24} color={colors.info.icon} />
-      ),
-    });
+    showToast('info', 'Informação', message);
   };
 
   const showWarning = (message: string) => {
-    showMessage({
-      message,
-      type: 'warning',
-      backgroundColor: 'transparent',
-      color: colors.warning.text,
-      duration: 4000,
-      style: getBaseStyle(colors.warning),
-      titleStyle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: colors.warning.text,
-        marginLeft: 8,
-      },
-      textStyle: {
-        fontSize: 15,
-        color: colors.warning.text,
-        marginLeft: 8,
-        lineHeight: 20,
-      },
-      icon: {
-        icon: 'warning',
-        position: 'left',
-        props: {},
-      },
-      animationDuration: 400,
-      floating: true,
-      position: 'top',
-      autoHide: true,
-      hideOnPress: true,
-      renderFlashMessageIcon: () => (
-        <Ionicons name="warning" size={24} color={colors.warning.icon} />
-      ),
-    });
+    showToast('warning', 'Atenção!', message);
   };
 
-  const hideToast = () => {
-    hideMessage();
+  const hideToast = (id?: string) => {
+    if (id) {
+      setToasts(prev => prev.filter(toast => toast.id !== id));
+    } else {
+      setToasts([]);
+    }
   };
 
   const value: ToastContextType = {
@@ -224,9 +73,37 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     hideToast,
   };
 
+  const onGestureEvent = (event: any, toastId: string) => {
+    const { translationX, state } = event.nativeEvent;
+    
+    if (state === State.END) {
+      if (Math.abs(translationX) > 100) {
+        hideToast(toastId);
+      }
+    }
+  };
+
   return (
     <ToastContext.Provider value={value}>
       {children}
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 9999 }}>
+        {toasts.map((toast) => (
+          <PanGestureHandler
+            key={toast.id}
+            onGestureEvent={(event: any) => onGestureEvent(event, toast.id)}
+            onHandlerStateChange={(event: any) => onGestureEvent(event, toast.id)}
+          >
+            <View>
+              <CustomToast
+                type={toast.type}
+                text1={toast.text1}
+                text2={toast.text2}
+                onHide={() => hideToast(toast.id)}
+              />
+            </View>
+          </PanGestureHandler>
+        ))}
+      </View>
     </ToastContext.Provider>
   );
 };
