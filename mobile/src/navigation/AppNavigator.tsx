@@ -7,14 +7,14 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
-// Screens
+
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import TotpScreen from '../screens/TotpScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import PasswordDetailScreen from '../screens/PasswordDetailScreen';
 
-// Types
+
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;

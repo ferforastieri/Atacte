@@ -27,7 +27,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       if (savedTheme !== null) {
         setIsDark(savedTheme === 'dark');
       } else {
-        // Se não há tema salvo, usar o tema do sistema
+        
         setIsDark(systemColorScheme === 'dark');
       }
     } catch (error) {

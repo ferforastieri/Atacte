@@ -19,10 +19,10 @@ interface ToastProviderProps {
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const { isDark } = useTheme();
 
-  // Cores da aplicação
+  
   const colors = {
-    success: '#16a34a', // Verde da aplicação
-    error: '#dc2626',   // Vermelho da aplicação
+    success: '#16a34a', 
+    error: '#dc2626',   
     info: isDark ? '#3b82f6' : '#2563eb',
     warning: '#eab308',
     background: isDark ? '#1f2937' : '#ffffff',

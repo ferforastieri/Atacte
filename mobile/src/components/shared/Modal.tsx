@@ -12,7 +12,7 @@ interface ModalProps {
   children?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg';
   showCloseButton?: boolean;
-  // Props para modal de confirmação
+  
   type?: 'default' | 'confirm';
   message?: string;
   confirmText?: string;
@@ -45,8 +45,8 @@ export const Modal: React.FC<ModalProps> = ({
       backgroundColor: isDark ? '#1f2937' : '#ffffff',
     };
     
-    // Calcular altura máxima considerando safe areas
-    const availableHeight = screenHeight - insets.top - insets.bottom - 40; // 40px de margem
+    
+    const availableHeight = screenHeight - insets.top - insets.bottom - 40; 
     const maxHeight = Math.min(availableHeight, screenHeight * 0.9);
     
     switch (size) {

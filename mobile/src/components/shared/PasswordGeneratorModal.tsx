@@ -32,7 +32,7 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
   const [includeSymbols, setIncludeSymbols] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Inicializar com senha fornecida se existir
+  
   React.useEffect(() => {
     if (initialPassword && visible) {
       setPassword(initialPassword);
@@ -49,7 +49,7 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
       return;
     }
     
-    // Construir conjunto de caracteres
+    
     let charset = '';
     if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
     if (includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -62,7 +62,7 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
       return;
     }
     
-    // Gerar senha
+    
     let newPassword = '';
     for (let i = 0; i < lengthNum; i++) {
       newPassword += charset.charAt(Math.floor(Math.random() * charset.length));
@@ -113,7 +113,7 @@ export const PasswordGeneratorModal: React.FC<PasswordGeneratorModalProps> = ({
       padding: 8,
       borderRadius: 6,
       backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      height: 48, // Mesma altura do input
+      height: 48, 
       justifyContent: 'center',
       alignItems: 'center',
     },

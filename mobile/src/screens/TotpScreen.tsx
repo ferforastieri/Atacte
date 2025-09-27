@@ -39,7 +39,7 @@ export default function TotpScreen() {
       });
       
       if (response.success && response.data) {
-        // Filtrar apenas senhas com TOTP habilitado
+        
         const passwords = Array.isArray(response.data) ? response.data : [];
         const totpPasswords = passwords.filter((password: PasswordEntry) => password.totpEnabled);
         setPasswords(totpPasswords);
@@ -78,7 +78,7 @@ export default function TotpScreen() {
       flex: 1,
       padding: 20,
       paddingTop: 60,
-      paddingBottom: 100, // Espaço para a navegação inferior
+      paddingBottom: 100, 
     },
     emptyContainer: {
       flex: 1,

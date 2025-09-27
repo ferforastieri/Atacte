@@ -2,20 +2,20 @@ import { useState, useCallback } from 'react';
 import { PasswordGenerator, PasswordGeneratorOptions, PasswordStrength } from '../utils/passwordGenerator';
 
 export interface UsePasswordGeneratorReturn {
-  // Estado
+  
   password: string;
   strength: PasswordStrength;
   options: PasswordGeneratorOptions;
   isGenerating: boolean;
   
-  // Ações
+  
   generatePassword: () => void;
   updateOptions: (newOptions: Partial<PasswordGeneratorOptions>) => void;
   setPassword: (password: string) => void;
   generateMemorable: (wordCount?: number, separator?: string, capitalize?: boolean) => void;
   generateMultiple: (count: number) => string[];
   
-  // Utilitários
+  
   validateOptions: (options: Partial<PasswordGeneratorOptions>) => { isValid: boolean; errors: string[] };
   resetToDefaults: () => void;
 }
@@ -58,7 +58,7 @@ export const usePasswordGenerator = (initialOptions?: Partial<PasswordGeneratorO
     setOptions(updatedOptions);
     generator.updateOptions(updatedOptions);
     
-    // Re-avaliar a senha atual se existir
+    
     if (password) {
       setStrength(generator.evaluateStrength(password));
     }
@@ -104,20 +104,20 @@ export const usePasswordGenerator = (initialOptions?: Partial<PasswordGeneratorO
   }, [generator]);
 
   return {
-    // Estado
+    
     password,
     strength,
     options,
     isGenerating,
     
-    // Ações
+    
     generatePassword,
     updateOptions,
     setPassword: handleSetPassword,
     generateMemorable,
     generateMultiple,
     
-    // Utilitários
+    
     validateOptions,
     resetToDefaults,
   };

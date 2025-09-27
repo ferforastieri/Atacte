@@ -294,7 +294,7 @@ export default function DashboardScreen() {
       if (response.success && response.data) {
         if (append) {
           setPasswords(prev => {
-            // Filtrar duplicatas baseado no ID
+            
             const existingIds = new Set(prev.map(p => p.id));
             const newPasswords = response.data!.filter(p => !existingIds.has(p.id));
             return [...prev, ...newPasswords];
@@ -304,18 +304,18 @@ export default function DashboardScreen() {
         }
         
         if (response.pagination) {
-          // Verificar se há mais dados baseado no total e offset atual
+          
           const currentTotal = offset + response.data.length;
           const hasMoreData = currentTotal < response.pagination.total;
           setHasMore(hasMoreData);
           setCurrentOffset(offset + response.data.length);
           
-          // Atualizar total da API para estatísticas
+          
           if (response.pagination.total > totalFromAPI) {
             setTotalFromAPI(response.pagination.total);
           }
         } else {
-          // Fallback: se não há paginação, assumir que não há mais dados
+          
           setHasMore(false);
           setCurrentOffset(offset + response.data.length);
         }
@@ -340,11 +340,11 @@ export default function DashboardScreen() {
 
   const loadAllPasswordsStats = async () => {
     try {
-      // Buscar todas as senhas para contar favoritas e TOTP
+      
       const allResponse = await passwordService.getPasswords({ limit: 10000 });
       if (allResponse.success && allResponse.data) {
         setAllPasswordsStats({
-          total: totalFromAPI || allResponse.data.length, // Usar total da API se disponível
+          total: totalFromAPI || allResponse.data.length, 
           favorites: allResponse.data.filter(p => p.isFavorite).length,
           totp: allResponse.data.filter(p => p.totpEnabled).length
         });
@@ -463,7 +463,7 @@ export default function DashboardScreen() {
     try {
       let response;
       
-      // Preparar dados para envio (igual ao web)
+      
       const passwordData: any = {
         name: formData.name.trim(),
         password: formData.password,
@@ -682,7 +682,7 @@ export default function DashboardScreen() {
 
           <Input
             label="Website"
-            placeholder="https://exemplo.com"
+            placeholder="https:
             value={formData.website}
             onChangeText={(text) => setFormData({ ...formData, website: text })}
             keyboardType="url"

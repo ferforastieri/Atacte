@@ -51,7 +51,7 @@ export class PasswordGenerator {
       throw new Error('O comprimento da senha deve ser pelo menos 1');
     }
 
-    // Construir conjunto de caracteres disponíveis
+    
     let availableChars = '';
 
     if (includeUppercase) {
@@ -71,17 +71,17 @@ export class PasswordGenerator {
       throw new Error('Pelo menos um tipo de caractere deve ser selecionado');
     }
 
-    // Remover caracteres similares se solicitado
+    
     if (excludeSimilar) {
       availableChars = availableChars.split('').filter(char => !CHARACTER_SETS.similar.includes(char)).join('');
     }
 
-    // Remover caracteres ambíguos se solicitado
+    
     if (excludeAmbiguous) {
       availableChars = availableChars.split('').filter(char => !CHARACTER_SETS.ambiguous.includes(char)).join('');
     }
 
-    // Garantir que pelo menos um caractere de cada tipo selecionado seja incluído
+    
     const requiredChars: string[] = [];
     
     if (includeUppercase) {
@@ -113,7 +113,7 @@ export class PasswordGenerator {
       requiredChars.push(this.getRandomChar(filteredSymbols));
     }
 
-    // Gerar o resto da senha
+    
     const remainingLength = Math.max(0, length - requiredChars.length);
     const password = [...requiredChars];
 
@@ -121,7 +121,7 @@ export class PasswordGenerator {
       password.push(this.getRandomChar(availableChars));
     }
 
-    // Embaralhar a senha para evitar padrões previsíveis
+    
     return this.shuffleArray(password).join('');
   }
 
@@ -143,7 +143,7 @@ export class PasswordGenerator {
     let score = 0;
     let feedback: string[] = [];
 
-    // Comprimento
+    
     if (password.length >= 12) {
       score += 2;
     } else if (password.length >= 8) {
@@ -152,13 +152,13 @@ export class PasswordGenerator {
       feedback.push('Use pelo menos 8 caracteres');
     }
 
-    // Tipos de caracteres
+    
     if (/[a-z]/.test(password)) score += 1;
     if (/[A-Z]/.test(password)) score += 1;
     if (/[0-9]/.test(password)) score += 1;
     if (/[^a-zA-Z0-9]/.test(password)) score += 1;
 
-    // Padrões comuns
+    
     if (/(.)\1{2,}/.test(password)) {
       score -= 1;
       feedback.push('Evite caracteres repetidos');
@@ -169,7 +169,7 @@ export class PasswordGenerator {
       feedback.push('Evite sequências comuns');
     }
 
-    // Determinar força
+    
     let label: string;
     let color: string;
 
@@ -261,7 +261,7 @@ export class PasswordGenerator {
     };
   }
 
-  // Métodos privados
+  
   private getRandomChar(chars: string): string {
     return chars[Math.floor(Math.random() * chars.length)];
   }
@@ -280,10 +280,10 @@ export class PasswordGenerator {
   }
 }
 
-// Instância padrão
+
 export const passwordGenerator = new PasswordGenerator();
 
-// Funções utilitárias
+
 export const generatePassword = (options?: Partial<PasswordGeneratorOptions>): string => {
   if (options) {
     const generator = new PasswordGenerator(options);
