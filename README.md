@@ -52,12 +52,12 @@ O projeto segue uma arquitetura de **3 camadas** com separação clara de respon
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │    Backend      │    │   Database      │
-│                 │    │                 │    │                 │
-│ ┌─────────────┐ │    │ • API REST      │    │ • Dados         │
-│ │   Web App   │ │◄──►│ • Autenticação  │◄──►│ • Criptografia  │
-│ │ (Vue.js 3)  │ │    │ • Criptografia  │    │ • Auditoria     │
-│ └─────────────┘ │    │ • Validação     │    │ • Sessões       │
-│ ┌─────────────┐ │    │                 │    │                 │
+│                 │    │ (Node.js +      │    │ (PostgreSQL)    │
+│ ┌─────────────┐ │    │  Express)       │    │                 │
+│ │   Web App   │ │◄──►│ • API REST      │◄──►│ • Dados         │
+│ │ (Vue.js 3)  │ │    │ • Autenticação  │    │ • Criptografia  │
+│ └─────────────┘ │    │ • Criptografia  │    │ • Auditoria     │
+│ ┌─────────────┐ │    │ • Validação     │    │ • Sessões       │
 │ │  Mobile App │ │    │                 │    │                 │
 │ │(React Native│ │    │                 │    │                 │
 │ │   + Expo)   │ │    │                 │    │                 │
