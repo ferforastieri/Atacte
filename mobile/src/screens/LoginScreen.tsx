@@ -71,11 +71,14 @@ export default function LoginScreen() {
     },
     header: {
       alignItems: 'center',
-      marginBottom: 40,
+      marginBottom: 50,
+      marginTop: 20,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: 18,
       color: isDark ? '#9ca3af' : '#6b7280',
+      marginTop: 8,
+      textAlign: 'center',
     },
     formCard: {
       marginBottom: 20,
@@ -100,7 +103,7 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Logo size={48} showText={true} textSize={32} />
+          <Logo size={80} showText={true} textSize={36} textColor={isDark ? '#f9fafb' : '#111827'} />
           <Text style={styles.subtitle}>Gerenciador de Senhas</Text>
         </View>
 

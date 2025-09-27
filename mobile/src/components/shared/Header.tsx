@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({
       <View style={styles.content}>
         <View style={styles.leftSection}>
           <View style={styles.logoContainer}>
-            <Logo size={24} showText={false} />
+            <Logo size={40} showText={false} />
           </View>
           {title && <Text style={styles.title}>{title}</Text>}
         </View>
