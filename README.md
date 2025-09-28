@@ -409,6 +409,26 @@ Importar dados de JSON.
 
 ## 🚀 Deployment
 
+### Deploy com Docker (Recomendado)
+
+```bash
+# 1. Configurar arquivos de exemplo
+cp backend/config.example.env backend/config.env
+cp docker-compose.example.yml docker-compose.yml
+cp deploy-local.example.sh deploy-local.sh
+
+# 2. Editar configurações
+- backend/config.env: banco de dados, JWT, etc.
+- deploy-local.sh: IP do servidor, usuário, caminho
+
+# 3. Configurar SSH sem senha
+ssh-keygen -t rsa -f ~/.ssh/id_rsa_atacte -N ""
+ssh-copy-id -i ~/.ssh/id_rsa_atacte.pub usuario@servidor
+
+# 4. Deploy automático
+./deploy-local.sh
+```
+
 ### Deploy Manual
 
 ```bash
@@ -416,47 +436,30 @@ Importar dados de JSON.
 git clone https://github.com/seu-usuario/atacte.git
 cd atacte
 
-# Configurar variáveis de ambiente
-cp backend/config.env.example backend/config.env
-# Editar config.env
+# Configurar arquivos necessários
+cp backend/config.example.env backend/config.env
+cp docker-compose.example.yml docker-compose.yml
+cp Dockerfile.example Dockerfile
+cp supervisord.example.conf supervisord.conf
+cp nginx/nginx.example.conf nginx/nginx.conf
 
-# Instalar dependências e build
-cd backend && npm install && npm run build
-cd ../web && npm install && npm run build
-
-# Configurar Nginx
-sudo cp nginx/nginx.conf /etc/nginx/sites-available/atacte
-sudo ln -s /etc/nginx/sites-available/atacte /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
+# Editar configurações
+nano backend/config.env  # banco de dados, JWT, etc.
 
 # Iniciar aplicação
-cd ../backend && npm start
-```
-
-### Deploy com Docker
-
-```bash
-# Usar o script de deploy
-./deploy.sh usuario@servidor:/caminho/destino
-
-# No servidor
-cd /caminho/destino
-docker-compose up -d
-```
-
-### Deploy com Docker Compose
-
-```bash
-# Configurar variáveis de ambiente
-cp backend/config.env.example backend/config.env
-# Editar config.env
-
-# Iniciar serviços
-docker-compose up -d
+docker-compose up -d --build
 
 # Verificar status
 docker-compose ps
 docker-compose logs -f
+```
+
+### Git Hook Automático (Opcional)
+
+```bash
+# Configurar deploy automático após commit
+chmod +x .git/hooks/post-commit
+# O hook executa deploy-local.sh automaticamente
 ```
 
 ## 💻 Desenvolvimento
