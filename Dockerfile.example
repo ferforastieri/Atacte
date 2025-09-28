@@ -1,6 +1,4 @@
-# Dockerfile Unificado - Atacte Password Manager (EXEMPLO)
-# Copie este arquivo para Dockerfile e ajuste conforme necessário
-
+# Dockerfile Unificado - Atacte Password Manager
 FROM node:18-alpine
 
 # Instalar dependências do sistema
@@ -33,7 +31,7 @@ COPY backend/package*.json ./
 COPY backend/tsconfig.json ./
 
 # Instalar dependências (cache layer)
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 # Copiar código fonte
 COPY backend/src/ ./src/
@@ -54,7 +52,7 @@ COPY web/tailwind.config.js ./
 COPY web/postcss.config.js ./
 
 # Instalar dependências (cache layer)
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 # Copiar código fonte
 COPY web/src/ ./src/
