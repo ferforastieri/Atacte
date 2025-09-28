@@ -139,7 +139,7 @@
           class="w-full sm:w-auto"
         >
           <PlusIcon class="w-4 h-4 mr-2" />
-          Nova Senha
+          Senha Nova
         </BaseButton>
 
         <div class="flex gap-3 sm:gap-4">
