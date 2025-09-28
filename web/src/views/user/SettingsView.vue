@@ -224,7 +224,7 @@ const loadSettings = async () => {
     const response = await preferencesApi.getPreferences()
     if (response.success && response.data) {
       language.value = response.data.language || 'pt-BR'
-      autoLock.value = response.data.autoLock?.toString() || '15'
+      autoLock.value = response.data.autoLock !== undefined ? response.data.autoLock.toString() : '15'
     } else {
       // Fallback para localStorage se não houver preferências no backend
       const savedLanguage = localStorage.getItem('language')

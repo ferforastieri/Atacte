@@ -386,7 +386,7 @@ const refreshPasswords = async () => {
   try {
     await passwordsStore.fetchPasswords()
     await passwordsStore.loadCompleteStats() // Recarregar estatísticas também
-    toast.success('Senhas atualizadas!')
+    // Removido toast de sucesso - não é necessário mostrar mensagem a cada listagem
   } catch (error) {
     toast.error('Erro ao atualizar senhas')
   } finally {

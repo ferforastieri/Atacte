@@ -1,0 +1,58 @@
+# Docker Compose - Atacte (EXEMPLO)
+# Copie este arquivo para docker-compose.yml e ajuste as configurações
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: atacte-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: atacte
+      POSTGRES_USER: seu_usuario_db
+      POSTGRES_PASSWORD: sua_senha_db_super_segura
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - atacte-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U seu_usuario_db -d atacte"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Aplicação Unificada (Frontend + Backend + Nginx)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: atacte-app
+    restart: unless-stopped
+    environment:
+      # Database
+      DATABASE_URL: postgresql://seu_usuario_db:sua_senha_db_super_segura@postgres:5432/atacte?sslmode=disable
+      # CORS
+      CORS_ORIGIN: "*"
+      # Server
+      PORT: 3001
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - atacte-network
+    volumes:
+      - ./backend/config.env:/app/backend/config.env:ro
+
+networks:
+  atacte-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

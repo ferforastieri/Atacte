@@ -84,12 +84,18 @@ docker-compose.override.yml
 .dockerignore
 docker-compose.*.yml
 !docker-compose.yml
+!docker-compose.example.yml
 docker-compose.yml
 Dockerfile
+!Dockerfile.example
 supervisord.conf
+!supervisord.example.conf
 nginx/nginx.conf
+!nginx/nginx.example.conf
 web/.env
+!web/env.example
 backend/.env
+!backend/config.example.env
 
 # SSL certificates (if you add them later)
 nginx/ssl/
@@ -100,4 +106,5 @@ nginx/ssl/
 # Deployment logs
 deploy.log
 deploy.sh
+deploy-local.sh
 
