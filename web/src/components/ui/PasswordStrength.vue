@@ -36,7 +36,7 @@
 import { computed } from 'vue'
 
 interface Props {
-  score?: number // 0-4
+  score?: number 
   feedback?: {
     warning?: string
     suggestions?: string[]

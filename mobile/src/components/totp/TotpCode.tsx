@@ -7,10 +7,10 @@ import * as Clipboard from 'expo-clipboard';
 import { TOTPClient, type TOTPCode } from '../../utils/totpClient';
 
 interface TotpCodeProps {
-  secret?: string; // Secret TOTP para geração client-side
-  code?: string; // Código atual (fallback para compatibilidade)
-  timeRemaining?: number; // Tempo restante (fallback)
-  period?: number; // Período (fallback)
+  secret?: string; 
+  code?: string; 
+  timeRemaining?: number; 
+  period?: number; 
   onRefresh?: () => void;
   onCopy?: () => void;
 }
@@ -28,7 +28,7 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
   const [currentTimeRemaining, setCurrentTimeRemaining] = useState<number>(30);
   const [currentPeriod, setCurrentPeriod] = useState<number>(30);
 
-  // Gerar código TOTP client-side se secret estiver disponível
+  
   const generateTotpCode = () => {
     if (!secret) return;
     
@@ -43,7 +43,7 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
     }
   };
 
-  // Usar valores das props como fallback se não houver secret
+  
   const displayCode = currentCode || code || '------';
   const displayTimeRemaining = currentTimeRemaining || timeRemaining || 30;
   const displayPeriod = currentPeriod || period || 30;
@@ -58,14 +58,14 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
 
   useEffect(() => {
     if (secret) {
-      // Geração client-side - atualizar a cada segundo
+      
       const timer = setInterval(() => {
         generateTotpCode();
       }, 1000);
 
       return () => clearInterval(timer);
     } else {
-      // Fallback para comportamento antigo
+      
       if (displayTimeRemaining <= 0) return;
 
       const timer = setInterval(() => {
@@ -98,10 +98,10 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
 
   const handleRefresh = () => {
     if (secret) {
-      // Regenerar client-side
+      
       generateTotpCode();
     } else {
-      // Fallback para comportamento antigo
+      
       onRefresh?.();
     }
   };

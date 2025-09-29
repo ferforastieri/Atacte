@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { NODE_ENV } from '../config';
 
-// Singleton do cliente Prisma
+
 class PrismaService {
   private static instance: PrismaClient;
 
@@ -14,10 +14,10 @@ class PrismaService {
         errorFormat: 'pretty',
       });
 
-      // Conectar ao banco
+      
       PrismaService.instance.$connect();
 
-      // Graceful shutdown
+      
       process.on('beforeExit', async () => {
         await PrismaService.instance.$disconnect();
       });
@@ -43,6 +43,6 @@ class PrismaService {
   }
 }
 
-// Exportar instância singleton
+
 export const prisma = PrismaService.getInstance();
 export default PrismaService;

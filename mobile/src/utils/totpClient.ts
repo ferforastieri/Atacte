@@ -2,13 +2,13 @@ import speakeasy from 'speakeasy'
 
 export interface TOTPCode {
   code: string
-  timeRemaining: number // segundos restantes até expirar
-  period: number // período total (30s)
+  timeRemaining: number 
+  period: number 
 }
 
 export interface TOTPValidation {
   isValid: boolean
-  delta?: number | undefined // diferença de tempo
+  delta?: number | undefined 
 }
 
 /**
@@ -16,14 +16,14 @@ export interface TOTPValidation {
  * Reduz drasticamente as requisições ao servidor
  */
 export class TOTPClient {
-  private static readonly TOTP_PERIOD = 30 // 30 segundos por período
-  private static readonly TOTP_WINDOW = 2 // Janela de tolerância (±2 períodos)
+  private static readonly TOTP_PERIOD = 30 
+  private static readonly TOTP_WINDOW = 2 
 
   /**
    * Gerar código TOTP atual baseado no secret
    */
   static generateCurrentCode(secret: string): TOTPCode {
-    // Limpar e normalizar o secret
+    
     const cleanSecret = secret.trim().replace(/\s/g, '').toUpperCase()
     
     if (!cleanSecret) {
@@ -36,7 +36,7 @@ export class TOTPClient {
       step: this.TOTP_PERIOD
     })
 
-    // Calcular tempo restante até o próximo período
+    
     const timeRemaining = this.TOTP_PERIOD - (Math.floor(Date.now() / 1000) % this.TOTP_PERIOD)
 
     return {

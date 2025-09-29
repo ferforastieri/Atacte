@@ -24,7 +24,7 @@ export type ResourceType =
   | 'SYSTEM';
 
 export class AuditUtil {
-  // Criar log de auditoria
+  
   static async log(
     userId: string | null,
     action: AuditAction,
@@ -50,7 +50,7 @@ export class AuditUtil {
     }
   }
 
-  // Buscar logs de auditoria de um usuário
+  
   static async getUserLogs(
     userId: string,
     options: { limit?: number; offset?: number } = {}
@@ -82,7 +82,7 @@ export class AuditUtil {
     return { logs, total };
   }
 
-  // Buscar logs de auditoria por recurso
+  
   static async getResourceLogs(
     resourceType: ResourceType,
     resourceId: string,

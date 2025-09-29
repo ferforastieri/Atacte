@@ -2,13 +2,13 @@ import { TOTP } from 'otpauth'
 
 export interface TOTPCode {
   code: string
-  timeRemaining: number // segundos restantes até expirar
-  period: number // período total (30s)
+  timeRemaining: number 
+  period: number 
 }
 
 export interface TOTPValidation {
   isValid: boolean
-  delta?: number | undefined // diferença de tempo
+  delta?: number | undefined 
 }
 
 /**
@@ -17,14 +17,14 @@ export interface TOTPValidation {
  * Compatível com browser usando otpauth
  */
 export class TOTPClient {
-  private static readonly TOTP_PERIOD = 30 // 30 segundos por período
-  private static readonly TOTP_WINDOW = 2 // Janela de tolerância (±2 períodos)
+  private static readonly TOTP_PERIOD = 30 
+  private static readonly TOTP_WINDOW = 2 
 
   /**
    * Gerar código TOTP atual baseado no secret
    */
   static generateCurrentCode(secret: string): TOTPCode {
-    // Limpar e normalizar o secret
+    
     const cleanSecret = secret.trim().replace(/\s/g, '').toUpperCase()
     
     if (!cleanSecret) {
@@ -32,7 +32,7 @@ export class TOTPClient {
     }
 
     try {
-      // Criar instância TOTP
+      
       const totp = new TOTP({
         secret: cleanSecret,
         algorithm: 'SHA1',
@@ -40,10 +40,10 @@ export class TOTPClient {
         period: this.TOTP_PERIOD
       })
 
-      // Gerar código atual
+      
       const token = totp.generate()
 
-      // Calcular tempo restante até o próximo período
+      
       const timeRemaining = this.TOTP_PERIOD - (Math.floor(Date.now() / 1000) % this.TOTP_PERIOD)
 
       return {

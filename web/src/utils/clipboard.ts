@@ -15,16 +15,16 @@ export interface CopyResult {
  */
 export async function copyToClipboard(text: string): Promise<CopyResult> {
   try {
-    // Verificar se o navegador suporta a API de clipboard moderna
+    
     if (navigator.clipboard && window.isSecureContext) {
-      // Usar a API moderna do clipboard (requer HTTPS ou localhost)
+      
       await navigator.clipboard.writeText(text)
       return {
         success: true,
         message: 'Copiado!'
       }
     } else {
-      // Fallback para navegadores mais antigos ou contextos não seguros
+      
       return await fallbackCopyToClipboard(text)
     }
   } catch (error) {
@@ -55,7 +55,7 @@ async function fallbackCopyToClipboard(text: string): Promise<CopyResult> {
     document.body.appendChild(textArea)
     textArea.focus()
     textArea.select()
-    textArea.setSelectionRange(0, 99999) // Para dispositivos móveis
+    textArea.setSelectionRange(0, 99999) 
     
     const successful = document.execCommand('copy')
     document.body.removeChild(textArea)

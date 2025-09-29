@@ -1,33 +1,33 @@
 import dotenv from 'dotenv'
 import path from 'path'
 
-// Carregar variáveis de ambiente
+
 dotenv.config({ path: path.join(__dirname, '../../../config.env') })
 
 export interface EnvironmentConfig {
-  // Server
+  
   PORT: number
   NODE_ENV: 'development' | 'production' | 'test'
   
-  // Database
+  
   DATABASE_URL: string
   
-  // JWT
+  
   JWT_SECRET: string
   JWT_EXPIRES_IN: string
   
-  // Encryption
+  
   ENCRYPTION_KEY: string
   
-  // Security
+  
   BCRYPT_ROUNDS: number
   RATE_LIMIT_WINDOW_MS: number
   RATE_LIMIT_MAX_REQUESTS: number
   
-  // CORS
+  
   CORS_ORIGIN: string
   
-  // Logging
+  
   LOG_LEVEL: 'error' | 'warn' | 'info' | 'debug'
 }
 
@@ -41,29 +41,29 @@ class Environment {
 
   private loadConfig(): EnvironmentConfig {
     return {
-      // Server
+      
       PORT: this.getNumber('PORT', 3001),
       NODE_ENV: this.getString('NODE_ENV', 'development') as 'development' | 'production' | 'test',
       
-      // Database
-      DATABASE_URL: this.getString('DATABASE_URL', 'postgresql://username:password@localhost:5432/atacte?sslmode=disable'),
       
-      // JWT
+      DATABASE_URL: this.getString('DATABASE_URL', 'postgresql://localhost:5432/atacte'),
+      
+      
       JWT_SECRET: this.getString('JWT_SECRET', 'your-super-secret-jwt-key-change-this-in-production'),
       JWT_EXPIRES_IN: this.getString('JWT_EXPIRES_IN', '7d'),
       
-      // Encryption
+      
       ENCRYPTION_KEY: this.getString('ENCRYPTION_KEY', 'your-32-character-encryption-key-here'),
       
-      // Security
+      
       BCRYPT_ROUNDS: this.getNumber('BCRYPT_ROUNDS', 12),
-      RATE_LIMIT_WINDOW_MS: this.getNumber('RATE_LIMIT_WINDOW_MS', 15 * 60 * 1000), // 15 minutes
+      RATE_LIMIT_WINDOW_MS: this.getNumber('RATE_LIMIT_WINDOW_MS', 15 * 60 * 1000), 
       RATE_LIMIT_MAX_REQUESTS: this.getNumber('RATE_LIMIT_MAX_REQUESTS', 500),
       
-      // CORS
+      
       CORS_ORIGIN: this.getString('CORS_ORIGIN', '*'),
       
-      // Logging
+      
       LOG_LEVEL: this.getString('LOG_LEVEL', 'info') as 'error' | 'warn' | 'info' | 'debug'
     }
   }
@@ -105,7 +105,7 @@ class Environment {
       }
     }
 
-    // Validações específicas
+    
     if (this.config.JWT_SECRET.length < 32) {
       throw new Error('JWT_SECRET must be at least 32 characters long')
     }
@@ -140,10 +140,10 @@ class Environment {
   }
 }
 
-// Singleton instance
+
 export const env = new Environment()
 
-// Export individual getters for convenience
+
 export const {
   PORT,
   NODE_ENV,

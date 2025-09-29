@@ -9,7 +9,7 @@ export interface PasswordGeneratorOptions {
 }
 
 export interface PasswordStrength {
-  score: number; // 0-4
+  score: number; 
   feedback: {
     warning: string;
     suggestions: string[];
@@ -18,7 +18,7 @@ export interface PasswordStrength {
 }
 
 export class PasswordUtil {
-  // Gerar senha segura
+  
   static generateSecurePassword(options: PasswordGeneratorOptions): {
     password: string;
     strength: PasswordStrength;
@@ -31,7 +31,7 @@ export class PasswordUtil {
       includeSymbols
     } = options;
 
-    // Construir charset baseado nas opções
+    
     let charset = '';
     if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
     if (includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -42,19 +42,19 @@ export class PasswordUtil {
       throw new Error('Pelo menos um tipo de caractere deve ser selecionado');
     }
 
-    // Gerar senha usando charset customizado
+    
     let password = '';
     for (let i = 0; i < length; i++) {
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
     
-    // Avaliar força da senha
+    
     const strength = this.evaluatePasswordStrength(password);
 
     return { password, strength };
   }
 
-  // Avaliar força da senha
+  
   static evaluatePasswordStrength(password: string): PasswordStrength {
     const result = zxcvbn(password);
     
@@ -68,7 +68,7 @@ export class PasswordUtil {
     };
   }
 
-  // Formatar tempo de quebra
+  
   private static formatCrackTime(crackTime: string): string {
     const timeMap: { [key: string]: string } = {
       'instant': 'instantâneo',
@@ -90,7 +90,7 @@ export class PasswordUtil {
     return formatted;
   }
 
-  // Verificar se a senha atende aos critérios mínimos
+  
   static validatePasswordStrength(password: string, minScore: number = 3): {
     isValid: boolean;
     strength: PasswordStrength;
@@ -102,7 +102,7 @@ export class PasswordUtil {
     };
   }
 
-  // Detectar senhas duplicadas
+  
   static findDuplicatePasswords(passwords: string[]): string[] {
     const seen = new Set<string>();
     const duplicates = new Set<string>();
@@ -118,7 +118,7 @@ export class PasswordUtil {
     return Array.from(duplicates);
   }
 
-  // Verificar se senha contém informações pessoais
+  
   static containsPersonalInfo(password: string, personalInfo: string[]): boolean {
     const lowerPassword = password.toLowerCase();
     return personalInfo.some(info => 

@@ -107,7 +107,7 @@ export class PasswordRepository {
       userId: filters.userId,
     };
 
-    // Filtros de busca
+    
     if (filters.search) {
       where.OR = [
         { name: { contains: filters.search, mode: 'insensitive' } },
@@ -132,7 +132,7 @@ export class PasswordRepository {
     const limit = filters.limit || 50;
     const offset = filters.offset || 0;
 
-    // Configurar ordenação
+    
     const sortBy = filters.sortBy || 'name';
     const sortOrder = filters.sortOrder || 'asc';
     
@@ -189,7 +189,7 @@ export class PasswordRepository {
     });
   }
 
-  // Custom Fields
+  
   async createCustomField(data: CreateCustomFieldData): Promise<CustomField> {
     return await prisma.customField.create({
       data,

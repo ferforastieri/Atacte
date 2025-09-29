@@ -24,7 +24,7 @@ export interface CreatePreferencesRequest {
 }
 
 export const preferencesApi = {
-  // Buscar preferências do usuário
+  
   async getPreferences(): Promise<{ success: boolean; data?: UserPreferences; message?: string }> {
     try {
       const response = await api.get('/preferences')
@@ -37,7 +37,7 @@ export const preferencesApi = {
     }
   },
 
-  // Criar preferências do usuário
+  
   async createPreferences(data: CreatePreferencesRequest): Promise<{ success: boolean; data?: UserPreferences; message?: string }> {
     try {
       const response = await api.post('/preferences', data)
@@ -50,7 +50,7 @@ export const preferencesApi = {
     }
   },
 
-  // Atualizar preferências do usuário
+  
   async updatePreferences(data: UpdatePreferencesRequest): Promise<{ success: boolean; data?: UserPreferences; message?: string }> {
     try {
       const response = await api.put('/preferences', data)
@@ -64,7 +64,7 @@ export const preferencesApi = {
     }
   },
 
-  // Atualizar ou criar preferências (upsert)
+  
   async upsertPreferences(data: UpdatePreferencesRequest): Promise<{ success: boolean; data?: UserPreferences; message?: string }> {
     try {
       const response = await api.patch('/preferences', data)
@@ -78,7 +78,7 @@ export const preferencesApi = {
     }
   },
 
-  // Deletar preferências do usuário
+  
   async deletePreferences(): Promise<{ success: boolean; message?: string }> {
     try {
       const response = await api.delete('/preferences')

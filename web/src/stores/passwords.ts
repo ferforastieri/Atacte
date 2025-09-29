@@ -5,7 +5,7 @@ import importExportApi from '@/api/importExport'
 import totpApi, { type TOTPCode } from '@/api/totp'
 
 export const usePasswordsStore = defineStore('passwords', () => {
-  // Estado
+  
   const passwords = ref<PasswordEntry[]>([])
   const currentPassword = ref<PasswordEntry | null>(null)
   const folders = ref<string[]>([])
@@ -25,12 +25,12 @@ export const usePasswordsStore = defineStore('passwords', () => {
     sortOrder: 'asc'
   })
 
-  // Getters
+  
   const favoritePasswords = computed(() => 
     passwords.value.filter(p => p.isFavorite)
   )
 
-  // Estatísticas completas (não apenas da página atual)
+  
   const allFavoritePasswords = ref<PasswordEntry[]>([])
   const allTotpEnabledPasswords = ref<PasswordEntry[]>([])
   const statsLoaded = ref(false)
@@ -54,10 +54,10 @@ export const usePasswordsStore = defineStore('passwords', () => {
 
   const totalCount = computed(() => pagination.value.total)
 
-  // Agora usamos as senhas diretamente do backend (já filtradas e paginadas)
+  
   const searchResults = computed(() => passwords.value)
 
-  // Actions
+  
   const fetchPasswords = async (filters?: Partial<PasswordSearchFilters>) => {
     isLoading.value = true
     try {
@@ -66,7 +66,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
       
       if (response.success) {
         passwords.value = response.data
-        // Atualizar informações de paginação
+        
         if (response.pagination) {
           pagination.value = {
             total: response.pagination.total,
@@ -106,7 +106,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
       const response = await passwordsApi.createPassword(passwordData)
       if (response.success) {
         passwords.value.push(response.data)
-        await fetchFolders() // Atualizar lista de pastas
+        await fetchFolders() 
         return response.data
       }
       throw new Error(response.message || 'Erro ao criar senha')
@@ -118,23 +118,23 @@ export const usePasswordsStore = defineStore('passwords', () => {
   const updatePassword = async (id: string, passwordData: UpdatePasswordRequest) => {
     isLoading.value = true
     try {
-      // Separar dados TOTP dos dados da senha
+      
       const { totpEnabled, totpSecret, ...passwordFields } = passwordData
       
-      // Atualizar dados da senha (sem TOTP)
+      
       const response = await passwordsApi.updatePassword(id, passwordFields)
       
       if (response.success) {
-        // Se há mudanças no TOTP, gerenciar separadamente
+        
         if (totpEnabled && totpSecret) {
-          // Adicionar ou atualizar TOTP
+          
           await addTotp(id, totpSecret)
         } else if (totpEnabled === false) {
-          // Remover TOTP se foi desabilitado
+          
           await removeTotp(id)
         }
         
-        // Atualizar a senha na lista
+        
         const index = passwords.value.findIndex(p => p.id === id)
         if (index !== -1) {
           passwords.value[index] = response.data
@@ -142,7 +142,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
         if (currentPassword.value?.id === id) {
           currentPassword.value = response.data
         }
-        await fetchFolders() // Atualizar lista de pastas
+        await fetchFolders() 
         return response.data
       }
       throw new Error(response.message || 'Erro ao atualizar senha')
@@ -160,7 +160,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
         if (currentPassword.value?.id === id) {
           currentPassword.value = null
         }
-        await fetchFolders() // Atualizar lista de pastas
+        await fetchFolders() 
         return response.data
       }
       throw new Error(response.message || 'Erro ao deletar senha')
@@ -198,7 +198,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }
   }
 
-  // TOTP Actions
+  
   const getTotpCode = async (id: string) => {
     try {
       const response = await totpApi.getTotpCode(id)
@@ -211,7 +211,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }
   }
 
-  // Buscar apenas o secret TOTP (para geração client-side)
+  
   const getTotpSecret = async (id: string) => {
     try {
       const response = await totpApi.getTotpSecret(id)
@@ -229,7 +229,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
     try {
       const response = await totpApi.addTotpToPassword(id, totpInput)
       if (response.success) {
-        // Atualizar a senha na lista
+        
         const index = passwords.value.findIndex(p => p.id === id)
         if (index !== -1) {
           passwords.value[index] = response.data
@@ -250,7 +250,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
     try {
       const response = await totpApi.removeTotpFromPassword(id)
       if (response.success) {
-        // Atualizar a senha na lista
+        
         const index = passwords.value.findIndex(p => p.id === id)
         if (index !== -1) {
           passwords.value[index] = response.data
@@ -266,13 +266,13 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }
   }
 
-  // Importação
+  
   const importPasswords = async (jsonData: any) => {
     isLoading.value = true
     try {
       const response = await importExportApi.importPasswords(jsonData)
       if (response.success) {
-        // Recarregar lista de senhas e pastas
+        
         await fetchPasswords()
         await fetchFolders()
         return response.data
@@ -283,7 +283,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }
   }
 
-  // Exportação
+  
   const exportToBitwarden = async () => {
     try {
       const result = await importExportApi.exportToBitwarden()
@@ -302,13 +302,13 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }
   }
 
-  // Carregar estatísticas completas
+  
   const loadCompleteStats = async () => {
     try {
-      // Buscar todas as senhas favoritas
+      
       const favoritesResponse = await passwordsApi.searchPasswords({
         isFavorite: true,
-        limit: 1000, // Buscar muitas senhas favoritas
+        limit: 1000, 
         offset: 0
       })
       
@@ -316,10 +316,10 @@ export const usePasswordsStore = defineStore('passwords', () => {
         allFavoritePasswords.value = favoritesResponse.data
       }
 
-      // Buscar todas as senhas com TOTP
+      
       const totpResponse = await passwordsApi.searchPasswords({
         totpEnabled: true,
-        limit: 1000, // Buscar muitas senhas com TOTP
+        limit: 1000, 
         offset: 0
       })
       
@@ -333,7 +333,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }
   }
 
-  // Utilitários
+  
   const setSearchFilters = (filters: Partial<PasswordSearchFilters>) => {
     searchFilters.value = { ...searchFilters.value, ...filters }
   }
@@ -353,7 +353,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
     currentPassword.value = null
   }
 
-  // Funções de paginação
+  
   const goToPage = async (page: number) => {
     const newOffset = (page - 1) * pagination.value.limit
     await fetchPasswords({ offset: newOffset })
@@ -378,7 +378,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
 
 
   return {
-    // Estado
+    
     passwords,
     currentPassword,
     folders,
@@ -386,19 +386,19 @@ export const usePasswordsStore = defineStore('passwords', () => {
     searchFilters,
     pagination,
     
-    // Getters
+    
     favoritePasswords,
     passwordsByFolder,
     totalCount,
     searchResults,
     
-    // Estatísticas completas
+    
     allFavoritePasswords,
     allTotpEnabledPasswords,
     statsLoaded,
     loadCompleteStats,
     
-    // Actions
+    
     fetchPasswords,
     fetchPasswordById,
     createPassword,
@@ -407,26 +407,26 @@ export const usePasswordsStore = defineStore('passwords', () => {
     fetchFolders,
     generatePassword,
     
-    // TOTP Actions
+    
     getTotpCode,
     getTotpSecret,
     addTotp,
     removeTotp,
     
-    // Importação
+    
     importPasswords,
     
-    // Exportação
+    
     exportToBitwarden,
     exportToCSV,
     
-    // Paginação
+    
     goToPage,
     nextPage,
     previousPage,
     setPageSize,
     
-    // Utilitários
+    
     setSearchFilters,
     clearSearch,
     clearCurrentPassword

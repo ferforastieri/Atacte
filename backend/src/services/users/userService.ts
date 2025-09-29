@@ -20,7 +20,7 @@ export interface UserStatsDto {
   weakPasswords: number;
   duplicatedPasswords: number;
   lastActivity?: Date;
-  accountAge: number; // em dias
+  accountAge: number; 
   totalLogins: number;
 }
 
@@ -65,7 +65,7 @@ export class UserService {
     this.userRepository = new UserRepository();
   }
 
-  // Buscar perfil do usuário
+  
   async getUserProfile(userId: string): Promise<UserProfileDto> {
     const user = await this.userRepository.findById(userId);
 
@@ -83,7 +83,7 @@ export class UserService {
     };
   }
 
-  // Buscar estatísticas do usuário
+  
   async getUserStats(userId: string): Promise<UserStatsDto> {
     const user = await this.userRepository.findById(userId);
 
@@ -91,7 +91,7 @@ export class UserService {
       throw new Error('Usuário não encontrado');
     }
 
-    // Buscar estatísticas usando repository
+    
     const stats = await this.userRepository.getUserStats(userId);
 
     return {
@@ -106,12 +106,12 @@ export class UserService {
     };
   }
 
-  // Buscar pastas do usuário
+  
   async getUserFolders(userId: string): Promise<string[]> {
     return await this.userRepository.getUserFolders(userId);
   }
 
-  // Buscar logs de auditoria do usuário
+  
   async getUserAuditLogs(
     userId: string, 
     options: { limit: number; offset: number }
@@ -134,19 +134,19 @@ export class UserService {
     return { logs: auditLogs, total: result.total };
   }
 
-  // Exportar dados do usuário
+  
   async exportUserData(userId: string, req?: Request): Promise<ExportDataDto> {
-    // Buscar dados do usuário
+    
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
     }
 
-    // Buscar dados usando repository
+    
     const exportData = await this.userRepository.exportUserData(userId);
 
-    // Log de auditoria
+    
     await AuditUtil.log(
       userId, 
       'EXPORT_DATA', 
@@ -163,19 +163,19 @@ export class UserService {
     };
   }
 
-  // Deletar conta do usuário
+  
   async deleteUserAccount(userId: string, req?: Request): Promise<void> {
-    // Verificar se usuário existe
+    
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
     }
 
-    // Deletar em cascata (senhas, logs, etc.)
+    
     await this.userRepository.delete(userId);
 
-    // Log de auditoria antes de deletar
+    
     await AuditUtil.log(
       userId, 
       'ACCOUNT_DELETED', 
@@ -186,12 +186,12 @@ export class UserService {
     );
   }
 
-  // Atualizar último login
+  
   async updateLastLogin(userId: string): Promise<void> {
     await this.userRepository.updateLastLogin(userId);
   }
 
-  // Desativar conta do usuário
+  
   async deactivateAccount(userId: string, req?: Request): Promise<void> {
     await this.userRepository.update(userId, { isActive: false });
 
@@ -205,7 +205,7 @@ export class UserService {
     );
   }
 
-  // Reativar conta do usuário
+  
   async reactivateAccount(userId: string, req?: Request): Promise<void> {
     await this.userRepository.update(userId, { isActive: true });
 

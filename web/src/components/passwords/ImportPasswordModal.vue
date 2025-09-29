@@ -130,7 +130,7 @@ const emit = defineEmits<Emits>()
 
 const passwordsStore = usePasswordsStore()
 
-// Estado do componente
+
 const selectedFile = ref<File | null>(null)
 const isImporting = ref(false)
 const importResult = ref<{
@@ -140,19 +140,19 @@ const importResult = ref<{
   duplicates: number
 } | null>(null)
 
-// Função para selecionar arquivo
+
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
   
   if (file) {
-    // Validar tipo de arquivo
+    
     if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
       alert('Por favor, selecione um arquivo JSON válido.')
       return
     }
     
-    // Validar tamanho (10MB)
+    
     if (file.size > 10 * 1024 * 1024) {
       alert('O arquivo é muito grande. Máximo de 10MB permitido.')
       return
@@ -163,7 +163,7 @@ const handleFileSelect = (event: Event) => {
   }
 }
 
-// Função para formatar tamanho do arquivo
+
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes'
   
@@ -174,7 +174,7 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-// Função para importar senhas
+
 const importPasswords = async () => {
   if (!selectedFile.value) return
   
@@ -182,14 +182,14 @@ const importPasswords = async () => {
   importResult.value = null
   
   try {
-    // Ler o arquivo
+    
     const fileContent = await selectedFile.value.text()
     const jsonData = JSON.parse(fileContent)
     
-    // Enviar para o backend
+    
     const result = await passwordsStore.importPasswords(jsonData)
     
-    // Adicionar propriedade success baseada no resultado
+    
     const importResultData = {
       ...result,
       success: result.errors.length === 0 || result.imported > 0
@@ -214,12 +214,12 @@ const importPasswords = async () => {
   }
 }
 
-// Função para limpar importação
+
 const clearImport = () => {
   selectedFile.value = null
   importResult.value = null
   
-  // Limpar input de arquivo
+  
   const fileInput = document.getElementById('file-upload') as HTMLInputElement
   if (fileInput) {
     fileInput.value = ''

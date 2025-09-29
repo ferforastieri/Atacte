@@ -297,24 +297,24 @@ import { BaseButton, BaseCard, TotpCode } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 import { copyToClipboard } from '@/utils/clipboard'
 
-// Components (serão criados depois)
-// import EditPasswordModal from '@/components/passwords/EditPasswordModal.vue'
-// import DeletePasswordModal from '@/components/passwords/DeletePasswordModal.vue'
+
+
+
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const passwordsStore = usePasswordsStore()
 
-// Estado
+
 const showPassword = ref(false)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 
-// Computed
+
 const password = computed(() => passwordsStore.currentPassword)
 
-// Methods
+
 const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value
 }
@@ -391,7 +391,7 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString('pt-BR')
 }
 
-// Lifecycle
+
 onMounted(async () => {
   const passwordId = route.params.id as string
   if (passwordId) {

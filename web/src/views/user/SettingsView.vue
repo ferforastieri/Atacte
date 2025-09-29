@@ -192,7 +192,7 @@ import { useAuthStore } from '@/stores/auth'
 import importExportApi from '@/api/importExport'
 import preferencesApi from '@/api/preferences'
 
-// Components
+
 import ImportPasswordModal from '@/components/passwords/ImportPasswordModal.vue'
 
 const router = useRouter()
@@ -205,28 +205,28 @@ const showChangePasswordModal = ref(false)
 const showDeleteAccountModal = ref(false)
 const showImportModal = ref(false)
 
-// Configurações
+
 const theme = ref('auto')
 const language = ref('pt-BR')
 const autoLock = ref('15')
 
-// Carregar configurações salvas
+
 onMounted(async () => {
   await loadSettings()
 })
 
 const loadSettings = async () => {
   try {
-    // Carregar tema do store (já inicializado)
+    
     theme.value = themeStore.isDarkMode ? 'dark' : 'light'
     
-    // Carregar preferências do backend
+    
     const response = await preferencesApi.getPreferences()
     if (response.success && response.data) {
       language.value = response.data.language || 'pt-BR'
       autoLock.value = response.data.autoLock !== undefined ? response.data.autoLock.toString() : '15'
     } else {
-      // Fallback para localStorage se não houver preferências no backend
+      
       const savedLanguage = localStorage.getItem('language')
       const savedAutoLock = localStorage.getItem('autoLock')
       
@@ -240,7 +240,7 @@ const loadSettings = async () => {
     }
   } catch (error) {
     console.error('Erro ao carregar configurações:', error)
-    // Fallback para localStorage
+    
     const savedLanguage = localStorage.getItem('language')
     const savedAutoLock = localStorage.getItem('autoLock')
     
@@ -260,7 +260,7 @@ const changeTheme = () => {
   } else if (theme.value === 'light') {
     themeStore.isDarkMode = false
   } else {
-    // Auto - seguir preferência do sistema
+    
     themeStore.isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
   }
   
@@ -304,7 +304,7 @@ const exportData = async () => {
     
     const result = await passwordsStore.exportToBitwarden()
     
-    // Criar e baixar arquivo
+    
     const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

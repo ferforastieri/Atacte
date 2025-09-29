@@ -1,7 +1,7 @@
 import crypto from 'crypto-js';
 
 export class CryptoUtil {
-  // Criptografar dados
+  
   static encrypt(data: string, key: string): string {
     try {
       return crypto.AES.encrypt(data, key).toString();
@@ -10,7 +10,7 @@ export class CryptoUtil {
     }
   }
 
-  // Descriptografar dados
+  
   static decrypt(encryptedData: string, key: string): string {
     try {
       const bytes = crypto.AES.decrypt(encryptedData, key);
@@ -26,22 +26,22 @@ export class CryptoUtil {
     }
   }
 
-  // Gerar chave aleatória
+  
   static generateKey(bits: number = 256): string {
     return crypto.lib.WordArray.random(bits / 8).toString();
   }
 
-  // Gerar salt
+  
   static generateSalt(bits: number = 128): string {
     return crypto.lib.WordArray.random(bits / 8).toString();
   }
 
-  // Hash de dados
+  
   static hash(data: string): string {
     return crypto.SHA256(data).toString();
   }
 
-  // Verificar se uma string é um hash válido
+  
   static isValidHash(hash: string): boolean {
     return /^[a-f0-9]{64}$/i.test(hash);
   }

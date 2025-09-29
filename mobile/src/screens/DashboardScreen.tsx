@@ -367,7 +367,7 @@ export default function DashboardScreen() {
     await Promise.all([loadPasswords(0, false), loadAllPasswordsStats()]);
   }, [loadPasswords]);
 
-  // Métodos de busca otimizados
+  
   const handleSearch = useCallback(async (query: string) => {
     try {
       setSearchQuery(query);
@@ -710,7 +710,7 @@ export default function DashboardScreen() {
 
           <Input
             label="Website"
-            placeholder="https://exemplo.com"
+            placeholder="https:
             value={formData.website}
             onChangeText={(text) => setFormData({ ...formData, website: text })}
             keyboardType="url"

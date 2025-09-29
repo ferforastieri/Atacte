@@ -10,10 +10,10 @@ export interface ToastData {
 }
 
 export const useToastStore = defineStore('toast', () => {
-  // Estado
+  
   const toasts = ref<ToastData[]>([])
 
-  // Actions
+  
   const showToast = (type: ToastData['type'], message: string, title?: string, duration?: number) => {
     const id = Date.now().toString()
     const toast: ToastData = {
@@ -26,7 +26,7 @@ export const useToastStore = defineStore('toast', () => {
     
     toasts.value.push(toast)
 
-    // Auto hide
+    
     setTimeout(() => {
       hideToast(id)
     }, toast.duration)
@@ -56,7 +56,7 @@ export const useToastStore = defineStore('toast', () => {
     }
   }
 
-  // Helpers
+  
   const getDefaultTitle = (type: ToastData['type']): string => {
     switch (type) {
       case 'success': return 'Sucesso!'
@@ -76,10 +76,10 @@ export const useToastStore = defineStore('toast', () => {
   }
 
   return {
-    // Estado
+    
     toasts,
     
-    // Actions
+    
     showSuccess,
     showError,
     showInfo,

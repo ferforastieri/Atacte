@@ -35,7 +35,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     
     setToasts(prev => [...prev, newToast]);
 
-    // Auto hide after 4-5 seconds
+    
     setTimeout(() => {
       hideToast(id);
     }, type === 'error' ? 5000 : 4000);

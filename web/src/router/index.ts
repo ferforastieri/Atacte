@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
-// Views
+
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue'
 import DashboardView from '@/views/DashboardView.vue'
@@ -106,16 +106,16 @@ const router = createRouter({
   ]
 })
 
-// Navigation Guards
+
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   
-  // Definir título da página
+  
   if (to.meta.title) {
     document.title = to.meta.title as string
   }
 
-  // Verificar se a rota requer autenticação
+  
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
       next('/login')
@@ -124,7 +124,7 @@ router.beforeEach(async (to, from, next) => {
     
     next()
   } else {
-    // Rota pública - redirecionar para dashboard se já estiver logado
+    
     if (authStore.isAuthenticated && (to.name === 'Login' || to.name === 'Register')) {
       next('/dashboard')
     } else {
@@ -133,7 +133,7 @@ router.beforeEach(async (to, from, next) => {
   }
 })
 
-// Interceptor de erros globais
+
 router.onError((error) => {
   console.error('Router Error:', error)
 })

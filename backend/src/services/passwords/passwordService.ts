@@ -11,7 +11,7 @@ export interface PasswordEntryDto {
   name: string;
   website?: string;
   username?: string;
-  password: string; // Descriptografado
+  password: string; 
   notes?: string;
   folder?: string;
   isFavorite: boolean;
@@ -19,15 +19,15 @@ export interface PasswordEntryDto {
   updatedAt: Date;
   lastUsed?: Date;
   customFields?: CustomFieldDto[];
-  // TOTP
+  
   totpEnabled: boolean;
-  totpCode?: TOTPCode; // Código atual se TOTP estiver habilitado
+  totpCode?: TOTPCode; 
 }
 
 export interface CustomFieldDto {
   id: string;
   fieldName: string;
-  value: string; // Descriptografado
+  value: string; 
   fieldType: string;
 }
 
@@ -44,8 +44,8 @@ export interface CreatePasswordEntryData {
     value: string;
     fieldType: 'text' | 'password' | 'email' | 'url' | 'number';
   }>;
-  // TOTP
-  totpSecret?: string; // Secret do TOTP (será criptografado)
+  
+  totpSecret?: string; 
   totpEnabled?: boolean;
 }
 
@@ -74,7 +74,7 @@ export class PasswordService {
     this.passwordRepository = new PasswordRepository();
   }
 
-  // Buscar senhas com filtros
+  
   async searchPasswords(userId: string, filters: SearchFilters, req?: Request): Promise<SearchResult> {
     const {
       query,
@@ -87,7 +87,7 @@ export class PasswordService {
       sortOrder
     } = filters;
 
-    // Buscar senhas usando repository
+    
     const searchFilters: any = {
       userId
     };
@@ -99,7 +99,7 @@ export class PasswordService {
     if (limit) searchFilters.limit = limit;
     if (offset) searchFilters.offset = offset;
     
-    // Sempre definir ordenação, mesmo que não seja fornecida
+    
     searchFilters.sortBy = sortBy || 'name';
     searchFilters.sortOrder = sortOrder || 'asc';
 
@@ -107,14 +107,14 @@ export class PasswordService {
     const passwords = result.items;
     const total = result.total;
 
-    // Buscar chave de criptografia do usuário
+    
     const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
     }
 
-    // Descriptografar senhas
+    
     const decryptedPasswords = [];
     for (const password of passwords) {
       try {
@@ -122,7 +122,7 @@ export class PasswordService {
         decryptedPasswords.push(decryptedPassword);
       } catch (error) {
         console.error('🔐 PasswordService: ERRO ao descriptografar senha, pulando:', password.name, error.message);
-        // Pula senhas que não conseguem ser descriptografadas
+        
         continue;
       }
     }
@@ -133,7 +133,7 @@ export class PasswordService {
     };
   }
 
-  // Buscar senha por ID
+  
   async getPasswordById(userId: string, passwordId: string, req?: Request): Promise<PasswordEntryDto | null> {
     const password = await this.passwordRepository.findById(passwordId, userId);
 
@@ -141,35 +141,35 @@ export class PasswordService {
       return null;
     }
 
-    // Buscar chave de criptografia
+    
     const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
     }
 
-    // Atualizar último uso
+    
     await this.passwordRepository.updateLastUsed(passwordId);
 
-    // Log de auditoria
+    
     await AuditUtil.log(userId, 'PASSWORD_VIEWED', 'PASSWORD_ENTRY', passwordId, null, req);
 
     return this.decryptPasswordEntry(password, user.encryptionKeyHash);
   }
 
-  // Criar nova senha
+  
   async createPassword(userId: string, data: CreatePasswordEntryData, req?: Request): Promise<PasswordEntryDto> {
-    // Buscar chave de criptografia
+    
     const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
     }
 
-    // Criptografar senha
+    
     const encryptedPassword = CryptoUtil.encrypt(data.password, user.encryptionKeyHash);
 
-    // Criptografar TOTP secret se fornecido
+    
     let encryptedTotpSecret: string | undefined;
     if (data.totpSecret) {
       if (!TOTPService.isValidSecret(data.totpSecret)) {
@@ -178,7 +178,7 @@ export class PasswordService {
       encryptedTotpSecret = TOTPService.encryptSecret(data.totpSecret, user.encryptionKeyHash);
     }
 
-    // Criar entrada de senha
+    
     const passwordEntry = await this.passwordRepository.create({
       userId,
       name: data.name,
@@ -197,7 +197,7 @@ export class PasswordService {
       })) || undefined
     } as any);
 
-    // Log de auditoria
+    
     await AuditUtil.log(
       userId, 
       'PASSWORD_CREATED', 
@@ -210,28 +210,28 @@ export class PasswordService {
     return this.decryptPasswordEntry(passwordEntry, user.encryptionKeyHash);
   }
 
-  // Atualizar senha
+  
   async updatePassword(
     userId: string, 
     passwordId: string, 
     data: UpdatePasswordEntryData, 
     req?: Request
   ): Promise<PasswordEntryDto | null> {
-    // Verificar se a senha existe
+    
     const existingPassword = await this.passwordRepository.findById(passwordId, userId);
 
     if (!existingPassword) {
       return null;
     }
 
-    // Buscar chave de criptografia
+    
     const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
     }
 
-    // Preparar dados para atualização
+    
     const updateData: any = {};
 
     if (data.name !== undefined) updateData.name = data.name;
@@ -258,15 +258,15 @@ export class PasswordService {
       }
     }
 
-    // Atualizar senha
+    
     const updatedPassword = await this.passwordRepository.update(passwordId, updateData);
 
-    // Atualizar campos customizados se fornecidos
+    
     if (data.customFields) {
-      // Remover campos existentes
+      
       await this.passwordRepository.deleteCustomFieldsByPasswordEntryId(passwordId);
 
-      // Criar novos campos
+      
       for (const field of data.customFields) {
         await this.passwordRepository.createCustomField({
           passwordEntryId: passwordId,
@@ -277,10 +277,10 @@ export class PasswordService {
       }
     }
 
-    // Buscar senha atualizada com campos customizados
+    
     const finalPassword = await this.passwordRepository.findById(passwordId);
 
-    // Log de auditoria
+    
     await AuditUtil.log(
       userId, 
       'PASSWORD_UPDATED', 
@@ -293,7 +293,7 @@ export class PasswordService {
     return this.decryptPasswordEntry(finalPassword!, user.encryptionKeyHash);
   }
 
-  // Deletar senha
+  
   async deletePassword(userId: string, passwordId: string, req?: Request): Promise<boolean> {
     const password = await this.passwordRepository.findById(passwordId, userId);
 
@@ -303,7 +303,7 @@ export class PasswordService {
 
     await this.passwordRepository.delete(passwordId);
 
-    // Log de auditoria
+    
     await AuditUtil.log(
       userId, 
       'PASSWORD_DELETED', 
@@ -316,12 +316,12 @@ export class PasswordService {
     return true;
   }
 
-  // Gerar senha segura
+  
   async generateSecurePassword(options: PasswordGeneratorOptions) {
     return PasswordUtil.generateSecurePassword(options);
   }
 
-  // Buscar pastas do usuário
+  
   async getUserFolders(userId: string): Promise<string[]> {
     const passwords = await this.passwordRepository.findByUserId(userId);
     
@@ -334,7 +334,7 @@ export class PasswordService {
   }
 
 
-  // Descriptografar entrada de senha
+  
   private async decryptPasswordEntry(password: PasswordEntry, encryptionKey: string): Promise<PasswordEntryDto> {
     const decryptedPassword = CryptoUtil.decrypt(password.encryptedPassword, encryptionKey);
     
@@ -345,7 +345,7 @@ export class PasswordService {
       fieldType: field.fieldType
     })) || [];
 
-    // Gerar código TOTP atual se habilitado
+    
     let totpCode: TOTPCode | undefined;
     if (password.totpEnabled && password.totpSecret) {
       try {

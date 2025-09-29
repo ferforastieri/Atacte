@@ -27,7 +27,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// POST /api/auth/login - Login do usuário
+
 router.post('/login', async (req, res) => {
   try {
     const { email, masterPassword, deviceName } = req.body;
@@ -53,7 +53,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /api/auth/logout - Logout do usuário
+
 router.post('/logout', authenticateToken, async (req: any, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -71,7 +71,7 @@ router.post('/logout', authenticateToken, async (req: any, res) => {
   }
 });
 
-// POST /api/auth/refresh - Renovar token
+
 router.post('/refresh', authenticateToken, async (req: any, res) => {
   try {
     const result = await authService.refreshToken(req.user.id);
@@ -89,7 +89,7 @@ router.post('/refresh', authenticateToken, async (req: any, res) => {
   }
 });
 
-// GET /api/auth/me - Perfil do usuário
+
 router.get('/me', authenticateToken, async (req: any, res) => {
   try {
     const user = await authService.getUserProfile(req.user.id);
@@ -106,7 +106,7 @@ router.get('/me', authenticateToken, async (req: any, res) => {
   }
 });
 
-// GET /api/auth/sessions - Sessões do usuário
+
 router.get('/sessions', authenticateToken, async (req: any, res) => {
   try {
     const sessions = await authService.getUserSessions(req.user.id);
@@ -123,7 +123,7 @@ router.get('/sessions', authenticateToken, async (req: any, res) => {
   }
 });
 
-// DELETE /api/auth/sessions/:sessionId - Revogar sessão
+
 router.delete('/sessions/:sessionId', authenticateToken, async (req: any, res) => {
   try {
     await authService.revokeSession(req.user.id, req.params.sessionId);

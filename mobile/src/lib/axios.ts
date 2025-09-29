@@ -3,16 +3,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-// Criar instância do axios
+
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10 segundos
+  timeout: 10000, 
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor para adicionar token de autenticação
+
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
@@ -30,13 +30,13 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Interceptor para tratamento de respostas
+
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
   async (error) => {
-    // Se o token expirou, remover do storage
+    
     if (error.response?.status === 401) {
       try {
         await AsyncStorage.removeItem('auth_token');

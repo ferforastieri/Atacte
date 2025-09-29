@@ -200,7 +200,7 @@ const formatDateTime = (dateString: string) => {
 
 const fetchLogs = async () => {
   try {
-    // Implementar busca de logs
+    
     logs.value = []
   } catch (error) {
     console.error('Erro ao buscar logs:', error)

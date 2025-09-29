@@ -6,10 +6,10 @@ import { TOTPService } from '../../services/totp/totpService';
 const router = Router();
 const totpService = new TOTPService();
 
-// Aplicar autenticação a todas as rotas
+
 router.use(authenticateToken);
 
-// POST /api/totp/generate - Gerar novo secret TOTP
+
 router.post('/generate', [
   body('serviceName')
     .notEmpty()
@@ -49,12 +49,12 @@ router.post('/generate', [
   }
 });
 
-// POST /api/totp/qrcode - Gerar QR Code para um otpauth URL
+
 router.post('/qrcode', [
   body('otpauthUrl')
     .notEmpty()
     .withMessage('URL otpauth é obrigatória')
-    .matches(/^otpauth:\/\/totp\//)
+    .matches(/^otpauth:\/\/totp\/.*$/)
     .withMessage('URL otpauth inválida')
 ], async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -86,7 +86,7 @@ router.post('/qrcode', [
   }
 });
 
-// POST /api/totp/validate - Validar um código TOTP
+
 router.post('/validate', [
   body('secret')
     .notEmpty()
@@ -110,7 +110,7 @@ router.post('/validate', [
 
     const { secret, code } = req.body;
     
-    // Verificar se o secret é válido
+    
     if (!TOTPService.isValidSecret(secret)) {
       res.status(400).json({
         success: false,
@@ -137,7 +137,7 @@ router.post('/validate', [
   }
 });
 
-// POST /api/totp/parse - Extrair informações de uma URL otpauth
+
 router.post('/parse', [
   body('otpauthUrl')
     .notEmpty()
@@ -178,14 +178,14 @@ router.post('/parse', [
   }
 });
 
-// POST /api/totp/test - Gerar múltiplos códigos para teste (desenvolvimento)
+
 router.post('/test', [
   body('secret')
     .notEmpty()
     .withMessage('Secret TOTP é obrigatório')
 ], async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Só permitir em desenvolvimento
+    
     if (process.env.NODE_ENV === 'production') {
       res.status(403).json({
         success: false,
@@ -234,7 +234,7 @@ router.post('/test', [
   }
 });
 
-// GET /api/totp/passwords/:id - Buscar código TOTP atual de uma senha
+
 router.get('/passwords/:id', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -261,7 +261,7 @@ router.get('/passwords/:id', async (req: AuthenticatedRequest, res: Response) =>
   }
 });
 
-// GET /api/totp/passwords/:id/secret - Buscar apenas o secret TOTP (para geração client-side)
+
 router.get('/passwords/:id/secret', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -288,7 +288,7 @@ router.get('/passwords/:id/secret', async (req: AuthenticatedRequest, res: Respo
   }
 });
 
-// POST /api/totp/passwords/:id - Adicionar TOTP a uma senha
+
 router.post('/passwords/:id', [
   body('totpInput')
     .notEmpty()
@@ -339,7 +339,7 @@ router.post('/passwords/:id', [
   }
 });
 
-// DELETE /api/totp/passwords/:id - Remover TOTP de uma senha
+
 router.delete('/passwords/:id', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;

@@ -32,7 +32,7 @@ export class PreferencesService {
       userId,
       theme: data.theme || 'light',
       language: data.language || 'pt-BR',
-      autoLock: data.autoLock !== undefined ? data.autoLock : 15, // Permitir 0 (nunca)
+      autoLock: data.autoLock !== undefined ? data.autoLock : 15, 
     });
 
     return this.mapToDto(preferences);
@@ -57,7 +57,7 @@ export class PreferencesService {
       userId,
       theme: data.theme || 'light',
       language: data.language || 'pt-BR',
-      autoLock: data.autoLock !== undefined ? data.autoLock : 15, // Permitir 0 (nunca)
+      autoLock: data.autoLock !== undefined ? data.autoLock : 15, 
     });
 
     return this.mapToDto(preferences);

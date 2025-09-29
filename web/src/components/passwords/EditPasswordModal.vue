@@ -177,7 +177,7 @@ const emit = defineEmits<Emits>()
 const toast = useToast()
 const passwordsStore = usePasswordsStore()
 
-// Form data
+
 const form = ref({
   name: '',
   website: '',
@@ -190,21 +190,21 @@ const form = ref({
   isFavorite: false
 })
 
-// UI state
+
 const isSubmitting = ref(false)
 
-// Validation errors
+
 const errors = ref<Record<string, string>>({})
 
-// Computed
+
 const isFormValid = computed(() => {
   return form.value.name.trim() && form.value.password.trim()
 })
 
 
-// Methods
+
 const generatePassword = () => {
-  // Gerar senha segura
+  
   const length = 16
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
   let password = ''
@@ -324,13 +324,13 @@ const loadPasswordData = () => {
       folder: props.password.folder || '',
       notes: props.password.notes || '',
       totpEnabled: props.password.totpEnabled || false,
-      totpSecret: '', // Não carregamos o secret por segurança
+      totpSecret: '', 
       isFavorite: props.password.isFavorite || false
     }
   }
 }
 
-// Carregar dados quando o modal abrir
+
 watch(() => props.show, (show) => {
   if (show && props.password) {
     loadPasswordData()
@@ -339,7 +339,7 @@ watch(() => props.show, (show) => {
   }
 })
 
-// Carregar dados quando a senha mudar
+
 watch(() => props.password, () => {
   if (props.password && props.show) {
     loadPasswordData()

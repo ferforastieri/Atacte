@@ -96,7 +96,7 @@ export default function TotpScreen() {
       const response = await passwordService.deletePassword(deletingPassword.id);
       if (response.success) {
         showSuccess('Senha excluída!');
-        await loadTotpPasswords(); // Recarregar lista
+        await loadTotpPasswords(); 
       } else {
         showError(response.message || 'Erro ao excluir senha');
       }
@@ -120,7 +120,7 @@ export default function TotpScreen() {
             ? 'Removido dos favoritos!' 
             : 'Adicionado aos favoritos!'
         );
-        await loadTotpPasswords(); // Recarregar lista
+        await loadTotpPasswords(); 
       } else {
         showError(response.message || 'Erro ao atualizar favorito');
       }
@@ -229,7 +229,7 @@ export default function TotpScreen() {
       color: isDark ? '#9ca3af' : '#6b7280',
       marginTop: 16,
     },
-    // Modal styles
+    
     modalContent: {
       padding: 20,
     },

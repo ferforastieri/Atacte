@@ -155,7 +155,7 @@ const validatePassword = () => {
 const handleRegister = async () => {
   errors.value = {}
   
-  // Validações locais
+  
   if (form.masterPassword !== form.confirmPassword) {
     errors.value.confirmPassword = 'As senhas não coincidem'
     return

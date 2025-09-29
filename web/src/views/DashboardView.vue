@@ -356,7 +356,7 @@ import { BaseButton, BaseCard, SearchInput, ThemeToggle, Logo } from '@/componen
 import { type PasswordEntry } from '@/api/passwords'
 import { copyToClipboard } from '@/utils/clipboard'
 
-// Components
+
 import CreatePasswordModal from '@/components/passwords/CreatePasswordModal.vue'
 import ImportPasswordModal from '@/components/passwords/ImportPasswordModal.vue'
 import PasswordDetailModal from '@/components/passwords/PasswordDetailModal.vue'
@@ -366,7 +366,7 @@ const toast = useToast()
 const authStore = useAuthStore()
 const passwordsStore = usePasswordsStore()
 
-// Estado
+
 const showUserMenu = ref(false)
 const showCreateModal = ref(false)
 const showImportModal = ref(false)
@@ -377,21 +377,21 @@ const selectedFolder = ref('')
 const showOnlyFavorites = ref(false)
 const isRefreshing = ref(false)
 
-// Computed
+
 const totpEnabledCount = computed(() => {
   return passwordsStore.allTotpEnabledPasswords.length
 })
 
-// Usar diretamente os resultados do store (já filtrados pelo backend)
+
 const filteredPasswords = computed(() => passwordsStore.searchResults)
 
-// Methods
+
 const refreshPasswords = async () => {
   isRefreshing.value = true
   try {
     await passwordsStore.fetchPasswords()
-    await passwordsStore.loadCompleteStats() // Recarregar estatísticas também
-    // Removido toast de sucesso - não é necessário mostrar mensagem a cada listagem
+    await passwordsStore.loadCompleteStats() 
+    
   } catch (error) {
     toast.error('Erro ao atualizar senhas')
   } finally {
@@ -399,12 +399,12 @@ const refreshPasswords = async () => {
   }
 }
 
-// Métodos de busca otimizados
+
 const handleSearch = async (query: string) => {
   try {
     await passwordsStore.fetchPasswords({ 
       query: query,
-      offset: 0 // Resetar para primeira página ao buscar
+      offset: 0 
     })
   } catch (error) {
     toast.error('Erro ao buscar senhas')
@@ -426,7 +426,7 @@ const handleFolderFilter = async () => {
   try {
     await passwordsStore.fetchPasswords({ 
       folder: selectedFolder.value,
-      offset: 0 // Resetar para primeira página ao filtrar
+      offset: 0 
     })
   } catch (error) {
     toast.error('Erro ao filtrar senhas')
@@ -438,7 +438,7 @@ const toggleFavorites = async () => {
   try {
     await passwordsStore.fetchPasswords({ 
       isFavorite: showOnlyFavorites.value,
-      offset: 0 // Resetar para primeira página ao filtrar
+      offset: 0 
     })
   } catch (error) {
     toast.error('Erro ao filtrar favoritos')
@@ -467,13 +467,13 @@ const toggleFavorite = async (password: PasswordEntry) => {
       isFavorite: newFavoriteStatus
     })
     
-    // Atualizar a senha na lista local para refletir a mudança imediatamente
+    
     const index = passwordsStore.passwords.findIndex(p => p.id === password.id)
     if (index !== -1) {
       passwordsStore.passwords[index].isFavorite = newFavoriteStatus
     }
     
-    // Atualizar estatísticas se necessário
+    
     if (passwordsStore.statsLoaded) {
       await passwordsStore.loadCompleteStats()
     }
@@ -487,7 +487,7 @@ const toggleFavorite = async (password: PasswordEntry) => {
 
 const exportPasswords = async () => {
   try {
-    // Implementar exportação
+    
     toast.success('Exportação iniciada!')
   } catch (error) {
     toast.error('Erro ao exportar senhas')
@@ -522,11 +522,11 @@ const handlePasswordDeleted = () => {
   refreshPasswords()
 }
 
-// Watchers removidos - agora o SearchInput gerencia o debounce
 
-// Lifecycle
+
+
 onMounted(async () => {
-  // Verificar se dados já foram carregados globalmente
+  
   if (passwordsStore.passwords.length === 0 && authStore.isAuthenticated) {
     try {
       await passwordsStore.fetchPasswords()
@@ -537,13 +537,13 @@ onMounted(async () => {
     }
   }
   
-  // Carregar estatísticas completas
+  
   if (!passwordsStore.statsLoaded) {
     await passwordsStore.loadCompleteStats()
   }
 })
 
-// Fechar menu ao clicar fora
+
 const handleClickOutside = (event: Event) => {
   if (!(event.target as Element).closest('.relative')) {
     showUserMenu.value = false

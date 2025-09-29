@@ -3,8 +3,8 @@ import { PrismaClient } from '../../../node_modules/.prisma/client';
 const prisma = new PrismaClient();
 
 export class TOTPRepository {
-  // Este repository é mais para operações relacionadas ao TOTP
-  // que não são diretamente sobre PasswordEntry (que já tem TOTP)
+  
+  
   
   async getUserEncryptionKey(userId: string): Promise<{ encryptionKeyHash: string } | null> {
     return await prisma.user.findUnique({

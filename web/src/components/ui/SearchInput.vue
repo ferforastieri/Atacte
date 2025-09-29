@@ -73,7 +73,7 @@ const isSearching = ref<boolean>(false)
 let debounceTimer: number | null = null
 let searchTimeout: number | null = null
 
-// Debounce function
+
 const debounce = (func: Function, delay: number) => {
   return (...args: any[]) => {
     if (debounceTimer) {
@@ -83,30 +83,30 @@ const debounce = (func: Function, delay: number) => {
   }
 }
 
-// Debounced search function
+
 const debouncedSearch = debounce((value: string) => {
   if (value.length >= props.minLength) {
     isSearching.value = true
     emit('search', value)
     
-    // Simulate search completion (you can remove this if you handle it differently)
+    
     searchTimeout = window.setTimeout(() => {
       isSearching.value = false
     }, 200)
   } else if (value.length === 0) {
-    // Clear search immediately when input is empty
+    
     isSearching.value = false
     emit('search', '')
   }
 }, props.debounceMs)
 
-// Handle input changes
+
 const handleInput = () => {
   emit('update:modelValue', inputValue.value)
   debouncedSearch(inputValue.value)
 }
 
-// Handle clear button
+
 const handleClear = () => {
   inputValue.value = ''
   emit('update:modelValue', '')
@@ -114,17 +114,17 @@ const handleClear = () => {
   emit('search', '')
   isSearching.value = false
   
-  // Clear any pending debounced calls
+  
   if (debounceTimer) {
     clearTimeout(debounceTimer)
     debounceTimer = null
   }
   
-  // Focus back to input
+  
   inputRef.value?.focus()
 }
 
-// Handle enter key
+
 const handleEnter = () => {
   if (debounceTimer) {
     clearTimeout(debounceTimer)
@@ -134,36 +134,36 @@ const handleEnter = () => {
   emit('search', inputValue.value)
 }
 
-// Handle escape key
+
 const handleEscape = () => {
   handleClear()
 }
 
-// Handle focus
+
 const handleFocus = () => {
   emit('focus')
 }
 
-// Handle blur
+
 const handleBlur = () => {
   emit('blur')
 }
 
-// Watch for external modelValue changes
+
 watch(() => props.modelValue, (newValue) => {
   if (newValue !== inputValue.value) {
     inputValue.value = newValue || ''
   }
 })
 
-// Auto focus on mount
+
 onMounted(() => {
   if (props.autoFocus) {
     inputRef.value?.focus()
   }
 })
 
-// Cleanup timers on unmount
+
 onUnmounted(() => {
   if (debounceTimer) {
     clearTimeout(debounceTimer)
@@ -173,7 +173,7 @@ onUnmounted(() => {
   }
 })
 
-// Expose methods for parent component
+
 defineExpose({
   focus: () => inputRef.value?.focus(),
   blur: () => inputRef.value?.blur(),

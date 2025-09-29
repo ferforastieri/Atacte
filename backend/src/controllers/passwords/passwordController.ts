@@ -6,7 +6,7 @@ import { PasswordService } from '../../services/passwords/passwordService';
 const router = Router();
 const passwordService = new PasswordService();
 
-// Tipos para as requisições
+
 interface CreatePasswordRequest {
   name: string;
   website?: string;
@@ -20,7 +20,7 @@ interface CreatePasswordRequest {
     value: string;
     fieldType: 'text' | 'password' | 'email' | 'url' | 'number';
   }>;
-  // TOTP
+  
   totpSecret?: string;
   totpEnabled?: boolean;
 }
@@ -38,7 +38,7 @@ interface SearchQuery {
   sortOrder?: 'asc' | 'desc';
 }
 
-// Validações
+
 const createPasswordValidation = [
   body('name')
     .trim()
@@ -69,21 +69,21 @@ const createPasswordValidation = [
     .withMessage('Secret TOTP deve ser uma string')
     .custom((value) => {
       if (value) {
-        // Validar se é uma chave TOTP válida (base32)
+        
         const cleanValue = value.replace(/\s/g, '').toUpperCase();
         const base32Regex = /^[A-Z2-7]+=*$/;
         
-        // Verificar se tem pelo menos 16 caracteres (chave TOTP mínima)
+        
         if (cleanValue.length < 16) {
           throw new Error('Chave TOTP muito curta. Deve ter pelo menos 16 caracteres.');
         }
         
-        // Verificar se contém apenas caracteres base32 válidos
+        
         if (!base32Regex.test(cleanValue)) {
           throw new Error('Chave TOTP inválida. Deve conter apenas letras A-Z e números 2-7 (ex: ABCD EFGH IJKL MNOP)');
         }
         
-        // Tentar gerar um código para validar se a chave funciona
+        
         try {
           const speakeasy = require('speakeasy');
           const cleanSecret = value.replace(/\s/g, '').toUpperCase();
@@ -119,10 +119,10 @@ const searchValidation = [
     .withMessage('totpEnabled deve ser boolean'),
 ];
 
-// Aplicar autenticação a todas as rotas
+
 router.use(authenticateToken);
 
-// GET /api/passwords - Listar senhas com filtros
+
 router.get('/', searchValidation, async (req: Request<{}, {}, {}, SearchQuery>, res: Response) => {
   try {
     const errors = validationResult(req);
@@ -167,7 +167,7 @@ router.get('/', searchValidation, async (req: Request<{}, {}, {}, SearchQuery>, 
   }
 });
 
-// GET /api/passwords/:id - Buscar senha específica
+
 router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -194,7 +194,7 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
-// POST /api/passwords - Criar nova senha
+
 router.post('/', createPasswordValidation, async (req: Request<{}, {}, CreatePasswordRequest>, res: Response) => {
   try {
     const errors = validationResult(req);
@@ -226,7 +226,7 @@ router.post('/', createPasswordValidation, async (req: Request<{}, {}, CreatePas
   }
 });
 
-// PUT /api/passwords/:id - Atualizar senha
+
 router.put('/:id', async (req: Request<{id: string}, {}, UpdatePasswordRequest>, res: Response) => {
   try {
     const errors = validationResult(req);
@@ -267,7 +267,7 @@ router.put('/:id', async (req: Request<{id: string}, {}, UpdatePasswordRequest>,
   }
 });
 
-// DELETE /api/passwords/:id - Deletar senha
+
 router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -294,7 +294,7 @@ router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
-// GET /api/passwords/generate - Gerar senha segura
+
 router.get('/generate', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const options = {

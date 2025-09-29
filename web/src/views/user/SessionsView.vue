@@ -162,7 +162,7 @@ const formatDateTime = (dateString: string) => {
 
 const revokeSession = async (sessionId: string) => {
   try {
-    // Implementar revogação de sessão
+    
     toast.success('Sessão revogada com sucesso!')
     await fetchSessions()
   } catch (error) {
@@ -173,7 +173,7 @@ const revokeSession = async (sessionId: string) => {
 const revokeAllSessions = async () => {
   isRevokingAll.value = true
   try {
-    // Implementar revogação de todas as sessões
+    
     toast.success('Todas as sessões foram revogadas!')
     await fetchSessions()
   } catch (error) {
@@ -185,7 +185,7 @@ const revokeAllSessions = async () => {
 
 const fetchSessions = async () => {
   try {
-    // Implementar busca de sessões
+    
     sessions.value = []
   } catch (error) {
     console.error('Erro ao buscar sessões:', error)

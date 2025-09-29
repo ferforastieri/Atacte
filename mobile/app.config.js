@@ -15,6 +15,7 @@ export default {
       "**/*"
     ],
     ios: {
+      bundleIdentifier: "com.atacte.mobile",
       supportsTablet: true,
       infoPlist: {
         NSAppTransportSecurity: {

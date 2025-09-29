@@ -13,19 +13,19 @@ export interface TOTPData {
 
 export interface TOTPCode {
   code: string;
-  timeRemaining: number; // segundos restantes até expirar
-  period: number; // período total (30s)
+  timeRemaining: number; 
+  period: number; 
 }
 
 export interface TOTPValidation {
   isValid: boolean;
-  delta?: number; // diferença de tempo
+  delta?: number; 
 }
 
 export class TOTPService {
   private passwordRepository: PasswordRepository;
-  private static readonly TOTP_WINDOW = 2; // Janela de tolerância (±2 períodos)
-  private static readonly TOTP_PERIOD = 30; // 30 segundos por período
+  private static readonly TOTP_WINDOW = 2; 
+  private static readonly TOTP_PERIOD = 30; 
 
   constructor() {
     this.passwordRepository = new PasswordRepository();
@@ -53,7 +53,7 @@ export class TOTPService {
    */
   static generateCurrentCode(secret: string): TOTPCode {
     
-    // Limpar e normalizar o secret
+    
     const cleanSecret = secret.trim().replace(/\s/g, '').toUpperCase();
     
     if (!cleanSecret) {
@@ -150,7 +150,7 @@ export class TOTPService {
    */
   static isValidSecret(secret: string): boolean {
     try {
-      // Tentar gerar um código para validar o secret
+      
       speakeasy.totp({
         secret: secret,
         encoding: 'base32',
@@ -183,25 +183,25 @@ export class TOTPService {
   } | null {
     try {
       
-      // Remover espaços e normalizar
+      
       const cleanUrl = otpauthUrl.trim();
       
-      // Verificar se é uma URL otpauth válida
-      if (!cleanUrl.startsWith('otpauth://totp/')) {
+      
+      if (!cleanUrl.startsWith('otpauth://')) {
         return null;
       }
       
-      // Extrair a parte após otpauth://totp/
-      const urlPart = cleanUrl.substring(15); // Remove 'otpauth://totp/'
       
-      // Separar o pathname dos query parameters
+      const urlPart = cleanUrl.substring(15); 
+      
+      
       const [pathname, queryString] = urlPart.split('?');
       
       if (!queryString) {
         return null;
       }
       
-      // Parse dos query parameters
+      
       const params = new URLSearchParams(queryString);
       const secret = params.get('secret');
       
@@ -209,7 +209,7 @@ export class TOTPService {
         return null;
       }
       
-      // Parse do pathname: serviceName:accountName
+      
       const pathParts = pathname.split(':');
       const serviceName = decodeURIComponent(pathParts[0] || '');
       const accountName = pathParts.length > 1 ? decodeURIComponent(pathParts[1]) : '';
@@ -240,7 +240,7 @@ export class TOTPService {
     return CryptoUtil.decrypt(encryptedSecret, encryptionKey);
   }
 
-  // === MÉTODOS DE INSTÂNCIA PARA GERENCIAR TOTP DE SENHAS ===
+  
 
   /**
    * Adicionar TOTP a uma entrada de senha
@@ -248,17 +248,17 @@ export class TOTPService {
   async addTotpToEntry(
     userId: string, 
     passwordId: string, 
-    totpInput: string, // Pode ser uma chave TOTP ou URL otpauth://
+    totpInput: string, 
     req?: Request
   ): Promise<any> {
-    // Verificar se a entrada existe
+    
     const existingEntry = await this.passwordRepository.findById(passwordId, userId);
 
     if (!existingEntry) {
       throw new Error('Senha não encontrada');
     }
 
-    // Buscar chave de criptografia
+    
     const user = await this.passwordRepository.getUserEncryptionKey(userId);
 
     if (!user) {
@@ -267,7 +267,7 @@ export class TOTPService {
 
     let totpSecret: string;
 
-    // Verificar se é uma URL otpauth://
+    
     if (totpInput.startsWith('otpauth://')) {
       const parsed = TOTPService.parseOtpAuthUrl(totpInput);
       
@@ -277,16 +277,16 @@ export class TOTPService {
       
       totpSecret = parsed.secret;
     } else {
-      // É uma chave TOTP direta
+      
       totpSecret = totpInput;
     }
 
-    // Validar secret TOTP
+    
     if (!TOTPService.isValidSecret(totpSecret)) {
       throw new Error('Secret TOTP inválido');
     }
 
-    // Criptografar e salvar
+    
     const encryptedSecret = TOTPService.encryptSecret(totpSecret, user.encryptionKeyHash);
 
     const updatedEntry = await this.passwordRepository.update(passwordId, {
@@ -368,7 +368,7 @@ export class TOTPService {
       
       const totpCode = TOTPService.generateCurrentCode(decryptedSecret);
 
-      // Log do acesso ao TOTP
+      
       await AuditUtil.log(
         userId,
         'PASSWORD_VIEWED',
@@ -408,7 +408,7 @@ export class TOTPService {
     try {
       const decryptedSecret = TOTPService.decryptSecret(entry.totpSecret, user.encryptionKeyHash);
       
-      // Log do acesso ao secret TOTP
+      
       await AuditUtil.log(
         userId,
         'PASSWORD_VIEWED',

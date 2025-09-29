@@ -2,7 +2,7 @@ import axios from 'axios'
 import { useToast } from '@/hooks/useToast'
 import config from '@/config/environment'
 
-// Configuração base do Axios
+
 const api = axios.create({
   baseURL: config.apiUrl,
   timeout: 10000,
@@ -11,7 +11,7 @@ const api = axios.create({
   }
 })
 
-// Interceptor para adicionar token de autenticação
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('auth_token')
@@ -25,7 +25,7 @@ api.interceptors.request.use(
   }
 )
 
-// Interceptor para tratar respostas e erros
+
 api.interceptors.response.use(
   (response) => {
     return response
@@ -38,8 +38,8 @@ api.interceptors.response.use(
       
       switch (status) {
         case 401:
-          // Token expirado ou inválido
-          // Só limpar se não for uma requisição de verificação
+          
+          
           if (!error.config.url?.includes('/auth/me')) {
             localStorage.removeItem('auth_token')
             localStorage.removeItem('user')
@@ -57,7 +57,7 @@ api.interceptors.response.use(
           break
           
         case 422:
-          // Erros de validação
+          
           if (data.errors && Array.isArray(data.errors)) {
             data.errors.forEach((err: any) => {
               toast.error(err.message || err)
@@ -79,10 +79,10 @@ api.interceptors.response.use(
           toast.error(data.message || 'Erro inesperado.')
       }
     } else if (error.request) {
-      // Erro de rede
+      
       toast.error('Erro de conexão. Verifique sua internet.')
     } else {
-      // Outros erros
+      
       toast.error('Erro inesperado.')
     }
     
@@ -92,7 +92,7 @@ api.interceptors.response.use(
 
 export default api
 
-// Re-exportar APIs
+
 export { default as authApi } from './auth'
 export { default as passwordsApi } from './passwords'
 export { default as totpApi } from './totp'

@@ -1,6 +1,6 @@
 import api from './index'
 
-// Tipos específicos para usuário
+
 export interface UserProfile {
   id: string
   email: string
@@ -51,39 +51,39 @@ export interface ExportData {
   exportedAt: string
 }
 
-// API de usuário
+
 const usersApi = {
-  // Buscar perfil do usuário
+  
   async getProfile() {
     const response = await api.get('/users/profile')
     return response.data
   },
 
-  // Buscar estatísticas
+  
   async getStats() {
     const response = await api.get('/users/stats')
     return response.data
   },
 
-  // Buscar pastas
+  
   async getFolders() {
     const response = await api.get('/users/folders')
     return response.data
   },
 
-  // Buscar logs de auditoria
+  
   async getAuditLogs(limit = 50, offset = 0) {
     const response = await api.get(`/users/audit-logs?limit=${limit}&offset=${offset}`)
     return response.data
   },
 
-  // Exportar dados
+  
   async exportData() {
     const response = await api.post('/users/export')
     return response.data
   },
 
-  // Deletar conta
+  
   async deleteAccount() {
     const response = await api.delete('/users/account')
     return response.data

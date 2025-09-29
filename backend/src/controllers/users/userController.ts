@@ -5,10 +5,10 @@ import { UserService } from '../../services/users/userService';
 const router = Router();
 const userService = new UserService();
 
-// Aplicar autenticação a todas as rotas
+
 router.use(authenticateToken);
 
-// GET /api/users/profile - Buscar perfil do usuário
+
 router.get('/profile', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userProfile = await userService.getUserProfile(req.user.id);
@@ -26,7 +26,7 @@ router.get('/profile', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
-// GET /api/users/stats - Estatísticas do usuário
+
 router.get('/stats', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const stats = await userService.getUserStats(req.user.id);
@@ -44,7 +44,7 @@ router.get('/stats', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
-// GET /api/users/folders - Listar pastas do usuário
+
 router.get('/folders', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const folders = await userService.getUserFolders(req.user.id);
@@ -62,7 +62,7 @@ router.get('/folders', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
-// GET /api/users/audit-logs - Logs de auditoria do usuário
+
 router.get('/audit-logs', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 50;
@@ -88,7 +88,7 @@ router.get('/audit-logs', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
-// POST /api/users/export - Exportar dados do usuário
+
 router.post('/export', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const exportData = await userService.exportUserData(req.user.id, req);
@@ -107,7 +107,7 @@ router.post('/export', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
-// DELETE /api/users/account - Deletar conta do usuário
+
 router.delete('/account', async (req: AuthenticatedRequest, res: Response) => {
   try {
     await userService.deleteUserAccount(req.user.id, req);

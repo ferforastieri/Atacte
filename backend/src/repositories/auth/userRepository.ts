@@ -62,7 +62,7 @@ export class UserRepository {
     });
   }
 
-  // User Sessions
+  
   async createSession(data: CreateUserSessionData): Promise<UserSession> {
     return await prisma.userSession.create({
       data,

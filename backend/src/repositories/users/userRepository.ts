@@ -50,7 +50,7 @@ export class UserRepository {
     });
   }
 
-  // Estatísticas do usuário
+  
   async getUserStats(userId: string): Promise<{
     totalPasswords: number;
     favoritePasswords: number;
@@ -85,8 +85,8 @@ export class UserRepository {
         .filter(folder => folder)
     )] as string[];
 
-    const weakPasswords = 0; // Implementar lógica de senhas fracas
-    const duplicatedPasswords = 0; // Implementar lógica de senhas duplicadas
+    const weakPasswords = 0; 
+    const duplicatedPasswords = 0; 
     
     const lastActivity = user.passwordEntries
       .map(p => p.lastUsed)

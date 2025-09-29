@@ -6,17 +6,17 @@ import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth'
 const router = Router()
 const importExportRepository = new ImportExportRepository()
 
-// Aplicar middleware de autenticação em todas as rotas
+
 router.use(authenticateToken)
 
-// === IMPORTAÇÃO ===
-// POST /api/import-export/import - Importar senhas do Bitwarden
+
+
 router.post('/import', async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthenticatedRequest).user.id
     const importData = req.body
 
-    // Validar dados de entrada
+    
     const validation = importExportService.validateImportData(importData)
     if (!validation.valid) {
       return res.status(400).json({
@@ -26,10 +26,10 @@ router.post('/import', async (req: Request, res: Response) => {
       })
     }
 
-    // Processar importação
+    
     const result = await importExportService.importFromBitwarden(userId, importData)
 
-    // Log da importação
+    
     await importExportRepository.createAuditLog({
       userId,
       action: 'IMPORT_PASSWORDS',
@@ -54,16 +54,16 @@ router.post('/import', async (req: Request, res: Response) => {
   }
 })
 
-// === EXPORTAÇÃO ===
-// GET /api/import-export/export/bitwarden - Exportar para formato Bitwarden
+
+
 router.get('/export/bitwarden', async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthenticatedRequest).user.id
 
-    // Processar exportação
+    
     const result = await importExportService.exportToBitwarden(userId)
 
-    // Log da exportação
+    
     await importExportRepository.createAuditLog({
       userId,
       action: 'EXPORT_PASSWORDS',
@@ -72,7 +72,7 @@ router.get('/export/bitwarden', async (req: Request, res: Response) => {
       userAgent: req.get('User-Agent') || 'unknown'
     })
 
-    // Configurar headers para download
+    
     const filename = `atacte-passwords-${new Date().toISOString().split('T')[0]}.json`
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
@@ -93,15 +93,15 @@ router.get('/export/bitwarden', async (req: Request, res: Response) => {
   }
 })
 
-// GET /api/import-export/export/csv - Exportar para formato CSV
+
 router.get('/export/csv', async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthenticatedRequest).user.id
 
-    // Processar exportação
+    
     const result = await importExportService.exportToCSV(userId)
 
-    // Log da exportação
+    
     await importExportRepository.createAuditLog({
       userId,
       action: 'EXPORT_PASSWORDS',
@@ -110,7 +110,7 @@ router.get('/export/csv', async (req: Request, res: Response) => {
       userAgent: req.get('User-Agent') || 'unknown'
     })
 
-    // Configurar headers para download
+    
     const filename = `atacte-passwords-${new Date().toISOString().split('T')[0]}.csv`
     res.setHeader('Content-Type', 'text/csv; charset=utf-8')
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)

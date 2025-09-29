@@ -43,11 +43,11 @@ export class AuthService {
       throw new Error('Email já está em uso');
     }
 
-    // Gerar salt e hash da senha
+    
     const salt = await bcrypt.genSalt(12);
     const masterPasswordHash = await bcrypt.hash(data.masterPassword, salt);
 
-    // Gerar chave de criptografia baseada na senha master
+    
     const encryptionKey = crypto.SHA256(data.masterPassword + data.email).toString();
 
     const userData: CreateUserData = {
@@ -76,10 +76,10 @@ export class AuthService {
       throw new Error('Credenciais inválidas');
     }
 
-    // Atualizar último login
+    
     await this.userRepository.updateLastLogin(user.id);
 
-    // Gerar token JWT
+    
     if (!JWT_SECRET) {
       throw new Error('JWT_SECRET não configurado');
     }
@@ -93,9 +93,9 @@ export class AuthService {
       { expiresIn: JWT_EXPIRES_IN as any }
     );
 
-    // Criar sessão
+    
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30); // 30 dias
+    expiresAt.setDate(expiresAt.getDate() + 30); 
 
     const sessionData: CreateUserSessionData = {
       userId: user.id,

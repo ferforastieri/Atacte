@@ -7,7 +7,7 @@ import { PORT, CORS_ORIGIN, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS, NODE_
 
 const app = express();
 
-// Middleware global
+
 app.use(helmet());
 app.use(cors({
   origin: CORS_ORIGIN,
@@ -16,7 +16,7 @@ app.use(cors({
 app.use(morgan(NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 
-// Rate limiting global
+
 const limiter = rateLimit({
   windowMs: RATE_LIMIT_WINDOW_MS,
   max: RATE_LIMIT_MAX_REQUESTS,
@@ -27,7 +27,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Health check
+
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
@@ -36,7 +36,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Importar e usar rotas
+
 import authRoutes from './controllers/auth/authController';
 import passwordRoutes from './controllers/passwords/passwordController';
 import userRoutes from './controllers/users/userController';
@@ -51,7 +51,7 @@ app.use('/api/totp', totpRoutes);
 app.use('/api/import-export', importExportRoutes);
 app.use('/api/preferences', preferencesRoutes);
 
-// Middleware de tratamento de erros
+
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Erro:', err);
   res.status(500).json({
@@ -60,7 +60,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   });
 });
 
-// Rota 404
+
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
@@ -68,7 +68,7 @@ app.use('*', (req, res) => {
   });
 });
 
-// Iniciar servidor
+
 if (require.main === module) {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor Atacte Password Manager rodando na porta ${PORT}`);

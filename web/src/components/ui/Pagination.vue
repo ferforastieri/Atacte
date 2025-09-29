@@ -109,28 +109,28 @@ const visiblePages = computed(() => {
   const { currentPage, totalPages } = props
   
   if (totalPages <= 7) {
-    // Se há 7 páginas ou menos, mostrar todas
+    
     for (let i = 1; i <= totalPages; i++) {
       pages.push(i)
     }
   } else {
-    // Lógica para mostrar páginas com ellipsis
+    
     if (currentPage <= 4) {
-      // Mostrar: 1 2 3 4 5 ... totalPages
+      
       for (let i = 1; i <= 5; i++) {
         pages.push(i)
       }
       pages.push('...')
       pages.push(totalPages)
     } else if (currentPage >= totalPages - 3) {
-      // Mostrar: 1 ... (totalPages-4) (totalPages-3) (totalPages-2) (totalPages-1) totalPages
+      
       pages.push(1)
       pages.push('...')
       for (let i = totalPages - 4; i <= totalPages; i++) {
         pages.push(i)
       }
     } else {
-      // Mostrar: 1 ... (currentPage-1) currentPage (currentPage+1) ... totalPages
+      
       pages.push(1)
       pages.push('...')
       pages.push(currentPage - 1)

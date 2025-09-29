@@ -20,7 +20,7 @@ onMounted(async () => {
   try {
     await authStore.initialize()
     
-    // Inicializar dados da aplicação se autenticado
+    
     if (authStore.isAuthenticated && instance?.appContext.config.globalProperties.$initApp) {
       await instance.appContext.config.globalProperties.$initApp()
     }

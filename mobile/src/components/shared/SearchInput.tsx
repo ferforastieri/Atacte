@@ -41,7 +41,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Debounce function
+  
   const debounce = useCallback((func: Function, delay: number) => {
     return (...args: any[]) => {
       if (debounceTimer.current) {
@@ -51,19 +51,19 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     };
   }, []);
 
-  // Debounced search function
+  
   const debouncedSearch = useCallback(
     debounce((searchValue: string) => {
       if (searchValue.length >= minLength) {
         setIsSearching(true);
         onSearch?.(searchValue);
         
-        // Simulate search completion
+        
         searchTimeout.current = setTimeout(() => {
           setIsSearching(false);
         }, 200);
       } else if (searchValue.length === 0) {
-        // Clear search immediately when input is empty
+        
         setIsSearching(false);
         onSearch?.('');
       }
@@ -71,14 +71,14 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     [debounceMs, minLength, onSearch]
   );
 
-  // Handle input changes
+  
   const handleInputChange = useCallback((text: string) => {
     setInputValue(text);
     onChangeText?.(text);
     debouncedSearch(text);
   }, [onChangeText, debouncedSearch]);
 
-  // Handle clear button
+  
   const handleClear = useCallback(() => {
     setInputValue('');
     onChangeText?.('');
@@ -86,17 +86,17 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     onSearch?.('');
     setIsSearching(false);
     
-    // Clear any pending debounced calls
+    
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
       debounceTimer.current = null;
     }
     
-    // Focus back to input
+    
     inputRef.current?.focus();
   }, [onChangeText, onClear, onSearch]);
 
-  // Handle submit (enter key equivalent)
+  
   const handleSubmit = useCallback(() => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
@@ -106,31 +106,31 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     onSearch?.(inputValue);
   }, [inputValue, onEnter, onSearch]);
 
-  // Handle focus
+  
   const handleFocus = useCallback(() => {
     onFocus?.();
   }, [onFocus]);
 
-  // Handle blur
+  
   const handleBlur = useCallback(() => {
     onBlur?.();
   }, [onBlur]);
 
-  // Update internal value when prop changes
+  
   useEffect(() => {
     if (value !== inputValue) {
       setInputValue(value);
     }
   }, [value]);
 
-  // Auto focus on mount
+  
   useEffect(() => {
     if (autoFocus) {
       inputRef.current?.focus();
     }
   }, [autoFocus]);
 
-  // Cleanup timers on unmount
+  
   useEffect(() => {
     return () => {
       if (debounceTimer.current) {
@@ -221,7 +221,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
           returnKeyType="search"
           autoCapitalize="none"
           autoCorrect={false}
-          clearButtonMode="never" // We handle clear button manually
+          clearButtonMode="never" 
         />
         
         {showClearButton && inputValue.length > 0 && (

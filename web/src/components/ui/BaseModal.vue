@@ -90,7 +90,7 @@ onUnmounted(() => {
   restoreBodyScroll()
 })
 
-// Atualizar scroll do body quando modal abre/fecha
+
 watch(() => props.show, (show) => {
   if (show) {
     preventBodyScroll()

@@ -1,6 +1,6 @@
 import api from './index'
 
-// Tipos específicos para senhas
+
 export interface PasswordEntry {
   id: string
   name: string
@@ -80,9 +80,9 @@ export interface TOTPCode {
   period: number
 }
 
-// API de senhas
+
 const passwordsApi = {
-  // Buscar senhas com filtros
+  
   async searchPasswords(filters: PasswordSearchFilters = {}) {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
@@ -95,31 +95,31 @@ const passwordsApi = {
     return response.data
   },
 
-  // Buscar senha por ID
+  
   async getPasswordById(id: string) {
     const response = await api.get(`/passwords/${id}`)
     return response.data
   },
 
-  // Criar nova senha
+  
   async createPassword(passwordData: CreatePasswordRequest) {
     const response = await api.post('/passwords', passwordData)
     return response.data
   },
 
-  // Atualizar senha
+  
   async updatePassword(id: string, passwordData: UpdatePasswordRequest) {
     const response = await api.put(`/passwords/${id}`, passwordData)
     return response.data
   },
 
-  // Deletar senha
+  
   async deletePassword(id: string) {
     const response = await api.delete(`/passwords/${id}`)
     return response.data
   },
 
-  // Gerar senha segura
+  
   async generatePassword(options: Partial<PasswordGeneratorOptions> = {}) {
     const params = new URLSearchParams()
     Object.entries(options).forEach(([key, value]) => {
@@ -132,11 +132,11 @@ const passwordsApi = {
     return response.data
   },
 
-  // === TOTP ===
+  
 
 
-  // === IMPORTAÇÃO ===
-  // Importar senhas do Bitwarden
+  
+  
   async importPasswords(jsonData: any) {
     const response = await api.post('/import-export/import', jsonData)
     return response.data

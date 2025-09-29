@@ -4,16 +4,16 @@ import crypto from 'crypto-js';
 import rateLimit from 'express-rate-limit';
 import { prisma, User } from '../infrastructure/prisma';
 
-// Estender o tipo Request para incluir dados do usuário
+
 export interface AuthenticatedRequest extends Request {
   user: User;
   sessionId: string;
 }
 
-// Rate limiting para autenticação
+
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // máximo 5 tentativas por IP
+  windowMs: 15 * 60 * 1000, 
+  max: 5, 
   message: { 
     success: false, 
     message: 'Muitas tentativas de login. Tente novamente em 15 minutos.' 
@@ -22,7 +22,7 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Middleware de autenticação JWT
+
 export const authenticateToken = async (
   req: Request,
   res: Response,
@@ -40,13 +40,13 @@ export const authenticateToken = async (
       return;
     }
 
-    // Verificar e decodificar o token
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
       userId: string; 
       email: string; 
     };
     
-    // Verificar se a sessão ainda existe e é válida
+    
     const tokenHash = crypto.SHA256(token).toString();
     
     const session = await prisma.userSession.findFirst({
@@ -72,14 +72,14 @@ export const authenticateToken = async (
       return;
     }
 
-    // Verificar auto-lock se configurado
+    
     if (session.user.preferences?.autoLock && session.user.preferences.autoLock > 0) {
       const lastUsed = new Date(session.lastUsed);
       const now = new Date();
       const minutesSinceLastUse = (now.getTime() - lastUsed.getTime()) / (1000 * 60);
       
       if (minutesSinceLastUse > session.user.preferences.autoLock) {
-        // Sessão expirada por inatividade
+        
         await prisma.userSession.delete({
           where: { id: session.id }
         });
@@ -92,7 +92,7 @@ export const authenticateToken = async (
       }
     }
 
-    // Atualizar último uso da sessão
+    
     try {
       await prisma.userSession.update({
         where: { id: session.id },
@@ -100,10 +100,10 @@ export const authenticateToken = async (
       });
     } catch (updateError) {
       console.error('Erro ao atualizar sessão:', updateError);
-      // Continuar mesmo com erro na atualização
+      
     }
 
-    // Adicionar dados do usuário ao request
+    
     (req as AuthenticatedRequest).user = session.user;
     (req as AuthenticatedRequest).sessionId = session.id;
     
@@ -117,7 +117,7 @@ export const authenticateToken = async (
   }
 };
 
-// Middleware opcional - não falha se não tiver token
+
 export const optionalAuth = async (
   req: Request,
   res: Response,
@@ -159,7 +159,7 @@ export const optionalAuth = async (
     
     next();
   } catch (error) {
-    // Em caso de erro, apenas continua sem autenticar
+    
     next();
   }
 };

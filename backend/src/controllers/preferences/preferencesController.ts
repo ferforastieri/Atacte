@@ -5,7 +5,7 @@ import { authenticateToken } from '../../middleware/auth';
 const router = express.Router();
 const preferencesService = new PreferencesService();
 
-// GET /api/preferences - Buscar preferências do usuário
+
 router.get('/', authenticateToken, async (req: any, res) => {
   try {
     const preferences = await preferencesService.getUserPreferences(req.user.id);
@@ -29,7 +29,7 @@ router.get('/', authenticateToken, async (req: any, res) => {
   }
 });
 
-// POST /api/preferences - Criar preferências do usuário
+
 router.post('/', authenticateToken, async (req: any, res) => {
   try {
     const { theme, language, autoLock } = req.body;
@@ -55,7 +55,7 @@ router.post('/', authenticateToken, async (req: any, res) => {
   }
 });
 
-// PUT /api/preferences - Atualizar preferências do usuário
+
 router.put('/', authenticateToken, async (req: any, res) => {
   try {
     
@@ -91,7 +91,7 @@ router.put('/', authenticateToken, async (req: any, res) => {
   }
 });
 
-// PATCH /api/preferences - Atualizar ou criar preferências (upsert)
+
 router.patch('/', authenticateToken, async (req: any, res) => {
   try {
     
@@ -121,7 +121,7 @@ router.patch('/', authenticateToken, async (req: any, res) => {
   }
 });
 
-// DELETE /api/preferences - Deletar preferências do usuário
+
 router.delete('/', authenticateToken, async (req: any, res) => {
   try {
     const deleted = await preferencesService.deleteUserPreferences(req.user.id);

@@ -55,9 +55,6 @@
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Código TOTP</label>
         <TotpCode 
           :secret="totpSecret"
-          :code="totpCode?.code || null"
-          :time-remaining="totpCode?.timeRemaining || null"
-          :period="totpCode?.period || null"
           @refresh="refreshTotpCode"
         />
       </div>
@@ -125,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useToast } from '@/hooks/useToast'
 import { HeartIcon, KeyIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, TotpCode, ConfirmModal } from '@/components/ui'
@@ -174,7 +171,7 @@ const handleEdit = () => {
 }
 
 const handleEditUpdated = () => {
-  // Recarregar dados da senha atual
+  
   emit('updated')
   toast.success('Senha atualizada com sucesso!')
 }
@@ -214,12 +211,13 @@ const loadTotpSecret = async () => {
   
   try {
     const secretData = await passwordsStore.getTotpSecret(props.password.id)
+    
     if (secretData?.secret) {
       totpSecret.value = secretData.secret
     }
   } catch (error) {
     console.error('Erro ao carregar secret TOTP:', error)
-    // Fallback para API antiga se necessário
+    
     try {
       const code = await passwordsStore.getTotpCode(props.password.id)
       totpCode.value = code
@@ -233,16 +231,16 @@ const refreshTotpCode = async () => {
   await loadTotpSecret()
 }
 
-// Timer não é mais necessário - o TotpCode gerencia internamente
+
 const startTotpTimer = () => {
-  // Não faz nada - TotpCode gerencia o timer
+  
 }
 
 const stopTotpTimer = () => {
-  // Não faz nada - TotpCode gerencia o timer
+  
 }
 
-// Carregar secret TOTP quando o modal abrir e a senha tiver TOTP habilitado
+
 watch(() => props.show, async (show) => {
   if (show && props.password?.totpEnabled) {
     await loadTotpSecret()
@@ -252,7 +250,7 @@ watch(() => props.show, async (show) => {
   }
 })
 
-// Atualizar passwordValue quando a senha mudar
+
 watch(() => props.password?.password, (newPassword) => {
   if (newPassword) {
     passwordValue.value = newPassword
@@ -266,7 +264,14 @@ watch(() => props.password?.id, async (id) => {
   }
 })
 
-// Limpar timer quando o componente for desmontado
+
+onMounted(() => {
+  if (props.show && props.password?.totpEnabled) {
+    loadTotpSecret()
+  }
+})
+
+
 onUnmounted(() => {
   stopTotpTimer()
 })

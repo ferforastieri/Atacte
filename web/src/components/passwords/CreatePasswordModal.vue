@@ -207,7 +207,7 @@ const emit = defineEmits<Emits>()
 const toast = useToast()
 const passwordsStore = usePasswordsStore()
 
-// Form data
+
 const form = ref({
   name: '',
   website: '',
@@ -220,22 +220,22 @@ const form = ref({
   isFavorite: false
 })
 
-// UI state
+
 const showPassword = ref(false)
 const isSubmitting = ref(false)
 
-// Validation errors
+
 const errors = ref<Record<string, string>>({})
 
-// Computed
+
 const isFormValid = computed(() => {
   return form.value.name.trim() && form.value.password.trim()
 })
 
 
-// Methods
+
 const generatePassword = () => {
-  // Gerar senha segura
+  
   const length = 16
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
   let password = ''
@@ -321,7 +321,7 @@ const handleSubmit = async () => {
     toast.success('Senha criada com sucesso!')
     emit('created')
     
-    // Reset form
+    
     resetForm()
   } catch (error: any) {
     toast.error(error.response?.data?.message || 'Erro ao criar senha')
@@ -346,7 +346,7 @@ const resetForm = () => {
   errors.value = {}
 }
 
-// Reset form when modal closes
+
 watch(() => props.show, (newShow) => {
   if (!newShow) {
     resetForm()

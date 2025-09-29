@@ -158,14 +158,15 @@ import { useRouter } from 'vue-router'
 import { usePasswordsStore } from '@/stores/passwords'
 import { useToast } from '@/hooks/useToast'
 import { copyToClipboard } from '@/utils/clipboard'
+import { TOTPClient } from '@/utils/totpClient'
 import type { PasswordEntry } from '@/api/passwords'
 
-// Components
+
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import PasswordDetailModal from '@/components/passwords/PasswordDetailModal.vue'
 
-// Icons
+
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -178,20 +179,35 @@ const router = useRouter()
 const passwordsStore = usePasswordsStore()
 const toast = useToast()
 
-// Estado
+
 const selectedPassword = ref<PasswordEntry | null>(null)
 const isRefreshing = ref(false)
-const totpCodes = ref<Map<string, any>>(new Map())
+const totpSecrets = ref<Map<string, string>>(new Map()) 
+const totpCodes = ref<Map<string, any>>(new Map()) 
 const refreshInterval = ref<number | null>(null)
+const updateTrigger = ref(0) 
 
-// Computed
+
 const totpPasswords = computed(() => {
   return passwordsStore.passwords.filter(p => p.totpEnabled)
 })
 
-// Methods
+
 const getTotpCode = (passwordId: string) => {
-  return totpCodes.value.get(passwordId)
+  
+  updateTrigger.value
+  
+  const secret = totpSecrets.value.get(passwordId)
+  if (!secret) return null
+  
+  try {
+    
+    const codeData = TOTPClient.generateCurrentCode(secret)
+    return codeData
+  } catch (error) {
+    console.error('Erro ao gerar código TOTP:', error)
+    return null
+  }
 }
 
 const refreshTotpCodes = async () => {
@@ -208,14 +224,13 @@ const refreshTotpCodes = async () => {
 }
 
 const loadTotpCodes = async () => {
-  // Com geração client-side, só precisamos carregar os secrets uma vez
-  // Os códigos serão gerados localmente pelos componentes TotpCode
+  
   for (const password of totpPasswords.value) {
     try {
-      // Buscar o secret TOTP da senha (sem gerar código)
+      
       const response = await passwordsStore.getTotpSecret(password.id)
       if (response?.secret) {
-        totpCodes.value.set(password.id, { secret: response.secret })
+        totpSecrets.value.set(password.id, response.secret)
       }
     } catch (error) {
       console.error(`Erro ao carregar secret TOTP para ${password.name}:`, error)
@@ -249,11 +264,13 @@ const handlePasswordDeleted = () => {
   refreshTotpCodes()
 }
 
-// Auto-refresh TOTP codes - agora client-side, sem requisições
+
 const startAutoRefresh = () => {
-  // Com a geração client-side, não precisamos mais de requisições frequentes
-  // O timer será gerenciado pelos componentes individuais TotpCode
-  console.log('Auto-refresh iniciado (client-side)')
+  
+  refreshInterval.value = window.setInterval(() => {
+    
+    updateTrigger.value++
+  }, 1000)
 }
 
 const stopAutoRefresh = () => {
@@ -263,7 +280,7 @@ const stopAutoRefresh = () => {
   }
 }
 
-// Lifecycle
+
 onMounted(async () => {
   try {
     await passwordsStore.fetchPasswords({ totpEnabled: true })

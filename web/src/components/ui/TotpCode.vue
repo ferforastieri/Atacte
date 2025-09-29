@@ -46,10 +46,10 @@ import BaseButton from './BaseButton.vue'
 import { TOTPClient, type TOTPCode } from '@/utils/totpClient'
 
 interface Props {
-  secret?: string | null // Secret TOTP para geração client-side
-  code?: string | null // Código atual (fallback para compatibilidade)
-  timeRemaining?: number | null // Tempo restante (fallback)
-  period?: number | null // Período (fallback)
+  secret?: string | null 
+  code?: string | null 
+  timeRemaining?: number | null 
+  period?: number | null 
   autoRefresh?: boolean
 }
 
@@ -65,14 +65,16 @@ const toast = useToast()
 const isRefreshing = ref(false)
 let intervalId: number | null = null
 
-// Estado interno para geração client-side
+
 const currentCode = ref<string>('')
 const currentTimeRemaining = ref<number>(30)
 const currentPeriod = ref<number>(30)
 
-// Gerar código TOTP client-side se secret estiver disponível
+
 const generateTotpCode = () => {
-  if (!props.secret) return
+  if (!props.secret) {
+    return
+  }
   
   try {
     const totpData = TOTPClient.generateCurrentCode(props.secret)
@@ -85,7 +87,7 @@ const generateTotpCode = () => {
   }
 }
 
-// Usar valores das props como fallback se não houver secret
+
 const displayCode = computed(() => {
   return currentCode.value || props.code || '------'
 })
@@ -124,11 +126,11 @@ const copyCode = async () => {
 const refreshCode = async () => {
   isRefreshing.value = true
   
-  // Se temos secret, regenerar client-side
+  
   if (props.secret) {
     generateTotpCode()
   } else {
-    // Fallback para o comportamento antigo
+    
     emit('refresh')
   }
   
@@ -142,10 +144,10 @@ const startTimer = () => {
   
   intervalId = window.setInterval(() => {
     if (props.secret) {
-      // Geração client-side - atualizar a cada segundo
+      
       generateTotpCode()
     } else {
-      // Fallback para comportamento antigo
+      
       if (displayTimeRemaining.value <= 1) {
         emit('refresh')
       }
@@ -160,7 +162,7 @@ const stopTimer = () => {
   }
 }
 
-// Watcher para reagir a mudanças no secret
+
 watch(() => props.secret, (newSecret) => {
   if (newSecret) {
     generateTotpCode()
