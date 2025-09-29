@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useToast } from 'vue-toastification'
+import { useToast } from '@/hooks/useToast'
 import config from '@/config/environment'
 
 // Configuração base do Axios

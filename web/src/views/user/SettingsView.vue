@@ -183,7 +183,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from 'vue-toastification'
+import { useToast } from '@/hooks/useToast'
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
 import { BaseButton, BaseCard, ThemeToggle } from '@/components/ui'
 import { useThemeStore } from '@/stores/theme'

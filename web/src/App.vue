@@ -2,12 +2,16 @@ np<template>
   <div id="app" class="min-h-screen bg-gray-50">
     <!-- Main App -->
     <router-view />
+    
+    <!-- Toast Container -->
+    <ToastContainer />
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, getCurrentInstance } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import ToastContainer from '@/components/layout/ToastContainer.vue'
 
 const authStore = useAuthStore()
 const instance = getCurrentInstance()

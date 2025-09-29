@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useToast } from 'vue-toastification'
+import { useToast } from '@/hooks/useToast'
 import { ClipboardIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 import BaseButton from './BaseButton.vue'
 

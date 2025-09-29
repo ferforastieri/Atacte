@@ -86,6 +86,15 @@ const router = createRouter({
       }
     },
     {
+      path: '/totp',
+      name: 'Totp',
+      component: () => import('@/views/totp/TotpView.vue'),
+      meta: { 
+        requiresAuth: true,
+        title: 'Códigos TOTP - Atacte'
+      }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: () => import('@/views/NotFoundView.vue'),

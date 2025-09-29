@@ -9,4 +9,5 @@ export { default as PasswordStrength } from './PasswordStrength.vue'
 export { default as Pagination } from './Pagination.vue'
 export { default as ThemeToggle } from './ThemeToggle.vue'
 export { default as Logo } from './Logo.vue'
+export { default as CustomToast } from './CustomToast.vue'
 

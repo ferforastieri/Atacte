@@ -279,7 +279,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useToast } from 'vue-toastification'
+import { useToast } from '@/hooks/useToast'
 import {
   ArrowLeftIcon,
   PencilIcon,

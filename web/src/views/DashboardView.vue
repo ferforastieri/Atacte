@@ -118,7 +118,10 @@
           </div>
         </BaseCard>
 
-        <BaseCard class="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+        <BaseCard 
+          class="bg-gradient-to-r from-orange-500 to-orange-600 text-white cursor-pointer hover:from-orange-600 hover:to-orange-700 transition-all"
+          @click="goToTotpScreen"
+        >
           <div class="flex items-center">
             <div class="flex-shrink-0">
               <KeyIcon class="h-6 w-6 sm:h-8 sm:w-8" />
@@ -330,7 +333,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from 'vue-toastification'
+import { useToast } from '@/hooks/useToast'
 import {
   LockClosedIcon,
   UserIcon,
@@ -484,6 +487,10 @@ const exportPasswords = async () => {
   } catch (error) {
     toast.error('Erro ao exportar senhas')
   }
+}
+
+const goToTotpScreen = () => {
+  router.push('/totp')
 }
 
 const handleLogout = async () => {

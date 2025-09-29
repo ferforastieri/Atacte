@@ -157,7 +157,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { useToast } from 'vue-toastification'
+import { useToast } from '@/hooks/useToast'
 import { KeyIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, PasswordStrength } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'

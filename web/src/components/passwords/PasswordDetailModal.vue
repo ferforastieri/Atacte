@@ -125,7 +125,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue'
-import { useToast } from 'vue-toastification'
+import { useToast } from '@/hooks/useToast'
 import { HeartIcon, KeyIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, TotpCode, ConfirmModal } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'

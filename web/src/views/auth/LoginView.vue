@@ -74,7 +74,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from 'vue-toastification'
+import { useToast } from '@/hooks/useToast'
 import { LockClosedIcon, EnvelopeIcon, ComputerDesktopIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { BaseButton, BaseInput, BaseCard, Logo } from '@/components/ui'

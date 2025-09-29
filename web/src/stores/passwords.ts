@@ -19,7 +19,6 @@ export const usePasswordsStore = defineStore('passwords', () => {
   const searchFilters = ref<PasswordSearchFilters>({
     query: '',
     folder: '',
-    isFavorite: undefined,
     limit: 50,
     offset: 0,
     sortBy: 'name',
@@ -330,7 +329,6 @@ export const usePasswordsStore = defineStore('passwords', () => {
     searchFilters.value = {
       query: '',
       folder: '',
-      isFavorite: undefined,
       limit: 50,
       offset: 0,
       sortBy: 'name',

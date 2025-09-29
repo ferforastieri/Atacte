@@ -234,7 +234,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useToast } from 'vue-toastification'
+import { useToast } from '@/hooks/useToast'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { BaseModal, BaseInput, BaseButton, PasswordStrength } from '@/components/ui'
 import { usePasswordsStore } from '@/stores/passwords'
