@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Card, Header, PasswordGeneratorModal } from '../components/shared';
+import { Button, Card, Header, PasswordGeneratorModal, SearchInput } from '../components/shared';
 import { Modal } from '../components/shared/Modal';
 import { Input } from '../components/shared/Input';
 import { Switch } from 'react-native';
@@ -367,6 +367,29 @@ export default function DashboardScreen() {
     await Promise.all([loadPasswords(0, false), loadAllPasswordsStats()]);
   }, [loadPasswords]);
 
+  // Métodos de busca otimizados
+  const handleSearch = useCallback(async (query: string) => {
+    try {
+      setSearchQuery(query);
+      setCurrentOffset(0);
+      await loadPasswords(0, false);
+    } catch (error) {
+      console.error('Erro ao buscar senhas:', error);
+      showError('Erro ao buscar senhas');
+    }
+  }, [loadPasswords]);
+
+  const handleSearchClear = useCallback(async () => {
+    try {
+      setSearchQuery('');
+      setCurrentOffset(0);
+      await loadPasswords(0, false);
+    } catch (error) {
+      console.error('Erro ao limpar busca:', error);
+      showError('Erro ao limpar busca');
+    }
+  }, [loadPasswords]);
+
   const handleLoadMore = useCallback(() => {
     if (!isLoadingMore && hasMore && passwords.length > 0) {
       loadPasswords(currentOffset, true);
@@ -612,13 +635,14 @@ export default function DashboardScreen() {
       <View style={styles.content}>
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar senhas..."
-            placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
+          <SearchInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            returnKeyType="search"
+            onSearch={handleSearch}
+            onClear={handleSearchClear}
+            placeholder="Buscar senhas..."
+            debounceMs={300}
+            minLength={2}
           />
         </View>
 

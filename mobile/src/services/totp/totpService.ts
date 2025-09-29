@@ -28,6 +28,10 @@ class TotpService {
     return this.makeRequest(`/totp/passwords/${passwordId}`);
   }
 
+  async getTotpSecret(passwordId: string): Promise<{ success: boolean; data?: { secret: string }; message?: string }> {
+    return this.makeRequest(`/totp/passwords/${passwordId}/secret`);
+  }
+
   async addTotpToPassword(passwordId: string, totpInput: string): Promise<{ success: boolean; message?: string }> {
     return this.makeRequest(`/totp/passwords/${passwordId}`, {
       method: 'POST',

@@ -1,14 +1,14 @@
 <template>
   <div class="totp-container">
     <div class="totp-code-wrapper">
-      <div class="totp-code" :class="{ 'animate-pulse': timeRemaining < 5 }">
+      <div class="totp-code" :class="{ 'animate-pulse': currentTimeRemaining < 5 }">
         {{ formattedCode }}
       </div>
       
       <div class="totp-timer-container">
         <div class="totp-timer" :style="timerStyle">
           <div class="totp-timer-inner">
-            {{ timeRemaining }}s
+            {{ currentTimeRemaining }}s
           </div>
         </div>
       </div>
@@ -19,7 +19,7 @@
         variant="ghost"
         size="sm"
         @click="copyCode"
-        :disabled="!code"
+        :disabled="!currentCode"
       >
         <ClipboardIcon class="w-4 h-4 mr-1" />
         Copiar
@@ -39,15 +39,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from '@/hooks/useToast'
 import { ClipboardIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 import BaseButton from './BaseButton.vue'
+import { TOTPClient, type TOTPCode } from '@/utils/totpClient'
 
 interface Props {
-  code?: string
-  timeRemaining?: number
-  period?: number
+  secret?: string | null // Secret TOTP para geração client-side
+  code?: string | null // Código atual (fallback para compatibilidade)
+  timeRemaining?: number | null // Tempo restante (fallback)
+  period?: number | null // Período (fallback)
   autoRefresh?: boolean
 }
 
@@ -63,25 +65,56 @@ const toast = useToast()
 const isRefreshing = ref(false)
 let intervalId: number | null = null
 
+// Estado interno para geração client-side
+const currentCode = ref<string>('')
+const currentTimeRemaining = ref<number>(30)
+const currentPeriod = ref<number>(30)
+
+// Gerar código TOTP client-side se secret estiver disponível
+const generateTotpCode = () => {
+  if (!props.secret) return
+  
+  try {
+    const totpData = TOTPClient.generateCurrentCode(props.secret)
+    currentCode.value = totpData.code
+    currentTimeRemaining.value = totpData.timeRemaining
+    currentPeriod.value = totpData.period
+  } catch (error) {
+    console.error('Erro ao gerar código TOTP:', error)
+    currentCode.value = '------'
+  }
+}
+
+// Usar valores das props como fallback se não houver secret
+const displayCode = computed(() => {
+  return currentCode.value || props.code || '------'
+})
+
+const displayTimeRemaining = computed(() => {
+  return currentTimeRemaining.value || props.timeRemaining || 30
+})
+
+const displayPeriod = computed(() => {
+  return currentPeriod.value || props.period || 30
+})
+
 const formattedCode = computed(() => {
-  if (!props.code) return '------'
-  return props.code.replace(/(.{3})/g, '$1 ').trim()
+  if (!displayCode.value || displayCode.value === '------') return '------'
+  return displayCode.value.replace(/(.{3})/g, '$1 ').trim()
 })
 
 const timerStyle = computed(() => {
-  if (!props.timeRemaining || !props.period) return {}
-  
-  const progress = (props.timeRemaining / props.period) * 100
+  const progress = (displayTimeRemaining.value / displayPeriod.value) * 100
   return {
     '--progress': `${progress * 3.6}deg`
   }
 })
 
 const copyCode = async () => {
-  if (!props.code) return
+  if (!displayCode.value || displayCode.value === '------') return
   
   try {
-    await navigator.clipboard.writeText(props.code)
+    await navigator.clipboard.writeText(displayCode.value)
     toast.success('Código copiado!')
   } catch (error) {
     toast.error('Erro ao copiar código')
@@ -90,7 +123,15 @@ const copyCode = async () => {
 
 const refreshCode = async () => {
   isRefreshing.value = true
-  emit('refresh')
+  
+  // Se temos secret, regenerar client-side
+  if (props.secret) {
+    generateTotpCode()
+  } else {
+    // Fallback para o comportamento antigo
+    emit('refresh')
+  }
+  
   setTimeout(() => {
     isRefreshing.value = false
   }, 1000)
@@ -100,10 +141,14 @@ const startTimer = () => {
   if (intervalId) return
   
   intervalId = window.setInterval(() => {
-    // O timer será controlado pelo componente pai
-    // Aqui apenas verificamos se precisa fazer refresh
-    if (props.timeRemaining && props.timeRemaining <= 1) {
-      emit('refresh')
+    if (props.secret) {
+      // Geração client-side - atualizar a cada segundo
+      generateTotpCode()
+    } else {
+      // Fallback para comportamento antigo
+      if (displayTimeRemaining.value <= 1) {
+        emit('refresh')
+      }
     }
   }, 1000)
 }
@@ -115,7 +160,18 @@ const stopTimer = () => {
   }
 }
 
+// Watcher para reagir a mudanças no secret
+watch(() => props.secret, (newSecret) => {
+  if (newSecret) {
+    generateTotpCode()
+  }
+}, { immediate: true })
+
 onMounted(() => {
+  if (props.secret) {
+    generateTotpCode()
+  }
+  
   if (props.autoRefresh) {
     startTimer()
   }

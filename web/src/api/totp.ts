@@ -68,6 +68,12 @@ const totpApi = {
     return response.data
   },
 
+  // Buscar apenas o secret TOTP (para geração client-side)
+  async getTotpSecret(passwordId: string) {
+    const response = await api.get(`/totp/passwords/${passwordId}/secret`)
+    return response.data
+  },
+
   // Adicionar TOTP a uma senha
   async addTotpToPassword(passwordId: string, totpInput: string) {
     const response = await api.post(`/totp/passwords/${passwordId}`, {

@@ -211,6 +211,19 @@ export const usePasswordsStore = defineStore('passwords', () => {
     }
   }
 
+  // Buscar apenas o secret TOTP (para geração client-side)
+  const getTotpSecret = async (id: string) => {
+    try {
+      const response = await totpApi.getTotpSecret(id)
+      if (response.success) {
+        return response.data
+      }
+      throw new Error(response.message || 'Erro ao buscar secret TOTP')
+    } catch (error) {
+      throw error
+    }
+  }
+
   const addTotp = async (id: string, totpInput: string) => {
     isLoading.value = true
     try {
@@ -396,6 +409,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
     
     // TOTP Actions
     getTotpCode,
+    getTotpSecret,
     addTotp,
     removeTotp,
     

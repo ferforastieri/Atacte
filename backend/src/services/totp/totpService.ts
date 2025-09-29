@@ -385,4 +385,44 @@ export class TOTPService {
     }
   }
 
+  /**
+   * Buscar apenas o secret TOTP para uma entrada (para geração client-side)
+   */
+  async getTotpSecretForEntry(
+    userId: string, 
+    passwordId: string, 
+    req?: Request
+  ): Promise<{ secret: string } | null> {
+    const entry = await this.passwordRepository.findById(passwordId, userId);
+    
+    if (!entry || !entry.totpEnabled || !entry.totpSecret) {
+      return null;
+    }
+
+    const user = await this.passwordRepository.getUserEncryptionKey(userId);
+
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    try {
+      const decryptedSecret = TOTPService.decryptSecret(entry.totpSecret, user.encryptionKeyHash);
+      
+      // Log do acesso ao secret TOTP
+      await AuditUtil.log(
+        userId,
+        'PASSWORD_VIEWED',
+        'PASSWORD_ENTRY',
+        passwordId,
+        { action: 'TOTP_SECRET_ACCESSED' },
+        req
+      );
+
+      return { secret: decryptedSecret };
+    } catch (error) {
+      console.error('Erro ao descriptografar TOTP secret:', error);
+      return null;
+    }
+  }
+
 }

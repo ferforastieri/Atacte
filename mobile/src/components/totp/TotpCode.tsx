@@ -4,16 +4,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Button } from '../shared/Button';
 import * as Clipboard from 'expo-clipboard';
+import { TOTPClient, type TOTPCode } from '../../utils/totpClient';
 
 interface TotpCodeProps {
-  code?: string;
-  timeRemaining?: number;
-  period?: number;
+  secret?: string; // Secret TOTP para geração client-side
+  code?: string; // Código atual (fallback para compatibilidade)
+  timeRemaining?: number; // Tempo restante (fallback)
+  period?: number; // Período (fallback)
   onRefresh?: () => void;
   onCopy?: () => void;
 }
 
 export const TotpCode: React.FC<TotpCodeProps> = ({
+  secret,
   code,
   timeRemaining = 0,
   period = 30,
@@ -21,39 +24,85 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
   onCopy,
 }) => {
   const { isDark } = useTheme();
-  const [currentTimeRemaining, setCurrentTimeRemaining] = useState(timeRemaining);
+  const [currentCode, setCurrentCode] = useState<string>('');
+  const [currentTimeRemaining, setCurrentTimeRemaining] = useState<number>(30);
+  const [currentPeriod, setCurrentPeriod] = useState<number>(30);
+
+  // Gerar código TOTP client-side se secret estiver disponível
+  const generateTotpCode = () => {
+    if (!secret) return;
+    
+    try {
+      const totpData = TOTPClient.generateCurrentCode(secret);
+      setCurrentCode(totpData.code);
+      setCurrentTimeRemaining(totpData.timeRemaining);
+      setCurrentPeriod(totpData.period);
+    } catch (error) {
+      console.error('Erro ao gerar código TOTP:', error);
+      setCurrentCode('------');
+    }
+  };
+
+  // Usar valores das props como fallback se não houver secret
+  const displayCode = currentCode || code || '------';
+  const displayTimeRemaining = currentTimeRemaining || timeRemaining || 30;
+  const displayPeriod = currentPeriod || period || 30;
 
   useEffect(() => {
-    setCurrentTimeRemaining(timeRemaining);
-  }, [timeRemaining]);
+    if (secret) {
+      generateTotpCode();
+    } else {
+      setCurrentTimeRemaining(timeRemaining);
+    }
+  }, [secret, timeRemaining]);
 
   useEffect(() => {
-    if (currentTimeRemaining <= 0) return;
+    if (secret) {
+      // Geração client-side - atualizar a cada segundo
+      const timer = setInterval(() => {
+        generateTotpCode();
+      }, 1000);
 
-    const timer = setInterval(() => {
-      setCurrentTimeRemaining(prev => {
-        if (prev <= 1) {
-          onRefresh?.();
-          return period;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      return () => clearInterval(timer);
+    } else {
+      // Fallback para comportamento antigo
+      if (displayTimeRemaining <= 0) return;
 
-    return () => clearInterval(timer);
-  }, [currentTimeRemaining, period, onRefresh]);
+      const timer = setInterval(() => {
+        setCurrentTimeRemaining(prev => {
+          if (prev <= 1) {
+            onRefresh?.();
+            return displayPeriod;
+          }
+          return prev - 1;
+        });
+      }, 1000);
 
-  const formattedCode = code ? code.replace(/(.{3})/g, '$1 ').trim() : '------';
-  const progress = (currentTimeRemaining / period) * 100;
+      return () => clearInterval(timer);
+    }
+  }, [secret, displayTimeRemaining, displayPeriod, onRefresh]);
+
+  const formattedCode = displayCode ? displayCode.replace(/(.{3})/g, '$1 ').trim() : '------';
+  const progress = (displayTimeRemaining / displayPeriod) * 100;
 
   const handleCopy = async () => {
-    if (code) {
+    if (displayCode && displayCode !== '------') {
       try {
-        await Clipboard.setStringAsync(code);
+        await Clipboard.setStringAsync(displayCode);
         onCopy?.();
       } catch (error) {
         console.error('Erro ao copiar código:', error);
       }
+    }
+  };
+
+  const handleRefresh = () => {
+    if (secret) {
+      // Regenerar client-side
+      generateTotpCode();
+    } else {
+      // Fallback para comportamento antigo
+      onRefresh?.();
     }
   };
 
@@ -139,7 +188,7 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
         <View style={styles.timerContainer}>
           <View style={styles.timer}>
             <View style={styles.timerInner}>
-              <Text style={styles.timerText}>{currentTimeRemaining}s</Text>
+              <Text style={styles.timerText}>{displayTimeRemaining}s</Text>
             </View>
             {/* Progress ring would go here if needed */}
           </View>
@@ -153,11 +202,11 @@ export const TotpCode: React.FC<TotpCodeProps> = ({
           variant="secondary"
           size="sm"
           style={styles.actionButton}
-          disabled={!code}
+          disabled={!displayCode || displayCode === '------'}
         />
         <Button
           title="Atualizar"
-          onPress={onRefresh || (() => {})}
+          onPress={handleRefresh}
           variant="secondary"
           size="sm"
           style={styles.actionButton}

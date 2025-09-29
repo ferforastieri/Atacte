@@ -4,5 +4,6 @@ export { Card } from './Card';
 export { Modal } from './Modal';
 export { Logo } from './Logo';
 export { Header } from './Header';
+export { SearchInput } from './SearchInput';
 export { TotpCode } from '../totp/TotpCode';
 export { PasswordGeneratorModal } from './PasswordGeneratorModal';

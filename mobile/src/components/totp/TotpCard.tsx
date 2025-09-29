@@ -37,33 +37,33 @@ export const TotpCard: React.FC<TotpCardProps> = ({
 }) => {
   const { isDark } = useTheme();
   const { showSuccess } = useToast();
-  const [totpCode, setTotpCode] = useState<{ code: string; timeRemaining: number; period: number } | null>(null);
+  const [totpSecret, setTotpSecret] = useState<string | null>(null);
   const [isLoadingTotp, setIsLoadingTotp] = useState(false);
 
   useEffect(() => {
     if (password.totpEnabled) {
-      loadTotpCode();
+      loadTotpSecret();
     }
   }, [password.totpEnabled, password.id]);
 
-  const loadTotpCode = async () => {
+  const loadTotpSecret = async () => {
     if (!password.totpEnabled) return;
     
     setIsLoadingTotp(true);
     try {
-      const response = await totpService.getTotpCode(password.id);
-      if (response.success && response.data) {
-        setTotpCode(response.data);
+      const response = await totpService.getTotpSecret(password.id);
+      if (response.success && response.data?.secret) {
+        setTotpSecret(response.data.secret);
       }
     } catch (error) {
-      console.error('Erro ao carregar código TOTP:', error);
+      console.error('Erro ao carregar secret TOTP:', error);
     } finally {
       setIsLoadingTotp(false);
     }
   };
 
   const refreshTotpCode = async () => {
-    await loadTotpCode();
+    await loadTotpSecret();
   };
 
   const handleTotpCopy = () => {
@@ -165,12 +165,10 @@ export const TotpCard: React.FC<TotpCardProps> = ({
       </TouchableOpacity>
       
       {/* TOTP Code */}
-      {password.totpEnabled && totpCode && (
+      {password.totpEnabled && totpSecret && (
         <View style={styles.totpContainer}>
           <TotpCode
-            code={totpCode.code}
-            timeRemaining={totpCode.timeRemaining}
-            period={totpCode.period}
+            secret={totpSecret}
             onRefresh={refreshTotpCode}
             onCopy={handleTotpCopy}
           />

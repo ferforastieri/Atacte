@@ -261,6 +261,33 @@ router.get('/passwords/:id', async (req: AuthenticatedRequest, res: Response) =>
   }
 });
 
+// GET /api/totp/passwords/:id/secret - Buscar apenas o secret TOTP (para geração client-side)
+router.get('/passwords/:id/secret', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const totpSecret = await totpService.getTotpSecretForEntry(req.user.id, id, req);
+
+    if (!totpSecret) {
+      res.status(404).json({
+        success: false,
+        message: 'Secret TOTP não encontrado ou não habilitado para esta entrada'
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: totpSecret
+    });
+  } catch (error: any) {
+    console.error('Erro ao buscar secret TOTP:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Erro interno do servidor'
+    });
+  }
+});
+
 // POST /api/totp/passwords/:id - Adicionar TOTP a uma senha
 router.post('/passwords/:id', [
   body('totpInput')

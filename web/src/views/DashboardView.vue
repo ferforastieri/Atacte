@@ -172,11 +172,13 @@
       <BaseCard class="mb-6">
         <div class="flex flex-col gap-4">
           <div class="flex-1">
-            <BaseInput
+            <SearchInput
               v-model="searchQuery"
-              type="text"
               placeholder="Buscar senhas..."
-              left-icon="MagnifyingGlassIcon"
+              :debounce-ms="300"
+              :min-length="2"
+              @search="handleSearch"
+              @clear="handleSearchClear"
             />
           </div>
           
@@ -350,7 +352,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { usePasswordsStore } from '@/stores/passwords'
-import { BaseButton, BaseInput, BaseCard, ThemeToggle, Logo } from '@/components/ui'
+import { BaseButton, BaseCard, SearchInput, ThemeToggle, Logo } from '@/components/ui'
 import { type PasswordEntry } from '@/api/passwords'
 import { copyToClipboard } from '@/utils/clipboard'
 
@@ -397,24 +399,27 @@ const refreshPasswords = async () => {
   }
 }
 
-// Debounce para busca
-let searchTimeout: number | null = null
-
-const handleSearch = async () => {
-  if (searchTimeout) {
-    clearTimeout(searchTimeout)
+// Métodos de busca otimizados
+const handleSearch = async (query: string) => {
+  try {
+    await passwordsStore.fetchPasswords({ 
+      query: query,
+      offset: 0 // Resetar para primeira página ao buscar
+    })
+  } catch (error) {
+    toast.error('Erro ao buscar senhas')
   }
-  
-  searchTimeout = setTimeout(async () => {
-    try {
-      await passwordsStore.fetchPasswords({ 
-        query: searchQuery.value,
-        offset: 0 // Resetar para primeira página ao buscar
-      })
-    } catch (error) {
-      toast.error('Erro ao buscar senhas')
-    }
-  }, 500) // 500ms de debounce
+}
+
+const handleSearchClear = async () => {
+  try {
+    await passwordsStore.fetchPasswords({ 
+      query: '',
+      offset: 0
+    })
+  } catch (error) {
+    toast.error('Erro ao limpar busca')
+  }
 }
 
 const handleFolderFilter = async () => {
@@ -517,10 +522,7 @@ const handlePasswordDeleted = () => {
   refreshPasswords()
 }
 
-// Watchers
-watch(searchQuery, () => {
-  handleSearch()
-})
+// Watchers removidos - agora o SearchInput gerencia o debounce
 
 // Lifecycle
 onMounted(async () => {

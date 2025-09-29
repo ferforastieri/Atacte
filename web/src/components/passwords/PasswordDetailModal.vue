@@ -54,9 +54,10 @@
       <div v-if="password.totpEnabled">
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Código TOTP</label>
         <TotpCode 
-          :code="totpCode?.code"
-          :time-remaining="totpCode?.timeRemaining"
-          :period="totpCode?.period"
+          :secret="totpSecret"
+          :code="totpCode?.code || null"
+          :time-remaining="totpCode?.timeRemaining || null"
+          :period="totpCode?.period || null"
           @refresh="refreshTotpCode"
         />
       </div>
@@ -151,6 +152,7 @@ const passwordsStore = usePasswordsStore()
 
 const isDeleting = ref(false)
 const totpCode = ref<{ code: string; timeRemaining: number; period: number } | null>(null)
+const totpSecret = ref<string | null>(null)
 let totpTimer: number | null = null
 const showEditModal = ref(false)
 const passwordValue = ref('')
@@ -207,47 +209,43 @@ const cancelDelete = () => {
   showDeleteConfirm.value = false
 }
 
-const loadTotpCode = async () => {
+const loadTotpSecret = async () => {
   if (!props.password?.id || !props.password?.totpEnabled) return
   
   try {
-    const code = await passwordsStore.getTotpCode(props.password.id)
-    totpCode.value = code
+    const secretData = await passwordsStore.getTotpSecret(props.password.id)
+    if (secretData?.secret) {
+      totpSecret.value = secretData.secret
+    }
   } catch (error) {
-    console.error('Erro ao carregar código TOTP:', error)
+    console.error('Erro ao carregar secret TOTP:', error)
+    // Fallback para API antiga se necessário
+    try {
+      const code = await passwordsStore.getTotpCode(props.password.id)
+      totpCode.value = code
+    } catch (fallbackError) {
+      console.error('Erro ao carregar código TOTP (fallback):', fallbackError)
+    }
   }
 }
 
 const refreshTotpCode = async () => {
-  await loadTotpCode()
+  await loadTotpSecret()
 }
 
+// Timer não é mais necessário - o TotpCode gerencia internamente
 const startTotpTimer = () => {
-  if (totpTimer) clearInterval(totpTimer)
-  
-  totpTimer = window.setInterval(() => {
-    if (totpCode.value) {
-      totpCode.value.timeRemaining--
-      
-      if (totpCode.value.timeRemaining <= 0) {
-        // Recarregar código TOTP quando o tempo expirar
-        refreshTotpCode()
-      }
-    }
-  }, 1000)
+  // Não faz nada - TotpCode gerencia o timer
 }
 
 const stopTotpTimer = () => {
-  if (totpTimer) {
-    clearInterval(totpTimer)
-    totpTimer = null
-  }
+  // Não faz nada - TotpCode gerencia o timer
 }
 
-// Carregar código TOTP quando o modal abrir e a senha tiver TOTP habilitado
+// Carregar secret TOTP quando o modal abrir e a senha tiver TOTP habilitado
 watch(() => props.show, async (show) => {
   if (show && props.password?.totpEnabled) {
-    await loadTotpCode()
+    await loadTotpSecret()
     startTotpTimer()
   } else {
     stopTotpTimer()
@@ -263,7 +261,7 @@ watch(() => props.password?.password, (newPassword) => {
 
 watch(() => props.password?.id, async (id) => {
   if (id && props.password?.totpEnabled) {
-    await loadTotpCode()
+    await loadTotpSecret()
     startTotpTimer()
   }
 })

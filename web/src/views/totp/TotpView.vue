@@ -208,14 +208,17 @@ const refreshTotpCodes = async () => {
 }
 
 const loadTotpCodes = async () => {
+  // Com geração client-side, só precisamos carregar os secrets uma vez
+  // Os códigos serão gerados localmente pelos componentes TotpCode
   for (const password of totpPasswords.value) {
     try {
-      const response = await passwordsStore.getTotpCode(password.id)
-      if (response) {
-        totpCodes.value.set(password.id, response)
+      // Buscar o secret TOTP da senha (sem gerar código)
+      const response = await passwordsStore.getTotpSecret(password.id)
+      if (response?.secret) {
+        totpCodes.value.set(password.id, { secret: response.secret })
       }
     } catch (error) {
-      console.error(`Erro ao carregar TOTP para ${password.name}:`, error)
+      console.error(`Erro ao carregar secret TOTP para ${password.name}:`, error)
     }
   }
 }
@@ -246,11 +249,11 @@ const handlePasswordDeleted = () => {
   refreshTotpCodes()
 }
 
-// Auto-refresh TOTP codes every second
+// Auto-refresh TOTP codes - agora client-side, sem requisições
 const startAutoRefresh = () => {
-  refreshInterval.value = setInterval(async () => {
-    await loadTotpCodes()
-  }, 1000)
+  // Com a geração client-side, não precisamos mais de requisições frequentes
+  // O timer será gerenciado pelos componentes individuais TotpCode
+  console.log('Auto-refresh iniciado (client-side)')
 }
 
 const stopAutoRefresh = () => {
