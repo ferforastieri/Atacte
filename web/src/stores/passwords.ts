@@ -301,7 +301,7 @@ export const usePasswordsStore = defineStore('passwords', () => {
       })
       
       if (favoritesResponse.success) {
-        allFavoritePasswords.value = favoritesResponse.data.passwords
+        allFavoritePasswords.value = favoritesResponse.data
       }
 
       // Buscar todas as senhas com TOTP
