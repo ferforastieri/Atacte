@@ -58,7 +58,7 @@ class Environment {
       // Security
       BCRYPT_ROUNDS: this.getNumber('BCRYPT_ROUNDS', 12),
       RATE_LIMIT_WINDOW_MS: this.getNumber('RATE_LIMIT_WINDOW_MS', 15 * 60 * 1000), // 15 minutes
-      RATE_LIMIT_MAX_REQUESTS: this.getNumber('RATE_LIMIT_MAX_REQUESTS', 100),
+      RATE_LIMIT_MAX_REQUESTS: this.getNumber('RATE_LIMIT_MAX_REQUESTS', 500),
       
       // CORS
       CORS_ORIGIN: this.getString('CORS_ORIGIN', '*'),
