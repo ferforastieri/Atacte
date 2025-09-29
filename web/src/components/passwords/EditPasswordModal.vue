@@ -118,7 +118,6 @@
               Cole a chave secreta do seu app autenticador (Google Authenticator, Authy, etc.)
             </p>
           </div>
-
         </div>
       </div>
 
@@ -202,12 +201,6 @@ const isFormValid = computed(() => {
   return form.value.name.trim() && form.value.password.trim()
 })
 
-// Watch for TOTP secret changes to generate QR code
-watch(() => form.value.totpSecret, (newSecret) => {
-  if (newSecret && form.value.name) {
-    generateQrCode()
-  }
-}, { immediate: false })
 
 // Methods
 const generatePassword = () => {
@@ -224,6 +217,7 @@ const generatePassword = () => {
 }
 
 
+
 const validateForm = () => {
   errors.value = {}
   
@@ -237,10 +231,6 @@ const validateForm = () => {
   
   if (form.value.website && !isValidUrl(form.value.website)) {
     errors.value.website = 'URL inválida'
-  }
-  
-  if (form.value.totpEnabled && !form.value.totpSecret.trim()) {
-    errors.value.totpSecret = 'Chave secreta é obrigatória quando TOTP está habilitado'
   }
   
   return Object.keys(errors.value).length === 0
@@ -269,17 +259,35 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   
   try {
-    await passwordsStore.updatePassword(props.password.id, {
+    const updateData: any = {
+      id: props.password.id,
       name: form.value.name.trim(),
-      website: form.value.website.trim() || undefined,
-      username: form.value.username.trim() || undefined,
       password: form.value.password,
-      folder: form.value.folder.trim() || undefined,
-      notes: form.value.notes.trim() || undefined,
       totpEnabled: form.value.totpEnabled,
-      totpSecret: form.value.totpEnabled ? form.value.totpSecret.trim() : undefined,
       isFavorite: form.value.isFavorite
-    })
+    }
+    
+    if (form.value.website.trim()) {
+      updateData.website = form.value.website.trim()
+    }
+    
+    if (form.value.username.trim()) {
+      updateData.username = form.value.username.trim()
+    }
+    
+    if (form.value.folder.trim()) {
+      updateData.folder = form.value.folder.trim()
+    }
+    
+    if (form.value.notes.trim()) {
+      updateData.notes = form.value.notes.trim()
+    }
+    
+    if (form.value.totpEnabled && form.value.totpSecret.trim()) {
+      updateData.totpSecret = form.value.totpSecret.trim()
+    }
+    
+    await passwordsStore.updatePassword(props.password.id, updateData)
     
     toast.success('Senha atualizada com sucesso!')
     emit('updated')

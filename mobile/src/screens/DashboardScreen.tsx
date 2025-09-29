@@ -76,6 +76,13 @@ export default function DashboardScreen() {
       flex: 1,
       padding: 20,
     },
+    listStyle: {
+      flex: 1,
+    },
+    listContainer: {
+      flexGrow: 1,
+      paddingBottom: 20,
+    },
     searchContainer: {
       marginBottom: 20,
     },
@@ -454,11 +461,6 @@ export default function DashboardScreen() {
       return;
     }
 
-    if (formData.totpEnabled && !formData.totpSecret) {
-      showError('Chave secreta TOTP é obrigatória quando TOTP está habilitado');
-      return;
-    }
-
     setIsSaving(true);
     try {
       let response;
@@ -659,6 +661,8 @@ export default function DashboardScreen() {
           ListFooterComponent={renderFooter}
           ListEmptyComponent={renderEmpty}
           showsVerticalScrollIndicator={false}
+          style={styles.listStyle}
+          contentContainerStyle={styles.listContainer}
         />
       </View>
 

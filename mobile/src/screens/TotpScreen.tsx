@@ -80,6 +80,10 @@ export default function TotpScreen() {
       paddingTop: 60,
       paddingBottom: 100, 
     },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: 20,
+    },
     emptyContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -184,6 +188,7 @@ export default function TotpScreen() {
       <Header title="TOTP" onThemeToggle={toggleTheme} />
       <ScrollView
         style={styles.content}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }

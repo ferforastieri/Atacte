@@ -136,61 +136,15 @@
             <label for="totpSecret" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Chave Secreta TOTP
             </label>
-            <div class="flex space-x-2">
-              <BaseInput
-                id="totpSecret"
-                v-model="form.totpSecret"
-                type="text"
-                placeholder="Digite a chave secreta do app autenticador"
-                :error="errors.totpSecret"
-                class="flex-1"
-              />
-              <button
-                type="button"
-                @click="generateTotpSecret"
-                class="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600"
-              >
-                Gerar
-              </button>
-            </div>
+            <BaseInput
+              id="totpSecret"
+              v-model="form.totpSecret"
+              type="text"
+              placeholder="Digite a chave secreta do app autenticador"
+              :error="errors.totpSecret"
+            />
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Cole a chave secreta do seu app autenticador (Google Authenticator, Authy, etc.)
-            </p>
-          </div>
-
-          <!-- TOTP QR Code -->
-          <div v-if="totpQrCode" class="text-center">
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Escaneie com seu app autenticador:</p>
-            <div class="inline-block p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <img :src="totpQrCode" alt="QR Code TOTP" class="w-32 h-32" />
-            </div>
-          </div>
-
-          <!-- Test TOTP -->
-          <div v-if="form.totpSecret" class="space-y-2">
-            <label for="totpTest" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Teste o código TOTP
-            </label>
-            <div class="flex space-x-2">
-              <BaseInput
-                id="totpTest"
-                v-model="totpTestCode"
-                type="text"
-                placeholder="Digite o código de 6 dígitos"
-                maxlength="6"
-                class="flex-1"
-              />
-              <button
-                type="button"
-                @click="testTotpCode"
-                :disabled="!totpTestCode || totpTestCode.length !== 6"
-                class="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600"
-              >
-                Testar
-              </button>
-            </div>
-            <p v-if="totpTestResult" class="text-sm" :class="totpTestResult.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-              {{ totpTestResult.message }}
             </p>
           </div>
         </div>
@@ -269,9 +223,6 @@ const form = ref({
 // UI state
 const showPassword = ref(false)
 const isSubmitting = ref(false)
-const totpQrCode = ref('')
-const totpTestCode = ref('')
-const totpTestResult = ref<{ success: boolean; message: string } | null>(null)
 
 // Validation errors
 const errors = ref<Record<string, string>>({})
@@ -281,12 +232,6 @@ const isFormValid = computed(() => {
   return form.value.name.trim() && form.value.password.trim()
 })
 
-// Watch for TOTP secret changes to generate QR code
-watch(() => form.value.totpSecret, (newSecret) => {
-  if (newSecret && form.value.name) {
-    generateQrCode()
-  }
-}, { immediate: false })
 
 // Methods
 const generatePassword = () => {
@@ -303,63 +248,6 @@ const generatePassword = () => {
   showPassword.value = true
 }
 
-const generateTotpSecret = () => {
-  // Gerar chave secreta aleatória (base32)
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
-  let secret = ''
-  for (let i = 0; i < 32; i++) {
-    secret += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  form.value.totpSecret = secret
-}
-
-const generateQrCode = async () => {
-  if (!form.value.totpSecret || !form.value.name) return
-  
-  try {
-    // Simular geração de QR code (em produção, usar biblioteca real)
-    const otpAuthUrl = `otpauth://totp/${form.value.name}?secret=${form.value.totpSecret}&issuer=Atacte`
-    // Em produção, usar: import QRCode from 'qrcode'
-    // totpQrCode.value = await QRCode.toDataURL(otpAuthUrl)
-    
-    // Placeholder para demonstração
-    totpQrCode.value = `data:image/svg+xml;base64,${btoa(`
-      <svg width="128" height="128" xmlns="http://www.w3.org/2000/svg">
-        <rect width="128" height="128" fill="white"/>
-        <text x="64" y="64" text-anchor="middle" font-family="Arial" font-size="10">
-          QR Code
-        </text>
-        <text x="64" y="80" text-anchor="middle" font-family="Arial" font-size="8">
-          ${form.value.totpSecret.substring(0, 16)}...
-        </text>
-      </svg>
-    `)}`
-  } catch (error) {
-    console.error('Erro ao gerar QR code:', error)
-  }
-}
-
-const testTotpCode = async () => {
-  if (!form.value.totpSecret || totpTestCode.value.length !== 6) return
-  
-  try {
-    // Simular validação TOTP (em produção, usar biblioteca real)
-    // const isValid = await passwordsStore.validateTotpCode(form.value.totpSecret, totpTestCode.value)
-    
-    // Placeholder para demonstração
-    const isValid = Math.random() > 0.5 // Simular sucesso/falha
-    
-    totpTestResult.value = {
-      success: isValid,
-      message: isValid ? 'Código válido! ✅' : 'Código inválido. Verifique o app autenticador.'
-    }
-  } catch (error) {
-    totpTestResult.value = {
-      success: false,
-      message: 'Erro ao validar código'
-    }
-  }
-}
 
 const validateForm = () => {
   errors.value = {}
@@ -455,9 +343,6 @@ const resetForm = () => {
     isFavorite: false
   }
   showPassword.value = false
-  totpQrCode.value = ''
-  totpTestCode.value = ''
-  totpTestResult.value = null
   errors.value = {}
 }
 
