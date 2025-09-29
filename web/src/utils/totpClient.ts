@@ -1,4 +1,4 @@
-import speakeasy from 'speakeasy'
+import { TOTP } from 'otpauth'
 
 export interface TOTPCode {
   code: string
@@ -14,6 +14,7 @@ export interface TOTPValidation {
 /**
  * Classe para geração de códigos TOTP no cliente
  * Reduz drasticamente as requisições ao servidor
+ * Compatível com browser usando otpauth
  */
 export class TOTPClient {
   private static readonly TOTP_PERIOD = 30 // 30 segundos por período
@@ -30,19 +31,29 @@ export class TOTPClient {
       throw new Error('Secret TOTP vazio')
     }
 
-    const token = speakeasy.totp({
-      secret: cleanSecret,
-      encoding: 'base32',
-      step: this.TOTP_PERIOD
-    })
+    try {
+      // Criar instância TOTP
+      const totp = new TOTP({
+        secret: cleanSecret,
+        algorithm: 'SHA1',
+        digits: 6,
+        period: this.TOTP_PERIOD
+      })
 
-    // Calcular tempo restante até o próximo período
-    const timeRemaining = this.TOTP_PERIOD - (Math.floor(Date.now() / 1000) % this.TOTP_PERIOD)
+      // Gerar código atual
+      const token = totp.generate()
 
-    return {
-      code: token,
-      timeRemaining,
-      period: this.TOTP_PERIOD
+      // Calcular tempo restante até o próximo período
+      const timeRemaining = this.TOTP_PERIOD - (Math.floor(Date.now() / 1000) % this.TOTP_PERIOD)
+
+      return {
+        code: token,
+        timeRemaining,
+        period: this.TOTP_PERIOD
+      }
+    } catch (error) {
+      console.error('Erro ao gerar código TOTP:', error)
+      throw new Error('Erro ao gerar código TOTP')
     }
   }
 
@@ -50,17 +61,26 @@ export class TOTPClient {
    * Validar um código TOTP
    */
   static validateCode(secret: string, code: string): TOTPValidation {
-    const verified = speakeasy.totp.verify({
-      secret: secret,
-      encoding: 'base32',
-      token: code,
-      window: this.TOTP_WINDOW,
-      step: this.TOTP_PERIOD
-    })
+    try {
+      const totp = new TOTP({
+        secret: secret,
+        algorithm: 'SHA1',
+        digits: 6,
+        period: this.TOTP_PERIOD
+      })
 
-    return {
-      isValid: verified,
-      delta: verified ? 0 : undefined
+      const verified = totp.validate({ token: code, window: this.TOTP_WINDOW })
+
+      return {
+        isValid: verified !== null,
+        delta: verified || undefined
+      }
+    } catch (error) {
+      console.error('Erro ao validar código TOTP:', error)
+      return {
+        isValid: false,
+        delta: undefined
+      }
     }
   }
 
@@ -71,23 +91,28 @@ export class TOTPClient {
     const codes: TOTPCode[] = []
     const now = Math.floor(Date.now() / 1000)
     
-    for (let i = -count; i <= count; i++) {
-      const time = now + (i * this.TOTP_PERIOD)
-      
-      const token = speakeasy.totp({
+    try {
+      const totp = new TOTP({
         secret: secret,
-        encoding: 'base32',
-        step: this.TOTP_PERIOD,
-        time: time
-      })
-
-      const timeRemaining = this.TOTP_PERIOD - (time % this.TOTP_PERIOD)
-
-      codes.push({
-        code: token,
-        timeRemaining,
+        algorithm: 'SHA1',
+        digits: 6,
         period: this.TOTP_PERIOD
       })
+      
+      for (let i = -count; i <= count; i++) {
+        const time = now + (i * this.TOTP_PERIOD)
+        
+        const token = totp.generate({ timestamp: time * 1000 })
+        const timeRemaining = this.TOTP_PERIOD - (time % this.TOTP_PERIOD)
+
+        codes.push({
+          code: token,
+          timeRemaining,
+          period: this.TOTP_PERIOD
+        })
+      }
+    } catch (error) {
+      console.error('Erro ao gerar códigos de teste:', error)
     }
 
     return codes
