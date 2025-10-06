@@ -29,7 +29,8 @@ export default {
         backgroundColor: "#ffffff"
       },
       package: "com.atacte.mobile",
-      permissions: ["INTERNET"]
+      permissions: ["INTERNET"],
+      usesCleartextTraffic: true
     },
     web: {
       favicon: "./assets/logo.png"
