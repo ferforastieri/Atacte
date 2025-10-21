@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import * as Notifications from 'expo-notifications';
 import { notificationService, NotificationData } from '../services/notification/notificationService';
-import { useAuth } from './AuthContext';
+import { useAuth as useAuthContext } from './AuthContext';
 
 interface NotificationContextType {
   notifications: NotificationData[];
@@ -21,7 +21,7 @@ interface NotificationProviderProps {
 }
 
 export function NotificationProvider({ children }: NotificationProviderProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthContext();
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -194,18 +194,6 @@ export function useNotification() {
   
   if (context === undefined) {
     throw new Error('useNotification must be used within a NotificationProvider');
-  }
-  
-  return context;
-}
-
-// Hook auxiliar para o AuthContext
-export function useAuth() {
-  const AuthContext = require('./AuthContext');
-  const context = useContext(AuthContext.default);
-  
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
   }
   
   return context;

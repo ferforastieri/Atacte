@@ -43,8 +43,7 @@ export default {
         "POST_NOTIFICATIONS",
         "VIBRATE"
       ],
-      usesCleartextTraffic: true,
-      googleServicesFile: "./google-services.json"
+      usesCleartextTraffic: true
     },
     web: {
       favicon: "./assets/logo.png"

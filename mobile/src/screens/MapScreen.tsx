@@ -1,268 +1,440 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
   StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocation } from '../contexts/LocationContext';
-import { useNotification } from '../contexts/NotificationContext';
-import { FamilyMapData, FamilyMemberLocation } from '../services/location/locationService';
+import { Card, Button } from '../components/shared';
+import { locationService, FamilyMemberLocation } from '../services/location/locationService';
 import { useToast } from '../hooks/useToast';
+import { useTheme } from '../contexts/ThemeContext';
+import { useLocation } from '../contexts/LocationContext';
+
+const { width, height } = Dimensions.get('window');
+const ASPECT_RATIO = width / height;
+const LATITUDE_DELTA = 0.0922;
+const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
 export default function MapScreen({ route, navigation }: any) {
   const { familyId, familyName } = route.params;
-  const { getFamilyLocations, sendCurrentLocation, isTrackingActive, startTracking, stopTracking } = useLocation();
-  const { sendSOS } = useNotification();
-  const { showToast } = useToast();
-  const mapRef = useRef<MapView>(null);
-  
-  const [familyData, setFamilyData] = useState<FamilyMapData | null>(null);
+  const [locations, setLocations] = useState<FamilyMemberLocation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMember, setSelectedMember] = useState<FamilyMemberLocation | null>(null);
+  const [mapRegion, setMapRegion] = useState({
+    latitude: -23.5505,
+    longitude: -46.6333,
+    latitudeDelta: LATITUDE_DELTA,
+    longitudeDelta: LONGITUDE_DELTA,
+  });
+  const { showError } = useToast();
+  const { isDark } = useTheme();
+  const { currentLocation } = useLocation();
 
   useEffect(() => {
     loadFamilyLocations();
     
     // Atualizar a cada 30 segundos
     const interval = setInterval(loadFamilyLocations, 30000);
-    
     return () => clearInterval(interval);
   }, [familyId]);
 
+  useEffect(() => {
+    if (Array.isArray(locations) && locations.length > 0) {
+      // Centralizar no primeiro membro
+      const firstLocation = locations[0];
+      setMapRegion({
+        latitude: firstLocation.latitude,
+        longitude: firstLocation.longitude,
+        latitudeDelta: LATITUDE_DELTA,
+        longitudeDelta: LONGITUDE_DELTA,
+      });
+    } else if (currentLocation) {
+      // Se não houver membros, centralizar na localização atual
+      setMapRegion({
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+        latitudeDelta: LATITUDE_DELTA,
+        longitudeDelta: LONGITUDE_DELTA,
+      });
+    }
+  }, [locations, currentLocation]);
+
   const loadFamilyLocations = async () => {
     try {
-      const data = await getFamilyLocations(familyId);
+      const response = await locationService.getFamilyLocations(familyId);
       
-      if (data) {
-        setFamilyData(data);
+      if (response.success && response.data) {
+        const familyData = response.data;
+        const locationsData = Array.isArray(familyData.members) 
+          ? familyData.members 
+          : [];
         
-        // Centralizar o mapa nos membros
-        if (data.members.length > 0 && mapRef.current) {
-          const coordinates = data.members.map((member) => ({
-            latitude: member.latitude,
-            longitude: member.longitude,
-          }));
-          
-          mapRef.current.fitToCoordinates(coordinates, {
-            edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-            animated: true,
-          });
-        }
+        setLocations(locationsData);
+      } else {
+        setLocations([]);
+        showError(response.message || 'Erro ao carregar localizações');
       }
     } catch (error) {
-      showToast('Erro ao carregar localizações', 'error');
+      setLocations([]);
+      showError('Erro ao carregar localizações');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleToggleTracking = async () => {
-    if (isTrackingActive) {
-      await stopTracking();
-      showToast('Rastreamento desativado', 'info');
-    } else {
-      const success = await startTracking();
-      
-      if (success) {
-        showToast('Rastreamento ativado', 'success');
-        loadFamilyLocations();
-      } else {
-        showToast('Erro ao ativar rastreamento', 'error');
-      }
-    }
+  const centerOnMember = (member: FamilyMemberLocation) => {
+    setMapRegion({
+      latitude: member.latitude,
+      longitude: member.longitude,
+      latitudeDelta: LATITUDE_DELTA / 2,
+      longitudeDelta: LONGITUDE_DELTA / 2,
+    });
+    setSelectedMember(member);
   };
 
-  const handleRefresh = async () => {
-    await sendCurrentLocation();
-    await loadFamilyLocations();
-    showToast('Localização atualizada', 'success');
+  const getMarkerColor = (member: FamilyMemberLocation) => {
+    if (member.isMoving) return '#16a34a'; // Verde se em movimento
+    if (member.batteryLevel && member.batteryLevel < 0.2) return '#dc2626'; // Vermelho se bateria baixa
+    return '#2563eb'; // Azul padrão
   };
 
-  const handleSOS = () => {
-    Alert.alert(
-      '🆘 Enviar Alerta de Emergência',
-      'Sua família será notificada imediatamente sobre sua localização atual. Continuar?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Enviar SOS',
-          style: 'destructive',
-          onPress: async () => {
-            if (familyData && familyData.members.length > 0) {
-              const myLocation = familyData.members[0];
-              const success = await sendSOS(myLocation.latitude, myLocation.longitude);
-              
-              if (success) {
-                showToast('SOS enviado para sua família!', 'success');
-              } else {
-                showToast('Erro ao enviar SOS', 'error');
-              }
-            }
-          },
-        },
-      ]
-    );
+  const formatLastUpdate = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Agora mesmo';
+    if (diffMins < 60) return `${diffMins} min atrás`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h atrás`;
+    
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d atrás`;
   };
 
-  const getMarkerColor = (userId: string) => {
-    // Usar cores diferentes para cada membro
-    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-    const index = familyData?.members.findIndex((m) => m.userId === userId) || 0;
-    return colors[index % colors.length];
-  };
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? '#111827' : '#f9fafb',
+    },
+    header: {
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? '#374151' : '#e5e7eb',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      minHeight: 60,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    backButton: {
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      marginRight: 12,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: isDark ? '#f9fafb' : '#111827',
+    },
+    refreshButton: {
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+    },
+    mapContainer: {
+      flex: 1,
+    },
+    map: {
+      width: '100%',
+      height: '100%',
+    },
+    loadingContainer: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 32,
+    },
+    emptyIcon: {
+      marginBottom: 16,
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: isDark ? '#9ca3af' : '#6b7280',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    emptyText: {
+      fontSize: 14,
+      color: isDark ? '#6b7280' : '#9ca3af',
+      textAlign: 'center',
+    },
+    memberListContainer: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 16,
+    },
+    memberCard: {
+      marginBottom: 8,
+    },
+    memberHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    memberAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: '#16a34a',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    memberAvatarText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#ffffff',
+    },
+    memberInfo: {
+      flex: 1,
+    },
+    memberName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: isDark ? '#f9fafb' : '#111827',
+      marginBottom: 2,
+    },
+    memberStatus: {
+      fontSize: 12,
+      color: isDark ? '#9ca3af' : '#6b7280',
+    },
+    centerButton: {
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+    },
+    memberDetails: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    detailItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    detailIcon: {
+      marginRight: 4,
+    },
+    detailText: {
+      fontSize: 12,
+      color: isDark ? '#d1d5db' : '#374151',
+    },
+    myLocationButton: {
+      position: 'absolute',
+      right: 16,
+      bottom: locations.length > 0 ? 180 : 32,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 4,
+      borderWidth: 1,
+      borderColor: isDark ? '#374151' : '#e5e7eb',
+    },
+  });
 
   if (isLoading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#6366f1" />
+      <View style={styles.container}>
+        <SafeAreaView style={styles.header} edges={['top']}>
+          <View style={styles.headerContent}>
+            <View style={styles.headerLeft}>
+              <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                <Ionicons name="arrow-back" size={20} color={isDark ? '#f9fafb' : '#111827'} />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>{familyName}</Text>
+            </View>
+          </View>
+        </SafeAreaView>
+        <View style={[styles.loadingContainer, { backgroundColor: isDark ? '#111827' : '#f9fafb' }]}>
+          <ActivityIndicator size="large" color="#16a34a" />
+        </View>
       </View>
     );
   }
 
   return (
-    <View className="flex-1">
-      {/* Header */}
-      <View className="bg-white px-4 py-4 shadow-sm flex-row items-center justify-between">
-        <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-            <Ionicons name="arrow-back" size={24} color="#1f2937" />
-          </TouchableOpacity>
-          <View>
-            <Text className="text-lg font-bold text-gray-900">{familyName}</Text>
-            <Text className="text-xs text-gray-500">
-              {familyData?.members.length || 0} membros
-            </Text>
+    <View style={styles.container}>
+      <SafeAreaView style={styles.header} edges={['top']}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={20} color={isDark ? '#f9fafb' : '#111827'} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{familyName}</Text>
           </View>
+          <TouchableOpacity style={styles.refreshButton} onPress={loadFamilyLocations}>
+            <Ionicons name="refresh" size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
+          </TouchableOpacity>
         </View>
+      </SafeAreaView>
 
-        <TouchableOpacity
-          onPress={handleRefresh}
-          className="bg-indigo-50 p-2 rounded-lg"
-        >
-          <Ionicons name="refresh" size={20} color="#6366f1" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Map */}
-      <MapView
-        ref={mapRef}
-        provider={PROVIDER_GOOGLE}
-        style={StyleSheet.absoluteFillObject}
-        initialRegion={{
-          latitude: familyData?.members[0]?.latitude || -23.5505,
-          longitude: familyData?.members[0]?.longitude || -46.6333,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
-        showsUserLocation
-        showsMyLocationButton={false}
-      >
-        {familyData?.members.map((member) => (
-          <Marker
-            key={member.userId}
-            coordinate={{
-              latitude: member.latitude,
-              longitude: member.longitude,
-            }}
-            title={member.nickname || member.userName}
-            description={member.address || 'Localização atual'}
-            onPress={() => setSelectedMember(member)}
-            pinColor={getMarkerColor(member.userId)}
+      {locations.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons 
+            name="location-outline" 
+            size={64} 
+            color={isDark ? '#4b5563' : '#d1d5db'} 
+            style={styles.emptyIcon} 
           />
-        ))}
-      </MapView>
+          <Text style={styles.emptyTitle}>Nenhuma localização disponível</Text>
+          <Text style={styles.emptyText}>
+            Os membros da família ainda não compartilharam suas localizações
+          </Text>
+        </View>
+      ) : (
+        <>
+          <View style={styles.mapContainer}>
+            <MapView
+              provider={PROVIDER_GOOGLE}
+              style={styles.map}
+              region={mapRegion}
+              showsUserLocation
+              showsMyLocationButton={false}
+            >
+              {Array.isArray(locations) && locations.map((member) => (
+                <Marker
+                  key={member.userId}
+                  coordinate={{
+                    latitude: member.latitude,
+                    longitude: member.longitude,
+                  }}
+                  title={member.userName || member.nickname || undefined}
+                  description={formatLastUpdate(member.timestamp)}
+                  pinColor={getMarkerColor(member)}
+                  onPress={() => setSelectedMember(member)}
+                />
+              ))}
+            </MapView>
 
-      {/* Member Info Card */}
-      {selectedMember && (
-        <View className="absolute bottom-24 left-4 right-4 bg-white rounded-lg p-4 shadow-lg">
-          <TouchableOpacity
-            onPress={() => setSelectedMember(null)}
-            className="absolute top-2 right-2 p-1"
-          >
-            <Ionicons name="close" size={20} color="#6b7280" />
-          </TouchableOpacity>
-
-          <View className="flex-row items-center mb-3">
-            <View className="bg-indigo-100 p-3 rounded-full mr-3">
-              <Ionicons name="person" size={24} color="#6366f1" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-lg font-semibold text-gray-900">
-                {selectedMember.nickname || selectedMember.userName}
-              </Text>
-              <Text className="text-sm text-gray-500">
-                {selectedMember.isMoving ? '🚶 Em movimento' : '📍 Parado'}
-              </Text>
-            </View>
+            {currentLocation && (
+              <TouchableOpacity
+                style={styles.myLocationButton}
+                onPress={() => {
+                  setMapRegion({
+                    latitude: currentLocation.latitude,
+                    longitude: currentLocation.longitude,
+                    latitudeDelta: LATITUDE_DELTA / 2,
+                    longitudeDelta: LONGITUDE_DELTA / 2,
+                  });
+                }}
+              >
+                <Ionicons name="locate" size={24} color="#16a34a" />
+              </TouchableOpacity>
+            )}
           </View>
 
-          {selectedMember.address && (
-            <View className="flex-row items-start mb-2">
-              <Ionicons name="location-outline" size={16} color="#6b7280" className="mt-1" />
-              <Text className="text-sm text-gray-600 ml-2 flex-1">
-                {selectedMember.address}
-              </Text>
-            </View>
-          )}
+          <View style={styles.memberListContainer}>
+            {Array.isArray(locations) && locations.map((member) => (
+              <Card key={member.userId} style={styles.memberCard}>
+                <View style={styles.memberHeader}>
+                  <View style={[styles.memberAvatar, { backgroundColor: getMarkerColor(member) }]}>
+                    <Text style={styles.memberAvatarText}>
+                      {(member.nickname || member.userName || '?')[0].toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={styles.memberInfo}>
+                    <Text style={styles.memberName}>
+                      {member.nickname || member.userName}
+                    </Text>
+                    <Text style={styles.memberStatus}>
+                      {formatLastUpdate(member.timestamp)}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.centerButton}
+                    onPress={() => centerOnMember(member)}
+                  >
+                    <Ionicons name="navigate" size={20} color="#16a34a" />
+                  </TouchableOpacity>
+                </View>
 
-          {selectedMember.batteryLevel !== null && (
-            <View className="flex-row items-center">
-              <Ionicons
-                name={selectedMember.batteryLevel > 0.5 ? 'battery-full' : 'battery-half'}
-                size={16}
-                color={selectedMember.batteryLevel > 0.2 ? '#10b981' : '#ef4444'}
-              />
-              <Text className="text-sm text-gray-600 ml-2">
-                Bateria: {Math.round((selectedMember.batteryLevel || 0) * 100)}%
-              </Text>
-            </View>
-          )}
-        </View>
+                <View style={styles.memberDetails}>
+                  {member.batteryLevel !== null && member.batteryLevel !== undefined && (
+                    <View style={styles.detailItem}>
+                      <Ionicons
+                        name="battery-charging"
+                        size={14}
+                        color={member.batteryLevel < 0.2 ? '#dc2626' : '#16a34a'}
+                        style={styles.detailIcon}
+                      />
+                      <Text style={styles.detailText}>
+                        {Math.round(member.batteryLevel * 100)}%
+                      </Text>
+                    </View>
+                  )}
+                  
+                  {member.isMoving && (
+                    <View style={styles.detailItem}>
+                      <Ionicons name="walk" size={14} color="#16a34a" style={styles.detailIcon} />
+                      <Text style={styles.detailText}>Em movimento</Text>
+                    </View>
+                  )}
+                  
+                  {member.accuracy && (
+                    <View style={styles.detailItem}>
+                      <Ionicons name="radio-outline" size={14} color={isDark ? '#9ca3af' : '#6b7280'} style={styles.detailIcon} />
+                      <Text style={styles.detailText}>±{Math.round(member.accuracy)}m</Text>
+                    </View>
+                  )}
+                </View>
+              </Card>
+            ))}
+          </View>
+        </>
       )}
-
-      {/* Action Buttons */}
-      <View className="absolute bottom-6 right-4 space-y-3">
-        <TouchableOpacity
-          onPress={handleSOS}
-          className="bg-red-600 p-4 rounded-full shadow-lg"
-        >
-          <Ionicons name="alert-circle" size={24} color="white" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleToggleTracking}
-          className={`${
-            isTrackingActive ? 'bg-green-600' : 'bg-gray-400'
-          } p-4 rounded-full shadow-lg`}
-        >
-          <Ionicons name="navigate" size={24} color="white" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => {
-            if (mapRef.current && familyData) {
-              const coordinates = familyData.members.map((member) => ({
-                latitude: member.latitude,
-                longitude: member.longitude,
-              }));
-              
-              mapRef.current.fitToCoordinates(coordinates, {
-                edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-                animated: true,
-              });
-            }
-          }}
-          className="bg-white p-4 rounded-full shadow-lg"
-        >
-          <Ionicons name="contract-outline" size={24} color="#6366f1" />
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
-

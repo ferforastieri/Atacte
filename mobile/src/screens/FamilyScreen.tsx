@@ -4,14 +4,16 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   RefreshControl,
-  Alert,
+  StyleSheet,
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Button, Card, Modal, Input, Header } from '../components/shared';
 import { familyService, Family } from '../services/family/familyService';
 import { useToast } from '../hooks/useToast';
+import { useTheme } from '../contexts/ThemeContext';
+import { useLocation } from '../contexts/LocationContext';
 
 export default function FamilyScreen({ navigation }: any) {
   const [families, setFamilies] = useState<Family[]>([]);
@@ -21,7 +23,10 @@ export default function FamilyScreen({ navigation }: any) {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [newFamilyName, setNewFamilyName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
-  const { showToast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  const { showSuccess, showError } = useToast();
+  const { isDark, toggleTheme } = useTheme();
+  const { checkAndStartTracking, isTrackingActive, sendCurrentLocation } = useLocation();
 
   useEffect(() => {
     loadFamilies();
@@ -35,10 +40,10 @@ export default function FamilyScreen({ navigation }: any) {
       if (response.success && response.data) {
         setFamilies(response.data);
       } else {
-        showToast(response.message || 'Erro ao carregar famílias', 'error');
+        showError(response.message || 'Erro ao carregar famílias');
       }
     } catch (error) {
-      showToast('Erro ao carregar famílias', 'error');
+      showError('Erro ao carregar famílias');
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -47,242 +52,324 @@ export default function FamilyScreen({ navigation }: any) {
 
   const handleCreateFamily = async () => {
     if (!newFamilyName.trim()) {
-      showToast('Digite o nome da família', 'error');
+      showError('Digite o nome da família');
       return;
     }
 
     try {
+      setIsSaving(true);
       const response = await familyService.createFamily({ name: newFamilyName });
       
       if (response.success) {
-        showToast('Família criada com sucesso!', 'success');
+        showSuccess('Família criada com sucesso!');
         setNewFamilyName('');
         setShowCreateModal(false);
         loadFamilies();
+        await checkAndStartTracking();
       } else {
-        showToast(response.message || 'Erro ao criar família', 'error');
+        showError(response.message || 'Erro ao criar família');
       }
     } catch (error) {
-      showToast('Erro ao criar família', 'error');
+      showError('Erro ao criar família');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleJoinFamily = async () => {
     if (!inviteCode.trim()) {
-      showToast('Digite o código de convite', 'error');
+      showError('Digite o código de convite');
       return;
     }
 
     try {
+      setIsSaving(true);
       const response = await familyService.joinFamily({ inviteCode });
       
       if (response.success) {
-        showToast('Você entrou na família!', 'success');
+        showSuccess('Você entrou na família!');
         setInviteCode('');
         setShowJoinModal(false);
         loadFamilies();
+        await checkAndStartTracking();
       } else {
-        showToast(response.message || 'Erro ao entrar na família', 'error');
+        showError(response.message || 'Erro ao entrar na família');
       }
     } catch (error) {
-      showToast('Erro ao entrar na família', 'error');
+      showError('Erro ao entrar na família');
+    } finally {
+      setIsSaving(false);
     }
-  };
-
-  const handleLeaveFamily = (family: Family) => {
-    Alert.alert(
-      'Sair da Família',
-      `Deseja realmente sair de "${family.name}"?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Sair',
-          style: 'destructive',
-          onPress: async () => {
-            const response = await familyService.leaveFamily(family.id);
-            
-            if (response.success) {
-              showToast('Você saiu da família', 'success');
-              loadFamilies();
-            } else {
-              showToast(response.message || 'Erro ao sair da família', 'error');
-            }
-          },
-        },
-      ]
-    );
   };
 
   const handleViewMap = (family: Family) => {
     navigation.navigate('Map', { familyId: family.id, familyName: family.name });
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? '#111827' : '#f9fafb',
+    },
+    content: {
+      flex: 1,
+      padding: 20,
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 48,
+    },
+    emptyIcon: {
+      marginBottom: 16,
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: isDark ? '#9ca3af' : '#6b7280',
+      marginBottom: 8,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: isDark ? '#6b7280' : '#9ca3af',
+      textAlign: 'center',
+      paddingHorizontal: 32,
+    },
+    familyCard: {
+      marginBottom: 12,
+    },
+    familyHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 12,
+    },
+    familyInfo: {
+      flex: 1,
+    },
+    familyName: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: isDark ? '#f9fafb' : '#111827',
+      marginBottom: 4,
+    },
+    familyMembers: {
+      fontSize: 14,
+      color: isDark ? '#9ca3af' : '#6b7280',
+    },
+    leaveButton: {
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: isDark ? '#7f1d1d' : '#fee2e2',
+    },
+    inviteCodeContainer: {
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 12,
+    },
+    inviteCodeLabel: {
+      fontSize: 12,
+      color: isDark ? '#9ca3af' : '#6b7280',
+      marginBottom: 4,
+    },
+    inviteCode: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#16a34a',
+      fontFamily: 'monospace',
+    },
+    actions: {
+      marginTop: 0,
+    },
+    fab: {
+      position: 'absolute',
+      bottom: 20,
+      right: 20,
+      flexDirection: 'row',
+      gap: 12,
+    },
+    fabButton: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    fabPrimary: {
+      backgroundColor: '#16a34a',
+    },
+    fabSecondary: {
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+      borderWidth: 1,
+      borderColor: isDark ? '#374151' : '#e5e7eb',
+    },
+    modalContent: {
+      gap: 16,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 8,
+    },
+    modalButton: {
+      flex: 1,
+    },
+  });
+
   if (isLoading && !isRefreshing) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
-        <ActivityIndicator size="large" color="#6366f1" />
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#16a34a" />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="bg-white px-4 py-6 shadow-sm">
-        <Text className="text-2xl font-bold text-gray-900">Minhas Famílias</Text>
-        <Text className="text-sm text-gray-500 mt-1">
-          Gerencie e visualize suas famílias
-        </Text>
-      </View>
-
-      {/* Content */}
-      <ScrollView
-        className="flex-1 px-4 py-4"
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={() => {
-            setIsRefreshing(true);
-            loadFamilies();
-          }} />
-        }
-      >
-        {families.length === 0 ? (
-          <View className="items-center justify-center py-12">
-            <Ionicons name="people-outline" size={64} color="#d1d5db" />
-            <Text className="text-lg text-gray-500 mt-4">Nenhuma família encontrada</Text>
-            <Text className="text-sm text-gray-400 mt-2 text-center px-8">
-              Crie uma nova família ou entre em uma existente usando um código de convite
-            </Text>
-          </View>
-        ) : (
-          families.map((family) => (
-            <View key={family.id} className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-              <View className="flex-row justify-between items-start mb-3">
-                <View className="flex-1">
-                  <Text className="text-lg font-semibold text-gray-900">{family.name}</Text>
-                  <Text className="text-sm text-gray-500 mt-1">
-                    {family.members.length} {family.members.length === 1 ? 'membro' : 'membros'}
-                  </Text>
+    <View style={styles.container}>
+      <Header title="Família" showThemeToggle={true} onThemeToggle={toggleTheme} />
+      
+      <View style={styles.content}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={() => {
+                setIsRefreshing(true);
+                loadFamilies();
+              }}
+              tintColor="#16a34a"
+            />
+          }
+        >
+          {families.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="people-outline" size={64} color={isDark ? '#4b5563' : '#d1d5db'} style={styles.emptyIcon} />
+              <Text style={styles.emptyTitle}>Nenhuma família encontrada</Text>
+              <Text style={styles.emptyText}>
+                Crie uma nova família ou entre em uma existente usando um código de convite
+              </Text>
+            </View>
+          ) : (
+            families.map((family) => (
+              <Card key={family.id} style={styles.familyCard}>
+                <View style={styles.familyHeader}>
+                  <View style={styles.familyInfo}>
+                    <Text style={styles.familyName}>{family.name}</Text>
+                    <Text style={styles.familyMembers}>
+                      {family.members.length} {family.members.length === 1 ? 'membro' : 'membros'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity style={styles.leaveButton}>
+                    <Ionicons name="exit-outline" size={20} color="#dc2626" />
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity
-                  onPress={() => handleLeaveFamily(family)}
-                  className="bg-red-50 p-2 rounded-lg"
-                >
-                  <Ionicons name="exit-outline" size={20} color="#ef4444" />
-                </TouchableOpacity>
-              </View>
 
-              <View className="bg-gray-50 rounded-lg p-3 mb-3">
-                <Text className="text-xs text-gray-500 mb-1">Código de Convite</Text>
-                <Text className="text-lg font-mono font-bold text-indigo-600">
-                  {family.inviteCode}
-                </Text>
-              </View>
+                <View style={styles.inviteCodeContainer}>
+                  <Text style={styles.inviteCodeLabel}>Código de Convite</Text>
+                  <Text style={styles.inviteCode}>{family.inviteCode}</Text>
+                </View>
 
-              <View className="flex-row space-x-2">
-                <TouchableOpacity
-                  onPress={() => handleViewMap(family)}
-                  className="flex-1 bg-indigo-600 py-3 rounded-lg flex-row justify-center items-center"
-                >
-                  <Ionicons name="map-outline" size={20} color="white" />
-                  <Text className="text-white font-semibold ml-2">Ver Mapa</Text>
-                </TouchableOpacity>
+                <View style={styles.actions}>
+                  <Button
+                    title="Ver Mapa"
+                    onPress={() => handleViewMap(family)}
+                    variant="primary"
+                  />
+                </View>
+              </Card>
+            ))
+          )}
+        </ScrollView>
+      </View>
 
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('FamilyDetails', { familyId: family.id })}
-                  className="bg-gray-100 py-3 px-4 rounded-lg"
-                >
-                  <Ionicons name="settings-outline" size={20} color="#6b7280" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
-        )}
-      </ScrollView>
-
-      {/* Floating Action Buttons */}
-      <View className="absolute bottom-6 right-4 space-y-3">
+      <View style={styles.fab}>
         <TouchableOpacity
+          style={[styles.fabButton, styles.fabSecondary]}
           onPress={() => setShowJoinModal(true)}
-          className="bg-white p-4 rounded-full shadow-lg"
         >
-          <Ionicons name="enter-outline" size={24} color="#6366f1" />
+          <Ionicons name="enter-outline" size={24} color="#16a34a" />
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={[styles.fabButton, styles.fabPrimary]}
           onPress={() => setShowCreateModal(true)}
-          className="bg-indigo-600 p-4 rounded-full shadow-lg"
         >
-          <Ionicons name="add" size={24} color="white" />
+          <Ionicons name="add" size={24} color="#ffffff" />
         </TouchableOpacity>
       </View>
 
-      {/* Create Family Modal */}
-      {showCreateModal && (
-        <View className="absolute inset-0 bg-black/50 justify-center items-center px-6">
-          <View className="bg-white rounded-lg p-6 w-full">
-            <Text className="text-xl font-bold text-gray-900 mb-4">Nova Família</Text>
-            
-            <TextInput
-              className="border border-gray-300 rounded-lg px-4 py-3 mb-4"
-              placeholder="Nome da família"
-              value={newFamilyName}
-              onChangeText={setNewFamilyName}
-              autoFocus
+      {/* Modal Criar Família */}
+      <Modal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Nova Família"
+        size="sm"
+      >
+        <View style={styles.modalContent}>
+          <Input
+            label="Nome da Família"
+            placeholder="Digite o nome da família"
+            value={newFamilyName}
+            onChangeText={setNewFamilyName}
+          />
+
+          <View style={styles.modalActions}>
+            <Button
+              title="Cancelar"
+              onPress={() => setShowCreateModal(false)}
+              variant="ghost"
+              style={styles.modalButton}
             />
-
-            <View className="flex-row space-x-3">
-              <TouchableOpacity
-                onPress={() => setShowCreateModal(false)}
-                className="flex-1 bg-gray-100 py-3 rounded-lg"
-              >
-                <Text className="text-gray-700 font-semibold text-center">Cancelar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleCreateFamily}
-                className="flex-1 bg-indigo-600 py-3 rounded-lg"
-              >
-                <Text className="text-white font-semibold text-center">Criar</Text>
-              </TouchableOpacity>
-            </View>
+            <Button
+              title="Criar"
+              onPress={handleCreateFamily}
+              variant="primary"
+              loading={isSaving}
+              style={styles.modalButton}
+            />
           </View>
         </View>
-      )}
+      </Modal>
 
-      {/* Join Family Modal */}
-      {showJoinModal && (
-        <View className="absolute inset-0 bg-black/50 justify-center items-center px-6">
-          <View className="bg-white rounded-lg p-6 w-full">
-            <Text className="text-xl font-bold text-gray-900 mb-4">Entrar na Família</Text>
-            
-            <TextInput
-              className="border border-gray-300 rounded-lg px-4 py-3 mb-4"
-              placeholder="Código de convite"
-              value={inviteCode}
-              onChangeText={setInviteCode}
-              autoCapitalize="characters"
-              autoFocus
+      {/* Modal Entrar na Família */}
+      <Modal
+        visible={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        title="Entrar na Família"
+        size="sm"
+      >
+        <View style={styles.modalContent}>
+          <Input
+            label="Código de Convite"
+            placeholder="Digite o código"
+            value={inviteCode}
+            onChangeText={(text) => setInviteCode(text.toUpperCase())}
+          />
+
+          <View style={styles.modalActions}>
+            <Button
+              title="Cancelar"
+              onPress={() => setShowJoinModal(false)}
+              variant="ghost"
+              style={styles.modalButton}
             />
-
-            <View className="flex-row space-x-3">
-              <TouchableOpacity
-                onPress={() => setShowJoinModal(false)}
-                className="flex-1 bg-gray-100 py-3 rounded-lg"
-              >
-                <Text className="text-gray-700 font-semibold text-center">Cancelar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleJoinFamily}
-                className="flex-1 bg-indigo-600 py-3 rounded-lg"
-              >
-                <Text className="text-white font-semibold text-center">Entrar</Text>
-              </TouchableOpacity>
-            </View>
+            <Button
+              title="Entrar"
+              onPress={handleJoinFamily}
+              variant="primary"
+              loading={isSaving}
+              style={styles.modalButton}
+            />
           </View>
         </View>
-      )}
+      </Modal>
     </View>
   );
 }
-

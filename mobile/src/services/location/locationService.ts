@@ -5,6 +5,53 @@ import apiClient from '../../lib/axios';
 
 const LOCATION_TASK_NAME = 'background-location-task';
 
+// Registrar a task de background ANTES de qualquer uso
+TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
+  if (error) {
+    console.error('❌ Erro na tarefa de localização:', error);
+    return;
+  }
+  
+  if (data) {
+    const { locations } = data;
+    const location = locations[0];
+    
+    if (location) {
+      try {
+        const batteryLevel = await Battery.getBatteryLevelAsync();
+        
+        // Construir payload apenas com campos válidos
+        const payload: any = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          isMoving: location.coords.speed ? location.coords.speed > 0.5 : false,
+        };
+        
+        // Adicionar campos opcionais apenas se tiverem valor
+        if (location.coords.accuracy !== null && location.coords.accuracy !== undefined) {
+          payload.accuracy = location.coords.accuracy;
+        }
+        if (location.coords.altitude !== null && location.coords.altitude !== undefined) {
+          payload.altitude = location.coords.altitude;
+        }
+        if (location.coords.speed !== null && location.coords.speed !== undefined) {
+          payload.speed = location.coords.speed;
+        }
+        if (location.coords.heading !== null && location.coords.heading !== undefined) {
+          payload.heading = location.coords.heading;
+        }
+        if (batteryLevel >= 0) {
+          payload.batteryLevel = batteryLevel;
+        }
+        
+        await apiClient.post('/location', payload);
+      } catch (error: any) {
+        console.error('❌ Erro ao enviar localização:', error.response?.data || error.message);
+      }
+    }
+  }
+});
+
 export interface LocationData {
   id: string;
   userId: string;
@@ -151,57 +198,32 @@ class LocationService {
         return false;
       }
 
-      // Verificar se a tarefa já está registrada
-      const isTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME);
+      // Verificar se já está rodando
+      const isRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
       
-      if (!isTaskDefined) {
-        // Definir a tarefa de background
-        TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
-          if (error) {
-            console.error('Erro na tarefa de localização:', error);
-            return;
-          }
-          
-          if (data) {
-            const { locations } = data;
-            const location = locations[0];
-            
-            if (location) {
-              const batteryLevel = await this.getBatteryLevel();
-              
-              await this.updateLocation({
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                accuracy: location.coords.accuracy,
-                altitude: location.coords.altitude,
-                speed: location.coords.speed,
-                heading: location.coords.heading,
-                batteryLevel: batteryLevel >= 0 ? batteryLevel : undefined,
-                isMoving: location.coords.speed ? location.coords.speed > 0.5 : false,
-              });
-            }
-          }
-        });
+      if (isRunning) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       }
 
       // Iniciar rastreamento em background
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.Balanced,
-        timeInterval: 60000, // 1 minuto
-        distanceInterval: 100, // 100 metros
+        timeInterval: 30000, // 30 segundos - mais frequente para testar
+        distanceInterval: 50, // 50 metros
+        deferredUpdatesInterval: 30000,
         foregroundService: {
-          notificationTitle: 'Atacte',
+          notificationTitle: 'Atacte - Rastreamento Ativo',
           notificationBody: 'Compartilhando sua localização com sua família',
-          notificationColor: '#ffffff',
+          notificationColor: '#16a34a',
         },
-        pausesUpdatesAutomatically: true,
+        pausesUpdatesAutomatically: false, // Não pausar automaticamente
         activityType: Location.ActivityType.Other,
         showsBackgroundLocationIndicator: true,
       });
 
       return true;
     } catch (error) {
-      console.error('Erro ao iniciar rastreamento em background:', error);
+      console.error('❌ Erro ao iniciar rastreamento em background:', error);
       return false;
     }
   }
@@ -243,10 +265,10 @@ class LocationService {
       const result = await this.updateLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        accuracy: location.coords.accuracy,
-        altitude: location.coords.altitude,
-        speed: location.coords.speed,
-        heading: location.coords.heading,
+        accuracy: location.coords.accuracy || undefined,
+        altitude: location.coords.altitude || undefined,
+        speed: location.coords.speed || undefined,
+        heading: location.coords.heading || undefined,
         batteryLevel: batteryLevel >= 0 ? batteryLevel : undefined,
         isMoving: location.coords.speed ? location.coords.speed > 0.5 : false,
       });

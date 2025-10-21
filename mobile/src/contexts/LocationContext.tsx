@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { locationService, LocationData, FamilyMapData } from '../services/location/locationService';
-import { useAuth } from './AuthContext';
+import { familyService } from '../services/family/familyService';
+import { useAuth as useAuthContext } from './AuthContext';
 
 interface LocationContextType {
   currentLocation: LocationData | null;
@@ -11,6 +12,7 @@ interface LocationContextType {
   sendCurrentLocation: () => Promise<boolean>;
   getFamilyLocations: (familyId: string) => Promise<FamilyMapData | null>;
   refreshLocation: () => Promise<void>;
+  checkAndStartTracking: () => Promise<void>;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -20,7 +22,7 @@ interface LocationProviderProps {
 }
 
 export function LocationProvider({ children }: LocationProviderProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthContext();
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [isTrackingActive, setIsTrackingActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,19 +30,55 @@ export function LocationProvider({ children }: LocationProviderProps) {
   useEffect(() => {
     if (isAuthenticated) {
       initializeLocation();
+    } else {
+      // Se desautenticado, parar tracking
+      stopTracking();
     }
   }, [isAuthenticated]);
 
   const initializeLocation = async () => {
     try {
-      // Verificar se o rastreamento está ativo
       const isActive = await locationService.isBackgroundLocationActive();
       setIsTrackingActive(isActive);
+      
+      if (!isActive) {
+        await checkAndStartTracking();
+      }
 
-      // Carregar última localização
       await refreshLocation();
     } catch (error) {
       console.error('Erro ao inicializar localização:', error);
+    }
+  };
+
+  const checkAndStartTracking = async () => {
+    try {
+      const response = await familyService.getFamilies();
+      
+      if (!response.success || !response.data || response.data.length === 0) {
+        return;
+      }
+      
+      const isActive = await locationService.isBackgroundLocationActive();
+      
+      if (isActive) {
+        return;
+      }
+      
+      const hasPermissions = await locationService.requestPermissions();
+      
+      if (!hasPermissions) {
+        return;
+      }
+      
+      const started = await locationService.startBackgroundLocation();
+      
+      if (started) {
+        setIsTrackingActive(true);
+        await locationService.sendCurrentLocation();
+      }
+    } catch (error) {
+      console.error('Erro ao verificar e iniciar rastreamento:', error);
     }
   };
 
@@ -129,6 +167,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     sendCurrentLocation,
     getFamilyLocations,
     refreshLocation,
+    checkAndStartTracking,
   };
 
   return <LocationContext.Provider value={value}>{children}</LocationContext.Provider>;
