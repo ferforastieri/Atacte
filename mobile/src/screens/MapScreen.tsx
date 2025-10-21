@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Button } from '../components/shared';
 import { locationService, FamilyMemberLocation } from '../services/location/locationService';
@@ -338,7 +338,6 @@ export default function MapScreen({ route, navigation }: any) {
         <>
           <View style={styles.mapContainer}>
             <MapView
-              provider={PROVIDER_GOOGLE}
               style={styles.map}
               region={mapRegion}
               showsUserLocation
