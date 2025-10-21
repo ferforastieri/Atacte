@@ -70,8 +70,7 @@ export default {
         "expo-notifications",
         {
           icon: "./assets/logo.png",
-          color: "#ffffff",
-          sounds: ["./assets/notification-sound.wav"]
+          color: "#ffffff"
         }
       ],
       [
