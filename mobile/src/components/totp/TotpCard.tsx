@@ -184,9 +184,9 @@ export const TotpCard: React.FC<TotpCardProps> = ({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.copyButton}
-          onPress={onCopyPassword}
+          onPress={onEdit}
         >
-          <Ionicons name="copy-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
+          <Ionicons name="create-outline" size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
         </TouchableOpacity>
         {password.username && (
           <TouchableOpacity
@@ -208,7 +208,7 @@ export const TotpCard: React.FC<TotpCardProps> = ({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.editButton}
-          onPress={onEdit}
+          onPress={onCopyPassword}
         >
           <View style={{
             backgroundColor: '#16a34a',
@@ -222,7 +222,7 @@ export const TotpCard: React.FC<TotpCardProps> = ({
               fontSize: 14,
               fontWeight: '500',
             }}>
-              Editar
+              Copiar Senha
             </Text>
           </View>
         </TouchableOpacity>
