@@ -20,7 +20,11 @@ export default {
       infoPlist: {
         NSAppTransportSecurity: {
           NSAllowsArbitraryLoads: true
-        }
+        },
+        NSLocationWhenInUseUsageDescription: "Este app precisa da sua localização para compartilhar com sua família.",
+        NSLocationAlwaysUsageDescription: "Este app precisa da sua localização em segundo plano para mantê-lo conectado com sua família.",
+        NSLocationAlwaysAndWhenInUseUsageDescription: "Este app precisa da sua localização para compartilhar com sua família.",
+        UIBackgroundModes: ["location", "remote-notification"]
       }
     },
     android: {
@@ -29,8 +33,18 @@ export default {
         backgroundColor: "#ffffff"
       },
       package: "com.atacte.mobile",
-      permissions: ["INTERNET"],
-      usesCleartextTraffic: true
+      permissions: [
+        "INTERNET",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "VIBRATE"
+      ],
+      usesCleartextTraffic: true,
+      googleServicesFile: "./google-services.json"
     },
     web: {
       favicon: "./assets/logo.png"
@@ -43,6 +57,24 @@ export default {
     plugins: [
       "expo-router",
       "expo-font",
+      [
+        "expo-location",
+        {
+          locationAlwaysAndWhenInUsePermission: "Este app precisa da sua localização para compartilhar com sua família.",
+          locationAlwaysPermission: "Este app precisa da sua localização em segundo plano para mantê-lo conectado com sua família.",
+          locationWhenInUsePermission: "Este app precisa da sua localização quando estiver em uso.",
+          isAndroidBackgroundLocationEnabled: true,
+          isAndroidForegroundServiceEnabled: true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/logo.png",
+          color: "#ffffff",
+          sounds: ["./assets/notification-sound.wav"]
+        }
+      ],
       [
         "expo-build-properties",
         {

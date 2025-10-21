@@ -15,13 +15,26 @@ export type AuditAction =
   | 'EXPORT_DATA'
   | 'IMPORT_DATA'
   | 'SESSION_REVOKED'
-  | 'ACCOUNT_DELETED';
+  | 'ACCOUNT_DELETED'
+  | 'PROFILE_UPDATED'
+  | 'FAMILY_CREATED'
+  | 'FAMILY_UPDATED'
+  | 'FAMILY_DELETED'
+  | 'FAMILY_JOINED'
+  | 'FAMILY_LEFT'
+  | 'MEMBER_REMOVED'
+  | 'MEMBER_ROLE_UPDATED'
+  | 'MEMBER_SETTINGS_UPDATED'
+  | 'LOCATION_UPDATED';
 
 export type ResourceType = 
   | 'USER'
   | 'PASSWORD_ENTRY'
   | 'SESSION'
-  | 'SYSTEM';
+  | 'SYSTEM'
+  | 'FAMILY'
+  | 'FAMILY_MEMBER'
+  | 'LOCATION';
 
 export class AuditUtil {
   

@@ -6,6 +6,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
 import { ToastProvider } from './src/contexts/ToastContext';
+import { LocationProvider } from './src/contexts/LocationContext';
+import { NotificationProvider } from './src/contexts/NotificationContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
@@ -15,10 +17,14 @@ export default function App() {
         <ThemeProvider>
           <ToastProvider>
             <AuthProvider>
-              <View style={styles.container}>
-                <StatusBar style="auto" />
-                <AppNavigator />
-              </View>
+              <NotificationProvider>
+                <LocationProvider>
+                  <View style={styles.container}>
+                    <StatusBar style="auto" />
+                    <AppNavigator />
+                  </View>
+                </LocationProvider>
+              </NotificationProvider>
             </AuthProvider>
           </ToastProvider>
         </ThemeProvider>

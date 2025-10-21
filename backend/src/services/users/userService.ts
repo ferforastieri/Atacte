@@ -7,10 +7,19 @@ import { UserRepository } from '../../repositories/users/userRepository';
 export interface UserProfileDto {
   id: string;
   email: string;
+  name?: string;
+  phoneNumber?: string;
+  profilePicture?: string;
   createdAt: Date;
   updatedAt: Date;
   lastLogin?: Date;
   isActive: boolean;
+}
+
+export interface UpdateUserProfileData {
+  name?: string;
+  phoneNumber?: string;
+  profilePicture?: string;
 }
 
 export interface UserStatsDto {
@@ -76,11 +85,43 @@ export class UserService {
     return {
       id: user.id,
       email: user.email,
+      name: user.name || undefined,
+      phoneNumber: user.phoneNumber || undefined,
+      profilePicture: user.profilePicture || undefined,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       lastLogin: user.lastLogin || undefined,
       isActive: user.isActive
     };
+  }
+
+  async updateUserProfile(
+    userId: string,
+    data: UpdateUserProfileData,
+    req?: Request
+  ): Promise<UserProfileDto> {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    await this.userRepository.update(userId, data);
+
+    await AuditUtil.log(
+      userId,
+      'PROFILE_UPDATED',
+      'USER',
+      userId,
+      data,
+      req
+    );
+
+    return this.getUserProfile(userId);
+  }
+
+  async updatePushToken(userId: string, pushToken: string): Promise<void> {
+    await this.userRepository.update(userId, { pushToken });
   }
 
   

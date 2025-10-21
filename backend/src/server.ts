@@ -43,6 +43,9 @@ import userRoutes from './controllers/users/userController';
 import totpRoutes from './controllers/totp/totpController';
 import importExportRoutes from './controllers/importExport/importExportController';
 import preferencesRoutes from './controllers/preferences/preferencesController';
+import familyRoutes from './controllers/family/familyController';
+import locationRoutes from './controllers/location/locationController';
+import notificationRoutes from './controllers/notification/notificationController';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/passwords', passwordRoutes);
@@ -50,6 +53,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/totp', totpRoutes);
 app.use('/api/import-export', importExportRoutes);
 app.use('/api/preferences', preferencesRoutes);
+app.use('/api/family', familyRoutes);
+app.use('/api/location', locationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

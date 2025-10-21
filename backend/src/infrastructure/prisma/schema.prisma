@@ -22,11 +22,21 @@ model User {
   lastLogin            DateTime? @map("last_login")
   isActive             Boolean  @default(true) @map("is_active")
   
+  // Dados adicionais para rastreamento
+  name                 String?
+  phoneNumber          String?  @map("phone_number")
+  profilePicture       String?  @map("profile_picture")
+  pushToken            String?  @map("push_token") // Token para notificações push
+  
   // Relacionamentos
   passwordEntries      PasswordEntry[]
   userSessions         UserSession[]
   auditLogs            AuditLog[]
   preferences          UserPreferences?
+  familyMemberships    FamilyMember[]
+  locations            Location[]
+  sentNotifications    Notification[] @relation("NotificationSender")
+  receivedNotifications Notification[] @relation("NotificationReceiver")
   
   @@map("users")
 }
@@ -117,4 +127,106 @@ model UserPreferences {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("user_preferences")
+}
+
+// ====================================
+// Modelos para Rastreamento Familiar
+// ====================================
+
+model Family {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  createdById  String   @map("created_by_id")
+  inviteCode   String   @unique @map("invite_code") // Código único para convites
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  isActive     Boolean  @default(true) @map("is_active")
+  
+  // Relacionamentos
+  members      FamilyMember[]
+  
+  @@map("families")
+}
+
+model FamilyMember {
+  id              String   @id @default(cuid())
+  familyId        String   @map("family_id")
+  userId          String   @map("user_id")
+  role            String   @default("member") // 'admin', 'member'
+  nickname        String?  // Apelido dentro da família
+  joinedAt        DateTime @default(now()) @map("joined_at")
+  leftAt          DateTime? @map("left_at")
+  isActive        Boolean  @default(true) @map("is_active")
+  
+  // Configurações de privacidade
+  shareLocation   Boolean  @default(true) @map("share_location")
+  showOnMap       Boolean  @default(true) @map("show_on_map")
+  
+  // Relacionamentos
+  family          Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([familyId, userId])
+  @@map("family_members")
+}
+
+model Location {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  latitude       Float
+  longitude      Float
+  accuracy       Float?   // Precisão em metros
+  altitude       Float?
+  speed          Float?   // Velocidade em m/s
+  heading        Float?   // Direção em graus
+  address        String?  // Endereço formatado
+  timestamp      DateTime @default(now())
+  batteryLevel   Float?   @map("battery_level") // Nível de bateria (0-1)
+  isMoving       Boolean  @default(false) @map("is_moving")
+  
+  // Relacionamentos
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, timestamp])
+  @@map("locations")
+}
+
+model Notification {
+  id           String   @id @default(cuid())
+  senderId     String?  @map("sender_id") // Pode ser null para notificações do sistema
+  receiverId   String   @map("receiver_id")
+  type         String   // 'location_alert', 'family_invite', 'sos', 'battery_low', 'geofence', etc.
+  title        String
+  body         String
+  data         Json?    // Dados adicionais da notificação
+  isRead       Boolean  @default(false) @map("is_read")
+  isSent       Boolean  @default(false) @map("is_sent")
+  sentAt       DateTime? @map("sent_at")
+  readAt       DateTime? @map("read_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  // Relacionamentos
+  sender       User?    @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
+  receiver     User     @relation("NotificationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  @@index([receiverId, isRead])
+  @@map("notifications")
+}
+
+model GeofenceZone {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  name         String
+  description  String?
+  latitude     Float
+  longitude    Float
+  radius       Float    // Raio em metros
+  isActive     Boolean  @default(true) @map("is_active")
+  notifyOnEnter Boolean @default(true) @map("notify_on_enter")
+  notifyOnExit Boolean @default(true) @map("notify_on_exit")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  @@map("geofence_zones")
 }

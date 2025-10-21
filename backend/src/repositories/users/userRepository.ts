@@ -9,6 +9,10 @@ export interface UpdateUserData {
   encryptionKeyHash?: string;
   lastLogin?: Date;
   isActive?: boolean;
+  name?: string;
+  phoneNumber?: string;
+  profilePicture?: string;
+  pushToken?: string;
 }
 
 export class UserRepository {

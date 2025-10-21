@@ -1,9 +1,20 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
+import { body, validationResult } from 'express-validator';
 import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
 import { UserService } from '../../services/users/userService';
 
 const router = Router();
 const userService = new UserService();
+
+interface UpdateProfileRequest {
+  name?: string;
+  phoneNumber?: string;
+  profilePicture?: string;
+}
+
+interface UpdatePushTokenRequest {
+  pushToken: string;
+}
 
 
 router.use(authenticateToken);
@@ -124,5 +135,78 @@ router.delete('/account', async (req: AuthenticatedRequest, res: Response) => {
     });
   }
 });
+
+// Atualizar perfil
+router.patch(
+  '/profile',
+  [
+    body('name').optional().trim().isLength({ max: 255 }).withMessage('Nome deve ter até 255 caracteres'),
+    body('phoneNumber').optional().trim().isMobilePhone('any').withMessage('Número de telefone inválido'),
+    body('profilePicture').optional().isURL().withMessage('URL da foto inválida'),
+  ],
+  async (req: Request<{}, {}, UpdateProfileRequest>, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Dados inválidos',
+          errors: errors.array()
+        });
+        return;
+      }
+
+      const authReq = req as AuthenticatedRequest;
+      const updatedProfile = await userService.updateUserProfile(authReq.user.id, req.body, authReq);
+
+      res.json({
+        success: true,
+        message: 'Perfil atualizado com sucesso',
+        data: updatedProfile
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+);
+
+// Atualizar push token
+router.patch(
+  '/push-token',
+  [
+    body('pushToken').notEmpty().withMessage('Push token é obrigatório'),
+  ],
+  async (req: Request<{}, {}, UpdatePushTokenRequest>, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Dados inválidos',
+          errors: errors.array()
+        });
+        return;
+      }
+
+      const authReq = req as AuthenticatedRequest;
+      await userService.updatePushToken(authReq.user.id, req.body.pushToken);
+
+      res.json({
+        success: true,
+        message: 'Push token atualizado com sucesso'
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar push token:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+);
 
 export default router;

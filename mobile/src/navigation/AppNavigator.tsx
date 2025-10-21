@@ -13,12 +13,16 @@ import DashboardScreen from '../screens/DashboardScreen';
 import TotpScreen from '../screens/TotpScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import PasswordDetailScreen from '../screens/PasswordDetailScreen';
+import FamilyScreen from '../screens/FamilyScreen';
+import MapScreen from '../screens/MapScreen';
 
 
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   PasswordDetail: { passwordId: string };
+  Map: { familyId: string; familyName: string };
+  FamilyDetails: { familyId: string };
 };
 
 export type AuthStackParamList = {
@@ -27,6 +31,7 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   Dashboard: undefined;
+  Family: undefined;
   Totp: undefined;
   Profile: undefined;
 };
@@ -54,6 +59,8 @@ function MainTabNavigator() {
 
           if (route.name === 'Dashboard') {
             iconName = focused ? 'key' : 'key-outline';
+          } else if (route.name === 'Family') {
+            iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'Totp') {
             iconName = focused ? 'time' : 'time-outline';
           } else if (route.name === 'Profile') {
@@ -77,6 +84,11 @@ function MainTabNavigator() {
         name="Dashboard" 
         component={DashboardScreen}
         options={{ title: 'Senhas' }}
+      />
+      <Tab.Screen 
+        name="Family" 
+        component={FamilyScreen}
+        options={{ title: 'Família' }}
       />
       <Tab.Screen 
         name="Totp" 
@@ -156,6 +168,11 @@ export default function AppNavigator() {
                   fontWeight: '600',
                 },
               }}
+            />
+            <Stack.Screen 
+              name="Map" 
+              component={MapScreen}
+              options={{ headerShown: false }}
             />
           </>
         ) : (
