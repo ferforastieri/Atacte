@@ -34,6 +34,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -95,27 +97,34 @@ class NotificationService {
       // Configurar canal de notificação para Android
       if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
-          name: 'Default',
+          name: 'Atacte',
+          description: 'Notificações gerais do Atacte',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#FF231F7C',
+          lightColor: '#16a34a',
           sound: 'default',
+          showBadge: true,
         });
 
         await Notifications.setNotificationChannelAsync('family', {
           name: 'Família',
+          description: 'Notificações da sua família',
           importance: Notifications.AndroidImportance.HIGH,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#FF231F7C',
+          lightColor: '#16a34a',
           sound: 'default',
+          showBadge: true,
         });
 
         await Notifications.setNotificationChannelAsync('sos', {
           name: 'Emergência',
+          description: 'Alertas de emergência da família',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#FF0000',
+          lightColor: '#dc2626',
           sound: 'default',
+          showBadge: true,
+          enableVibrate: true,
         });
       }
 
@@ -179,7 +188,7 @@ class NotificationService {
   }
 
   // Exibir notificação local
-  async showLocalNotification(title: string, body: string, data?: Record<string, unknown>): Promise<void> {
+  async showLocalNotification(title: string, body: string, data?: Record<string, unknown>, channelId: string = 'default'): Promise<void> {
     try {
       await Notifications.scheduleNotificationAsync({
         content: {
@@ -187,6 +196,11 @@ class NotificationService {
           body,
           data,
           sound: 'default',
+          badge: 1,
+          ...(Platform.OS === 'android' && { 
+            channelId,
+            color: '#16a34a',
+          }),
         },
         trigger: null, // Exibir imediatamente
       });

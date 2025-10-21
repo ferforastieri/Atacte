@@ -162,8 +162,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       if (response.success) {
         // Exibir notificação local de confirmação
         await notificationService.showLocalNotification(
-          'SOS Enviado',
-          'Sua família foi notificada sobre sua emergência!'
+          '🚨 SOS Enviado',
+          'Sua família foi notificada sobre sua emergência!',
+          { type: 'sos', latitude, longitude },
+          'sos'
         );
         return true;
       }
