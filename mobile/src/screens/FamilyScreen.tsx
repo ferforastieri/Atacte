@@ -138,10 +138,10 @@ export default function FamilyScreen({ navigation }: any) {
     familyCard: {
       marginBottom: 12,
       borderWidth: 1,
-      borderColor: '#e5e7eb',
+      borderColor: isDark ? '#374151' : '#e5e7eb',
       borderRadius: 12,
       padding: 16,
-      backgroundColor: '#ffffff',
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
       shadowColor: '#000',
       shadowOffset: {
         width: 0,

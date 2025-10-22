@@ -195,7 +195,7 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
               <Ionicons name="arrow-back" size={20} color={isDark ? '#f9fafb' : '#111827'} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>{familyName}</Text>
+            <Text style={[styles.headerTitle, { color: isDark ? '#f9fafb' : '#111827' }]}>{familyName}</Text>
           </View>
           <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
             <Ionicons 
@@ -211,7 +211,7 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
       {/* Tabs de navegação */}
       <View style={[styles.tabContainer, { backgroundColor: isDark ? '#1f2937' : '#ffffff' }]}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'map' && styles.activeTab]}
+          style={[styles.tab, activeTab === 'map' && [styles.activeTab, { backgroundColor: isDark ? '#374151' : '#f0fdf4' }]]}
           onPress={() => setActiveTab('map')}
         >
           <Ionicons 
@@ -228,7 +228,7 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'members' && styles.activeTab]}
+          style={[styles.tab, activeTab === 'members' && [styles.activeTab, { backgroundColor: isDark ? '#374151' : '#f0fdf4' }]]}
           onPress={() => setActiveTab('members')}
         >
           <Ionicons 
@@ -245,7 +245,7 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'zones' && styles.activeTab]}
+          style={[styles.tab, activeTab === 'zones' && [styles.activeTab, { backgroundColor: isDark ? '#374151' : '#f0fdf4' }]]}
           onPress={() => setActiveTab('zones')}
         >
           <Ionicons 
@@ -277,7 +277,10 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
             />
             
             {/* Lista de membros na parte de baixo do mapa */}
-            <View style={[styles.membersListContainer, { backgroundColor: isDark ? '#1f2937' : '#ffffff' }]}>
+            <View style={[styles.membersListContainer, { 
+              backgroundColor: isDark ? '#1f2937' : '#ffffff',
+              borderTopColor: isDark ? '#374151' : '#e5e7eb'
+            }]}>
               <FamilyMembersList
                 members={locations}
                 onMemberPress={handleMemberPress}

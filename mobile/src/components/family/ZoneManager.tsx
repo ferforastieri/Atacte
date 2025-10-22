@@ -198,13 +198,13 @@ export default function ZoneManager({
                 </View>
                 <View style={styles.zoneActions}>
                   <TouchableOpacity
-                    style={styles.actionButton}
+                    style={[styles.actionButton, { backgroundColor: isDark ? '#374151' : '#f3f4f6' }]}
                     onPress={() => handleEditZone(zone)}
                   >
                     <Ionicons name="pencil" size={16} color="#16a34a" />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.actionButton}
+                    style={[styles.actionButton, { backgroundColor: isDark ? '#374151' : '#f3f4f6' }]}
                     onPress={() => handleDeleteZone(zone)}
                   >
                     <Ionicons name="trash" size={16} color="#dc2626" />
@@ -283,7 +283,7 @@ export default function ZoneManager({
                 </Text>
               </View>
             ) : (
-              <View style={styles.positionInfo}>
+              <View style={[styles.positionInfo, { backgroundColor: isDark ? '#374151' : '#f3f4f6' }]}>
                 <Text style={[styles.positionText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
                   Lat: {formData.latitude.toFixed(4)}, Lng: {formData.longitude.toFixed(4)}
                 </Text>

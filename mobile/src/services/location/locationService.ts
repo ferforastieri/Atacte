@@ -1,56 +1,8 @@
 import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
 import * as Battery from 'expo-battery';
 import apiClient from '../../lib/axios';
 
 const LOCATION_TASK_NAME = 'background-location-task';
-
-// Registrar a task de background ANTES de qualquer uso
-TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
-  if (error) {
-    console.error('❌ Erro na tarefa de localização:', error);
-    return;
-  }
-  
-  if (data) {
-    const { locations } = data;
-    const location = locations[0];
-    
-    if (location) {
-      try {
-        const batteryLevel = await Battery.getBatteryLevelAsync();
-        
-        // Construir payload apenas com campos válidos
-        const payload: any = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          isMoving: location.coords.speed ? location.coords.speed > 0.5 : false,
-        };
-        
-        // Adicionar campos opcionais apenas se tiverem valor
-        if (location.coords.accuracy !== null && location.coords.accuracy !== undefined) {
-          payload.accuracy = location.coords.accuracy;
-        }
-        if (location.coords.altitude !== null && location.coords.altitude !== undefined) {
-          payload.altitude = location.coords.altitude;
-        }
-        if (location.coords.speed !== null && location.coords.speed !== undefined) {
-          payload.speed = location.coords.speed;
-        }
-        if (location.coords.heading !== null && location.coords.heading !== undefined) {
-          payload.heading = location.coords.heading;
-        }
-        if (batteryLevel >= 0) {
-          payload.batteryLevel = batteryLevel;
-        }
-        
-        await apiClient.post('/location', payload);
-      } catch (error: any) {
-        console.error('❌ Erro ao enviar localização:', error.response?.data || error.message);
-      }
-    }
-  }
-});
 
 export interface LocationData {
   id: string;
@@ -189,67 +141,7 @@ class LocationService {
     return this.makeRequest('/location/stats');
   }
 
-  // Iniciar rastreamento em background
-  async startBackgroundLocation(): Promise<boolean> {
-    try {
-      const hasPermissions = await this.requestPermissions();
-      
-      if (!hasPermissions) {
-        return false;
-      }
 
-      // Verificar se já está rodando
-      const isRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-      
-      if (isRunning) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      }
-
-      // Iniciar rastreamento em background
-      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.Balanced,
-        timeInterval: 30000, // 30 segundos - mais frequente para testar
-        distanceInterval: 50, // 50 metros
-        deferredUpdatesInterval: 30000,
-        foregroundService: {
-          notificationTitle: 'Atacte - Rastreamento Ativo',
-          notificationBody: 'Compartilhando sua localização com sua família',
-          notificationColor: '#16a34a',
-        },
-        pausesUpdatesAutomatically: false, // Não pausar automaticamente
-        activityType: Location.ActivityType.Other,
-        showsBackgroundLocationIndicator: true,
-      });
-
-      return true;
-    } catch (error) {
-      console.error('❌ Erro ao iniciar rastreamento em background:', error);
-      return false;
-    }
-  }
-
-  // Parar rastreamento em background
-  async stopBackgroundLocation(): Promise<void> {
-    try {
-      const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-      
-      if (hasStarted) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      }
-    } catch (error) {
-      console.error('Erro ao parar rastreamento em background:', error);
-    }
-  }
-
-  // Verificar se o rastreamento está ativo
-  async isBackgroundLocationActive(): Promise<boolean> {
-    try {
-      return await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-    } catch (error) {
-      console.error('Erro ao verificar rastreamento:', error);
-      return false;
-    }
-  }
 
   // Enviar localização atual
   async sendCurrentLocation(): Promise<boolean> {

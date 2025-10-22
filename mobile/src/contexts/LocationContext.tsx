@@ -41,9 +41,40 @@ export function LocationProvider({ children }: LocationProviderProps) {
     }
   }, [isAuthenticated]);
 
+  // Verificar se o tracking ainda está ativo periodicamente
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const checkTrackingStatus = async () => {
+      try {
+        const backgroundFunctions = (global as any).backgroundLocationFunctions;
+        if (!backgroundFunctions) return;
+        
+        const isActive = await backgroundFunctions.isBackgroundLocationActive();
+        if (!isActive && isTrackingActive) {
+          console.log('⚠️ Tracking parou inesperadamente, reiniciando...');
+          await checkAndStartTracking();
+        }
+      } catch (error) {
+        console.error('Erro ao verificar status do tracking:', error);
+      }
+    };
+
+    // Verificar a cada 30 segundos
+    const interval = setInterval(checkTrackingStatus, 30000);
+    
+    return () => clearInterval(interval);
+  }, [isAuthenticated, isTrackingActive]);
+
   const initializeLocation = async () => {
     try {
-      const isActive = await locationService.isBackgroundLocationActive();
+      const backgroundFunctions = (global as any).backgroundLocationFunctions;
+      if (!backgroundFunctions) {
+        console.log('❌ Background functions não disponíveis');
+        return;
+      }
+      
+      const isActive = await backgroundFunctions.isBackgroundLocationActive();
       setIsTrackingActive(isActive);
       
       if (!isActive) {
@@ -61,29 +92,38 @@ export function LocationProvider({ children }: LocationProviderProps) {
       const response = await familyService.getFamilies();
       
       if (!response.success || !response.data || response.data.length === 0) {
+        console.log('⚠️ Nenhuma família encontrada, não iniciando tracking');
         return;
       }
       
-      const isActive = await locationService.isBackgroundLocationActive();
+      const backgroundFunctions = (global as any).backgroundLocationFunctions;
+      if (!backgroundFunctions) {
+        console.log('❌ Background functions não disponíveis');
+        return;
+      }
+      
+      const isActive = await backgroundFunctions.isBackgroundLocationActive();
       
       if (isActive) {
+        console.log('✅ Tracking já está ativo');
+        setIsTrackingActive(true);
         return;
       }
       
-      const hasPermissions = await locationService.requestPermissions();
-      
-      if (!hasPermissions) {
-        return;
-      }
-      
-      const started = await locationService.startBackgroundLocation();
+      console.log('🔄 Iniciando tracking de localização...');
+      const started = await backgroundFunctions.startBackgroundLocation();
       
       if (started) {
         setIsTrackingActive(true);
+        console.log('✅ Tracking iniciado com sucesso');
         await locationService.sendCurrentLocation();
+      } else {
+        console.log('❌ Falha ao iniciar tracking');
+        setIsTrackingActive(false);
       }
     } catch (error) {
       console.error('Erro ao verificar e iniciar rastreamento:', error);
+      setIsTrackingActive(false);
     }
   };
 
@@ -173,7 +213,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const startTracking = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const success = await locationService.startBackgroundLocation();
+      const backgroundFunctions = (global as any).backgroundLocationFunctions;
+      if (!backgroundFunctions) {
+        console.log('❌ Background functions não disponíveis');
+        return false;
+      }
+      
+      const success = await backgroundFunctions.startBackgroundLocation();
       
       if (success) {
         setIsTrackingActive(true);
@@ -192,7 +238,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const stopTracking = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      await locationService.stopBackgroundLocation();
+      const backgroundFunctions = (global as any).backgroundLocationFunctions;
+      if (!backgroundFunctions) {
+        console.log('❌ Background functions não disponíveis');
+        return;
+      }
+      
+      await backgroundFunctions.stopBackgroundLocation();
       setIsTrackingActive(false);
     } catch (error) {
       console.error('Erro ao parar rastreamento:', error);

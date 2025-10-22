@@ -41,9 +41,15 @@ export default {
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
         "POST_NOTIFICATIONS",
-        "VIBRATE"
+        "VIBRATE",
+        "WAKE_LOCK",
+        "RECEIVE_BOOT_COMPLETED",
+        "SYSTEM_ALERT_WINDOW"
       ],
-      usesCleartextTraffic: true
+      usesCleartextTraffic: true,
+      compileSdkVersion: 34,
+      targetSdkVersion: 34,
+      minSdkVersion: 23
     },
     web: {
       favicon: "./assets/logo.png"
