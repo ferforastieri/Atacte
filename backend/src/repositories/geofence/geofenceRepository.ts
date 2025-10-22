@@ -1,4 +1,4 @@
-import prisma from '../../infrastructure/prisma/client';
+import { prisma } from '../../infrastructure/prisma';
 import { GeofenceZone } from '@prisma/client';
 
 export interface CreateGeofenceZoneData {

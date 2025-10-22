@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
-import { authenticateToken } from '../../middleware/auth';
+import { authenticateToken, AuthenticatedRequest } from '../../middleware/auth';
 import { GeofenceService } from '../../services/geofence/geofenceService';
 
 const router = Router();
 const geofenceService = new GeofenceService();
 
 // POST /api/geofence/zones
-router.post('/zones', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.post('/zones', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!.id;
     const { name, description, latitude, longitude, radius, notifyOnEnter, notifyOnExit } = req.body;
@@ -56,7 +56,7 @@ router.post('/zones', authenticateToken, async (req: Request, res: Response): Pr
 });
 
 // GET /api/geofence/zones
-router.get('/zones', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.get('/zones', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!.id;
     const { active } = req.query;
@@ -79,7 +79,7 @@ router.get('/zones', authenticateToken, async (req: Request, res: Response): Pro
 });
 
 // GET /api/geofence/zones/:id
-router.get('/zones/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.get('/zones/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -108,7 +108,7 @@ router.get('/zones/:id', authenticateToken, async (req: Request, res: Response):
 });
 
 // PATCH /api/geofence/zones/:id
-router.patch('/zones/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.patch('/zones/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -150,7 +150,7 @@ router.patch('/zones/:id', authenticateToken, async (req: Request, res: Response
 });
 
 // DELETE /api/geofence/zones/:id
-router.delete('/zones/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.delete('/zones/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -171,7 +171,7 @@ router.delete('/zones/:id', authenticateToken, async (req: Request, res: Respons
 });
 
 // POST /api/geofence/check
-router.post('/check', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.post('/check', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user!.id;
     const { latitude, longitude } = req.body;

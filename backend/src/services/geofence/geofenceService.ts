@@ -177,27 +177,7 @@ export class GeofenceService {
       return;
     }
 
-    // Enviar notificação
-    const title = eventType === 'enter' 
-      ? `📍 Você chegou em ${zone.name}` 
-      : `🚶 Você saiu de ${zone.name}`;
-    
-    const body = eventType === 'enter'
-      ? `Você entrou na zona ${zone.name}`
-      : `Você saiu da zona ${zone.name}`;
-
-    await this.notificationService.sendToUser({
-      receiverId: userId,
-      type: 'geofence',
-      title,
-      body,
-      data: {
-        zoneId: zone.id,
-        zoneName: zone.name,
-        eventType,
-        location: currentLocation,
-      },
-    });
+    // Não notificar o próprio usuário - apenas a família
   }
 
   // Calcular distância entre dois pontos (fórmula de Haversine)
