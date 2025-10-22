@@ -149,24 +149,62 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   const sendGeofenceNotification = async (zone: GeofenceZone, type: 'enter' | 'exit') => {
     try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: type === 'enter' ? `📍 Você chegou em ${zone.name}` : `🚶 Você saiu de ${zone.name}`,
-          body: type === 'enter' 
-            ? `Você entrou na zona ${zone.name}`
-            : `Você saiu da zona ${zone.name}`,
-          data: {
-            type: 'geofence',
-            zoneId: zone.id,
-            zoneName: zone.name,
-            eventType: type,
-          },
-          sound: 'default',
-        },
-        trigger: null,
-      });
+      // Notificar apenas a família (não notificar a si mesmo)
+      await notifyFamilyAboutGeofence(zone, type);
     } catch (error) {
       console.error('Erro ao enviar notificação de zona:', error);
+    }
+  };
+
+  const notifyFamilyAboutGeofence = async (zone: GeofenceZone, type: 'enter' | 'exit') => {
+    try {
+      // Buscar todas as famílias do usuário
+      const familiesResponse = await familyService.getFamilies();
+      
+      if (!familiesResponse.success || !familiesResponse.data) {
+        return;
+      }
+
+      const families = familiesResponse.data;
+      
+      // Para cada família, notificar todos os membros
+      for (const family of families) {
+        for (const member of family.members) {
+          // Não notificar a si mesmo
+          if (member.userId === zone.userId) {
+            continue;
+          }
+
+          const memberName = member.nickname || member.userName || 'Membro da família';
+          const title = type === 'enter' 
+            ? `📍 ${memberName} chegou em ${zone.name}` 
+            : `🚶 ${memberName} saiu de ${zone.name}`;
+          
+          const body = type === 'enter'
+            ? `${memberName} entrou na zona ${zone.name}`
+            : `${memberName} saiu da zona ${zone.name}`;
+
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title,
+              body,
+              data: {
+                type: 'family_geofence',
+                zoneId: zone.id,
+                zoneName: zone.name,
+                eventType: type,
+                memberName,
+                familyId: family.id,
+                familyName: family.name,
+              },
+              sound: 'default',
+            },
+            trigger: null,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao notificar família sobre zona:', error);
     }
   };
 
