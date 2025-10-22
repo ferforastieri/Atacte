@@ -400,7 +400,8 @@ const updateMapZones = () => {
   zoneCircles = []
 
   // Adicionar círculos das zonas
-  zones.value.forEach(zone => {
+  if (zones.value && Array.isArray(zones.value)) {
+    zones.value.forEach(zone => {
     const circle = new maplibregl.Circle({
       center: [zone.longitude, zone.latitude],
       radius: zone.radius,
@@ -411,7 +412,8 @@ const updateMapZones = () => {
     }).addTo(map)
 
     zoneCircles.push(circle)
-  })
+    })
+  }
 }
 
 const refreshLocations = async () => {

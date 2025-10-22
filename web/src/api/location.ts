@@ -53,14 +53,63 @@ export interface CreateZoneData {
 export const locationApi = {
   // Buscar localizações da família
   async getFamilyLocations(): Promise<FamilyMember[]> {
-    const response = await api.get('/location/family')
-    return response.data
+    try {
+      // Primeiro buscar as famílias do usuário
+      const familiesResponse = await api.get('/family')
+      const families = familiesResponse.data.data // Acessar o array dentro de data
+      
+      console.log('Famílias encontradas:', families)
+      
+      if (!families || families.length === 0) {
+        console.log('Nenhuma família encontrada')
+        return []
+      }
+      
+      // Para cada família, buscar as localizações
+      const allMembers: FamilyMember[] = []
+      
+      for (const family of families) {
+        try {
+          console.log(`Buscando localizações da família ${family.id}`)
+          const locationResponse = await api.get(`/location/family/${family.id}`)
+          const familyData = locationResponse.data
+          
+          console.log(`Dados da família ${family.id}:`, familyData)
+          
+          if (familyData && familyData.data && familyData.data.members) {
+            // Mapear os dados para o formato esperado
+            const members = familyData.data.members.map((member: any) => ({
+              id: member.userId,
+              name: member.userName || member.nickname || 'Membro',
+              email: '', // Não temos email na resposta
+              lastSeen: member.timestamp,
+              batteryLevel: member.batteryLevel,
+              latitude: member.latitude,
+              longitude: member.longitude,
+              isOnline: true // Assumir online se tem localização recente
+            }))
+            
+            allMembers.push(...members)
+            console.log(`Adicionados ${members.length} membros da família ${family.id}`)
+          }
+        } catch (error) {
+          console.error(`Erro ao buscar localizações da família ${family.id}:`, error)
+          // Continuar com outras famílias mesmo se uma falhar
+        }
+      }
+      
+      console.log('Total de membros encontrados:', allMembers.length)
+      return allMembers
+    } catch (error) {
+      console.error('Erro ao buscar famílias:', error)
+      return []
+    }
   },
 
   // Buscar zonas do usuário
   async getZones(): Promise<GeofenceZone[]> {
     const response = await api.get('/geofence/zones')
-    return response.data
+    return response.data.data || response.data || []
   },
 
   // Criar nova zona
