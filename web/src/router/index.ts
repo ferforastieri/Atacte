@@ -95,6 +95,15 @@ const router = createRouter({
       }
     },
     {
+      path: '/location',
+      name: 'Location',
+      component: () => import('@/views/LocationView.vue'),
+      meta: { 
+        requiresAuth: true,
+        title: 'Localização - Atacte'
+      }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: () => import('@/views/NotFoundView.vue'),
