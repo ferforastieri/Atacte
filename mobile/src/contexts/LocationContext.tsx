@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useRe
 import { locationService, LocationData, FamilyMapData } from '../services/location/locationService';
 import { familyService } from '../services/family/familyService';
 import { geofenceService, GeofenceZone } from '../services/geofence/geofenceService';
+import { notificationService } from '../services/notification/notificationService';
 import * as Notifications from 'expo-notifications';
 import { useAuth as useAuthContext } from './AuthContext';
 
@@ -158,51 +159,12 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   const notifyFamilyAboutGeofence = async (zone: GeofenceZone, type: 'enter' | 'exit') => {
     try {
-      // Buscar todas as famílias do usuário
-      const familiesResponse = await familyService.getFamilies();
-      
-      if (!familiesResponse.success || !familiesResponse.data) {
-        return;
-      }
-
-      const families = familiesResponse.data;
-      
-      // Para cada família, notificar todos os membros
-      for (const family of families) {
-        for (const member of family.members) {
-          // Não notificar a si mesmo
-          if (member.userId === zone.userId) {
-            continue;
-          }
-
-          const memberName = member.nickname || member.userName || 'Membro da família';
-          const title = type === 'enter' 
-            ? `📍 ${memberName} chegou em ${zone.name}` 
-            : `🚶 ${memberName} saiu de ${zone.name}`;
-          
-          const body = type === 'enter'
-            ? `${memberName} entrou na zona ${zone.name}`
-            : `${memberName} saiu da zona ${zone.name}`;
-
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title,
-              body,
-              data: {
-                type: 'family_geofence',
-                zoneId: zone.id,
-                zoneName: zone.name,
-                eventType: type,
-                memberName,
-                familyId: family.id,
-                familyName: family.name,
-              },
-              sound: 'default',
-            },
-            trigger: null,
-          });
-        }
-      }
+      // Usar o serviço de notificação seguindo o padrão do projeto
+      await notificationService.sendGeofenceNotification({
+        zoneName: zone.name,
+        eventType: type,
+        zoneId: zone.id,
+      });
     } catch (error) {
       console.error('Erro ao notificar família sobre zona:', error);
     }

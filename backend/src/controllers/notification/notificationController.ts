@@ -19,6 +19,12 @@ interface SOSRequest {
   longitude: number;
 }
 
+interface GeofenceRequest {
+  zoneName: string;
+  eventType: 'enter' | 'exit';
+  zoneId: string;
+}
+
 interface NotificationQuery {
   isRead?: string;
   limit?: string;
@@ -50,6 +56,19 @@ const sosValidation = [
   body('longitude')
     .isFloat({ min: -180, max: 180 })
     .withMessage('Longitude inválida'),
+];
+
+const geofenceValidation = [
+  body('zoneName')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Nome da zona é obrigatório e deve ter até 100 caracteres'),
+  body('eventType')
+    .isIn(['enter', 'exit'])
+    .withMessage('Tipo de evento deve ser "enter" ou "exit"'),
+  body('zoneId')
+    .notEmpty()
+    .withMessage('ID da zona é obrigatório'),
 ];
 
 // Rotas
@@ -234,6 +253,46 @@ router.post(
       res.status(500).json({
         success: false,
         message: 'Erro ao enviar SOS',
+      });
+    }
+  }
+);
+
+// Notificar família sobre geofencing
+router.post(
+  '/geofence',
+  geofenceValidation,
+  async (req: Request<{}, {}, GeofenceRequest>, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Dados inválidos',
+          errors: errors.array(),
+        });
+        return;
+      }
+
+      const authReq = req as AuthenticatedRequest;
+      const { zoneName, eventType, zoneId } = req.body;
+
+      await notificationService.sendGeofenceToFamily(
+        authReq.user.id,
+        zoneName,
+        eventType,
+        zoneId
+      );
+
+      res.json({
+        success: true,
+        message: 'Família notificada sobre o movimento na zona',
+      });
+    } catch (error) {
+      console.error('Erro ao notificar família sobre geofencing:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro ao notificar família',
       });
     }
   }

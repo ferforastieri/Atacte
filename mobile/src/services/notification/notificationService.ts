@@ -187,6 +187,18 @@ class NotificationService {
     });
   }
 
+  // Notificar família sobre geofencing
+  async sendGeofenceNotification(data: {
+    zoneName: string;
+    eventType: 'enter' | 'exit';
+    zoneId: string;
+  }): Promise<{ success: boolean; message?: string }> {
+    return this.makeRequest('/notifications/geofence', {
+      method: 'POST',
+      data,
+    });
+  }
+
   // Exibir notificação local
   async showLocalNotification(title: string, body: string, data?: Record<string, unknown>, channelId: string = 'default'): Promise<void> {
     try {

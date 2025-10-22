@@ -218,6 +218,55 @@ export class NotificationService {
     }
   }
 
+  // Notificar família sobre geofencing
+  async sendGeofenceToFamily(
+    userId: string, 
+    zoneName: string, 
+    eventType: 'enter' | 'exit',
+    zoneId: string
+  ): Promise<void> {
+    // Buscar todas as famílias do usuário
+    const families = await this.familyRepository.findByUserId(userId);
+    
+    const notifications: CreateNotificationData[] = [];
+
+    for (const family of families) {
+      // Buscar todos os membros da família (exceto o próprio usuário)
+      const members = family.members.filter(member => member.userId !== userId);
+      
+      for (const member of members) {
+        const memberName = member.nickname || member.user.name || 'Membro da família';
+        const title = eventType === 'enter' 
+          ? `📍 ${memberName} chegou em ${zoneName}` 
+          : `🚶 ${memberName} saiu de ${zoneName}`;
+        
+        const body = eventType === 'enter'
+          ? `${memberName} entrou na zona ${zoneName}`
+          : `${memberName} saiu da zona ${zoneName}`;
+
+        notifications.push({
+          senderId: userId,
+          receiverId: member.userId,
+          type: 'family_geofence',
+          title,
+          body,
+          data: {
+            zoneId,
+            zoneName,
+            eventType,
+            memberName,
+            familyId: family.id,
+            familyName: family.name,
+          },
+        });
+      }
+    }
+
+    if (notifications.length > 0) {
+      await this.notificationRepository.createBatch(notifications);
+    }
+  }
+
   async cleanupOldNotifications(daysToKeep: number = 30): Promise<number> {
     return await this.notificationRepository.deleteOldNotifications(daysToKeep);
   }
