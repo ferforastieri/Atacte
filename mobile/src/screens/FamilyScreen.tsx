@@ -14,6 +14,7 @@ import { familyService, Family } from '../services/family/familyService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocation } from '../contexts/LocationContext';
+import GeofenceScreen from './GeofenceScreen';
 
 export default function FamilyScreen({ navigation }: any) {
   const [families, setFamilies] = useState<Family[]>([]);
@@ -21,6 +22,7 @@ export default function FamilyScreen({ navigation }: any) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showZones, setShowZones] = useState(false);
   const [newFamilyName, setNewFamilyName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -220,6 +222,14 @@ export default function FamilyScreen({ navigation }: any) {
     modalButton: {
       flex: 1,
     },
+    zonesButtonContainer: {
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+    },
+    zonesButton: {
+      backgroundColor: isDark ? '#374151' : '#f3f4f6',
+      borderColor: isDark ? '#4b5563' : '#d1d5db',
+    },
   });
 
   if (isLoading && !isRefreshing) {
@@ -288,6 +298,18 @@ export default function FamilyScreen({ navigation }: any) {
           )}
         </ScrollView>
       </View>
+
+      {/* Botão Minhas Zonas - só aparece se tiver famílias */}
+      {families.length > 0 && (
+        <View style={styles.zonesButtonContainer}>
+          <Button
+            title="📍 Minhas Zonas"
+            onPress={() => setShowZones(true)}
+            variant="secondary"
+            style={styles.zonesButton}
+          />
+        </View>
+      )}
 
       <View style={styles.fab}>
         <TouchableOpacity
@@ -370,6 +392,17 @@ export default function FamilyScreen({ navigation }: any) {
           </View>
         </View>
       </Modal>
+
+      {/* Modal de Zonas */}
+      {showZones && (
+        <View style={StyleSheet.absoluteFillObject}>
+          <GeofenceScreen 
+            navigation={{
+              goBack: () => setShowZones(false)
+            }}
+          />
+        </View>
+      )}
     </View>
   );
 }

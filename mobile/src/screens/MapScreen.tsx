@@ -8,30 +8,23 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker } from 'react-native-maps';
+import MapLibreGL from '@rnmapbox/maps';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Button } from '../components/shared';
+import { Card } from '../components/shared';
 import { locationService, FamilyMemberLocation } from '../services/location/locationService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocation } from '../contexts/LocationContext';
 
+// Configurar MapLibre (gratuito, sem API Key)
+MapLibreGL.setAccessToken(null);
+
 const { width, height } = Dimensions.get('window');
-const ASPECT_RATIO = width / height;
-const LATITUDE_DELTA = 0.0922;
-const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
 export default function MapScreen({ route, navigation }: any) {
   const { familyId, familyName } = route.params;
   const [locations, setLocations] = useState<FamilyMemberLocation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedMember, setSelectedMember] = useState<FamilyMemberLocation | null>(null);
-  const [mapRegion, setMapRegion] = useState({
-    latitude: -23.5505,
-    longitude: -46.6333,
-    latitudeDelta: LATITUDE_DELTA,
-    longitudeDelta: LONGITUDE_DELTA,
-  });
   const { showError } = useToast();
   const { isDark } = useTheme();
   const { currentLocation } = useLocation();
@@ -39,31 +32,9 @@ export default function MapScreen({ route, navigation }: any) {
   useEffect(() => {
     loadFamilyLocations();
     
-    // Atualizar a cada 30 segundos
     const interval = setInterval(loadFamilyLocations, 30000);
     return () => clearInterval(interval);
   }, [familyId]);
-
-  useEffect(() => {
-    if (Array.isArray(locations) && locations.length > 0) {
-      // Centralizar no primeiro membro
-      const firstLocation = locations[0];
-      setMapRegion({
-        latitude: firstLocation.latitude,
-        longitude: firstLocation.longitude,
-        latitudeDelta: LATITUDE_DELTA,
-        longitudeDelta: LONGITUDE_DELTA,
-      });
-    } else if (currentLocation) {
-      // Se não houver membros, centralizar na localização atual
-      setMapRegion({
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-        latitudeDelta: LATITUDE_DELTA,
-        longitudeDelta: LONGITUDE_DELTA,
-      });
-    }
-  }, [locations, currentLocation]);
 
   const loadFamilyLocations = async () => {
     try {
@@ -88,20 +59,10 @@ export default function MapScreen({ route, navigation }: any) {
     }
   };
 
-  const centerOnMember = (member: FamilyMemberLocation) => {
-    setMapRegion({
-      latitude: member.latitude,
-      longitude: member.longitude,
-      latitudeDelta: LATITUDE_DELTA / 2,
-      longitudeDelta: LONGITUDE_DELTA / 2,
-    });
-    setSelectedMember(member);
-  };
-
   const getMarkerColor = (member: FamilyMemberLocation) => {
-    if (member.isMoving) return '#16a34a'; // Verde se em movimento
-    if (member.batteryLevel && member.batteryLevel < 0.2) return '#dc2626'; // Vermelho se bateria baixa
-    return '#2563eb'; // Azul padrão
+    if (member.isMoving) return '#16a34a';
+    if (member.batteryLevel && member.batteryLevel < 0.2) return '#dc2626';
+    return '#2563eb';
   };
 
   const formatLastUpdate = (timestamp: string) => {
@@ -168,8 +129,7 @@ export default function MapScreen({ route, navigation }: any) {
       flex: 1,
     },
     map: {
-      width: '100%',
-      height: '100%',
+      flex: 1,
     },
     loadingContainer: {
       ...StyleSheet.absoluteFillObject,
@@ -240,11 +200,6 @@ export default function MapScreen({ route, navigation }: any) {
       fontSize: 12,
       color: isDark ? '#9ca3af' : '#6b7280',
     },
-    centerButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-    },
     memberDetails: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -264,24 +219,6 @@ export default function MapScreen({ route, navigation }: any) {
     detailText: {
       fontSize: 12,
       color: isDark ? '#d1d5db' : '#374151',
-    },
-    myLocationButton: {
-      position: 'absolute',
-      right: 16,
-      bottom: locations.length > 0 ? 180 : 32,
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-      alignItems: 'center',
-      justifyContent: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
-      elevation: 4,
-      borderWidth: 1,
-      borderColor: isDark ? '#374151' : '#e5e7eb',
     },
   });
 
@@ -304,6 +241,12 @@ export default function MapScreen({ route, navigation }: any) {
       </View>
     );
   }
+
+  const centerCoordinate = locations.length > 0
+    ? [locations[0].longitude, locations[0].latitude]
+    : currentLocation
+    ? [currentLocation.longitude, currentLocation.latitude]
+    : [-46.6333, -23.5505];
 
   return (
     <View style={styles.container}>
@@ -337,46 +280,62 @@ export default function MapScreen({ route, navigation }: any) {
       ) : (
         <>
           <View style={styles.mapContainer}>
-            <MapView
+            <MapLibreGL.MapView
               style={styles.map}
-              region={mapRegion}
-              showsUserLocation
-              showsMyLocationButton={false}
+              styleURL="https://demotiles.maplibre.org/style.json"
             >
-              {Array.isArray(locations) && locations.map((member) => (
-                <Marker
+              <MapLibreGL.Camera
+                zoomLevel={12}
+                centerCoordinate={centerCoordinate as [number, number]}
+              />
+              
+              {locations.map((member) => (
+                <MapLibreGL.PointAnnotation
                   key={member.userId}
-                  coordinate={{
-                    latitude: member.latitude,
-                    longitude: member.longitude,
-                  }}
-                  title={member.userName || member.nickname || undefined}
-                  description={formatLastUpdate(member.timestamp)}
-                  pinColor={getMarkerColor(member)}
-                  onPress={() => setSelectedMember(member)}
-                />
+                  id={member.userId}
+                  coordinate={[member.longitude, member.latitude]}
+                >
+                  <View
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 15,
+                      backgroundColor: getMarkerColor(member),
+                      borderWidth: 3,
+                      borderColor: 'white',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>
+                      {(member.nickname || member.userName || '?')[0].toUpperCase()}
+                    </Text>
+                  </View>
+                </MapLibreGL.PointAnnotation>
               ))}
-            </MapView>
 
-            {currentLocation && (
-              <TouchableOpacity
-                style={styles.myLocationButton}
-                onPress={() => {
-                  setMapRegion({
-                    latitude: currentLocation.latitude,
-                    longitude: currentLocation.longitude,
-                    latitudeDelta: LATITUDE_DELTA / 2,
-                    longitudeDelta: LONGITUDE_DELTA / 2,
-                  });
-                }}
-              >
-                <Ionicons name="locate" size={24} color="#16a34a" />
-              </TouchableOpacity>
-            )}
+              {currentLocation && (
+                <MapLibreGL.PointAnnotation
+                  id="user-location"
+                  coordinate={[currentLocation.longitude, currentLocation.latitude]}
+                >
+                  <View
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: '#3b82f6',
+                      borderWidth: 3,
+                      borderColor: 'white',
+                    }}
+                  />
+                </MapLibreGL.PointAnnotation>
+              )}
+            </MapLibreGL.MapView>
           </View>
 
           <View style={styles.memberListContainer}>
-            {Array.isArray(locations) && locations.map((member) => (
+            {locations.map((member) => (
               <Card key={member.userId} style={styles.memberCard}>
                 <View style={styles.memberHeader}>
                   <View style={[styles.memberAvatar, { backgroundColor: getMarkerColor(member) }]}>
@@ -392,12 +351,6 @@ export default function MapScreen({ route, navigation }: any) {
                       {formatLastUpdate(member.timestamp)}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    style={styles.centerButton}
-                    onPress={() => centerOnMember(member)}
-                  >
-                    <Ionicons name="navigate" size={20} color="#16a34a" />
-                  </TouchableOpacity>
                 </View>
 
                 <View style={styles.memberDetails}>

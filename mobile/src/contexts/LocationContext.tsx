@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { locationService, LocationData, FamilyMapData } from '../services/location/locationService';
 import { familyService } from '../services/family/familyService';
+import { geofenceService, GeofenceZone } from '../services/geofence/geofenceService';
+import * as Notifications from 'expo-notifications';
 import { useAuth as useAuthContext } from './AuthContext';
 
 interface LocationContextType {
@@ -26,6 +28,8 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [isTrackingActive, setIsTrackingActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const activeZones = useRef<Set<string>>(new Set());
+  const lastCheckTime = useRef<number>(Date.now());
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -89,11 +93,80 @@ export function LocationProvider({ children }: LocationProviderProps) {
       
       if (response.success && response.data) {
         setCurrentLocation(response.data);
+        
+        // Verificar zonas apenas a cada 30 segundos para economizar bateria
+        const now = Date.now();
+        if (now - lastCheckTime.current >= 30000) {
+          await checkGeofenceZones(response.data);
+          lastCheckTime.current = now;
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar localização:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const checkGeofenceZones = async (location: LocationData) => {
+    try {
+      const zonesResponse = await geofenceService.getUserZones(true);
+      
+      if (!zonesResponse.success || !zonesResponse.data) {
+        return;
+      }
+
+      const zones = zonesResponse.data;
+      const currentlyInZones = new Set<string>();
+
+      for (const zone of zones) {
+        const isInZone = geofenceService.isPointInZone(
+          location.latitude,
+          location.longitude,
+          zone
+        );
+
+        if (isInZone) {
+          currentlyInZones.add(zone.id);
+          
+          // Se acabou de entrar na zona
+          if (!activeZones.current.has(zone.id) && zone.notifyOnEnter) {
+            await sendGeofenceNotification(zone, 'enter');
+          }
+        } else {
+          // Se acabou de sair da zona
+          if (activeZones.current.has(zone.id) && zone.notifyOnExit) {
+            await sendGeofenceNotification(zone, 'exit');
+          }
+        }
+      }
+
+      activeZones.current = currentlyInZones;
+    } catch (error) {
+      console.error('Erro ao verificar zonas:', error);
+    }
+  };
+
+  const sendGeofenceNotification = async (zone: GeofenceZone, type: 'enter' | 'exit') => {
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: type === 'enter' ? `📍 Você chegou em ${zone.name}` : `🚶 Você saiu de ${zone.name}`,
+          body: type === 'enter' 
+            ? `Você entrou na zona ${zone.name}`
+            : `Você saiu da zona ${zone.name}`,
+          data: {
+            type: 'geofence',
+            zoneId: zone.id,
+            zoneName: zone.name,
+            eventType: type,
+          },
+          sound: 'default',
+        },
+        trigger: null,
+      });
+    } catch (error) {
+      console.error('Erro ao enviar notificação de zona:', error);
     }
   };
 
