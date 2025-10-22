@@ -41,7 +41,9 @@ export default {
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
         "POST_NOTIFICATIONS",
-        "VIBRATE"
+        "VIBRATE",
+        "WAKE_LOCK",
+        "RECEIVE_BOOT_COMPLETED"
       ],
       usesCleartextTraffic: true
     },
@@ -63,7 +65,8 @@ export default {
           locationAlwaysPermission: "Este app precisa da sua localização em segundo plano para mantê-lo conectado com sua família.",
           locationWhenInUsePermission: "Este app precisa da sua localização quando estiver em uso.",
           isAndroidBackgroundLocationEnabled: true,
-          isAndroidForegroundServiceEnabled: true
+          isAndroidForegroundServiceEnabled: true,
+          isAndroidBackgroundLocationPermissionEnabled: true
         }
       ],
       [

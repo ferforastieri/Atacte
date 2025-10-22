@@ -35,11 +35,32 @@ export function LocationProvider({ children }: LocationProviderProps) {
   useEffect(() => {
     if (isAuthenticated) {
       initializeLocation();
+      
+      // Verificar periodicamente se o rastreamento ainda está ativo
+      const interval = setInterval(async () => {
+        try {
+          const isActive = await locationService.isBackgroundLocationActive();
+          if (isActive !== isTrackingActive) {
+            console.log(`🔄 Estado do rastreamento mudou: ${isActive ? 'ativo' : 'inativo'}`);
+            setIsTrackingActive(isActive);
+            
+            // Se parou de funcionar, tentar reiniciar
+            if (!isActive) {
+              console.log('🔄 Tentando reiniciar rastreamento...');
+              await checkAndStartTracking();
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao verificar estado do rastreamento:', error);
+        }
+      }, 30000); // Verificar a cada 30 segundos
+
+      return () => clearInterval(interval);
     } else {
       // Se desautenticado, parar tracking
       stopTracking();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isTrackingActive]);
 
   const initializeLocation = async () => {
     try {
@@ -61,29 +82,38 @@ export function LocationProvider({ children }: LocationProviderProps) {
       const response = await familyService.getFamilies();
       
       if (!response.success || !response.data || response.data.length === 0) {
+        console.log('📱 Usuário não está em nenhuma família, não iniciando rastreamento');
         return;
       }
       
       const isActive = await locationService.isBackgroundLocationActive();
       
       if (isActive) {
+        console.log('📍 Rastreamento já está ativo');
+        setIsTrackingActive(true);
         return;
       }
       
+      console.log('🔐 Solicitando permissões de localização...');
       const hasPermissions = await locationService.requestPermissions();
       
       if (!hasPermissions) {
+        console.log('❌ Permissões de localização negadas');
         return;
       }
       
+      console.log('🚀 Iniciando rastreamento de localização em background...');
       const started = await locationService.startBackgroundLocation();
       
       if (started) {
+        console.log('✅ Rastreamento iniciado com sucesso');
         setIsTrackingActive(true);
         await locationService.sendCurrentLocation();
+      } else {
+        console.log('❌ Falha ao iniciar rastreamento');
       }
     } catch (error) {
-      console.error('Erro ao verificar e iniciar rastreamento:', error);
+      console.error('❌ Erro ao verificar e iniciar rastreamento:', error);
     }
   };
 

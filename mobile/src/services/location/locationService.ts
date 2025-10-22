@@ -208,9 +208,9 @@ class LocationService {
       // Iniciar rastreamento em background
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.Balanced,
-        timeInterval: 30000, // 30 segundos - mais frequente para testar
-        distanceInterval: 50, // 50 metros
-        deferredUpdatesInterval: 30000,
+        timeInterval: 60000, // 1 minuto - mais eficiente para bateria
+        distanceInterval: 100, // 100 metros - menos sensível a pequenos movimentos
+        deferredUpdatesInterval: 60000,
         foregroundService: {
           notificationTitle: 'Atacte - Rastreamento Ativo',
           notificationBody: 'Compartilhando sua localização com sua família',
@@ -219,6 +219,13 @@ class LocationService {
         pausesUpdatesAutomatically: false, // Não pausar automaticamente
         activityType: Location.ActivityType.Other,
         showsBackgroundLocationIndicator: true,
+        // Configurações específicas para Android
+        android: {
+          notificationTitle: 'Atacte - Rastreamento Ativo',
+          notificationBody: 'Compartilhando sua localização com sua família',
+          notificationColor: '#16a34a',
+          killServiceOnDestroy: false,
+        },
       });
 
       return true;
