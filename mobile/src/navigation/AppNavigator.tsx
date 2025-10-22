@@ -14,14 +14,14 @@ import TotpScreen from '../screens/TotpScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import PasswordDetailScreen from '../screens/PasswordDetailScreen';
 import FamilyScreen from '../screens/FamilyScreen';
-import MapScreen from '../screens/MapScreen';
+import FamilyDetailScreen from '../screens/FamilyDetailScreen';
 
 
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   PasswordDetail: { passwordId: string };
-  Map: { familyId: string; familyName: string };
+  FamilyDetail: { familyId: string; familyName: string };
   FamilyDetails: { familyId: string };
 };
 
@@ -170,8 +170,8 @@ export default function AppNavigator() {
               }}
             />
             <Stack.Screen 
-              name="Map" 
-              component={MapScreen}
+              name="FamilyDetail" 
+              component={FamilyDetailScreen}
               options={{ headerShown: false }}
             />
           </>

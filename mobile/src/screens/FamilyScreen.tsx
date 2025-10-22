@@ -14,7 +14,6 @@ import { familyService, Family } from '../services/family/familyService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocation } from '../contexts/LocationContext';
-import GeofenceScreen from './GeofenceScreen';
 
 export default function FamilyScreen({ navigation }: any) {
   const [families, setFamilies] = useState<Family[]>([]);
@@ -22,7 +21,6 @@ export default function FamilyScreen({ navigation }: any) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [showZones, setShowZones] = useState(false);
   const [newFamilyName, setNewFamilyName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -105,7 +103,7 @@ export default function FamilyScreen({ navigation }: any) {
   };
 
   const handleViewMap = (family: Family) => {
-    navigation.navigate('Map', { familyId: family.id, familyName: family.name });
+    navigation.navigate('FamilyDetail', { familyId: family.id, familyName: family.name });
   };
 
   const styles = StyleSheet.create({
@@ -139,6 +137,19 @@ export default function FamilyScreen({ navigation }: any) {
     },
     familyCard: {
       marginBottom: 12,
+      borderWidth: 1,
+      borderColor: '#e5e7eb',
+      borderRadius: 12,
+      padding: 16,
+      backgroundColor: '#ffffff',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 3.84,
+      elevation: 5,
     },
     familyHeader: {
       flexDirection: 'row',
@@ -222,14 +233,6 @@ export default function FamilyScreen({ navigation }: any) {
     modalButton: {
       flex: 1,
     },
-    zonesButtonContainer: {
-      paddingHorizontal: 20,
-      paddingBottom: 20,
-    },
-    zonesButton: {
-      backgroundColor: isDark ? '#374151' : '#f3f4f6',
-      borderColor: isDark ? '#4b5563' : '#d1d5db',
-    },
   });
 
   if (isLoading && !isRefreshing) {
@@ -268,7 +271,11 @@ export default function FamilyScreen({ navigation }: any) {
             </View>
           ) : (
             families.map((family) => (
-              <Card key={family.id} style={styles.familyCard}>
+              <TouchableOpacity 
+                key={family.id} 
+                style={styles.familyCard}
+                onPress={() => handleViewMap(family)}
+              >
                 <View style={styles.familyHeader}>
                   <View style={styles.familyInfo}>
                     <Text style={styles.familyName}>{family.name}</Text>
@@ -286,30 +293,12 @@ export default function FamilyScreen({ navigation }: any) {
                   <Text style={styles.inviteCode}>{family.inviteCode}</Text>
                 </View>
 
-                <View style={styles.actions}>
-                  <Button
-                    title="Ver Mapa"
-                    onPress={() => handleViewMap(family)}
-                    variant="primary"
-                  />
-                </View>
-              </Card>
+              </TouchableOpacity>
             ))
           )}
         </ScrollView>
       </View>
 
-      {/* Botão Minhas Zonas - só aparece se tiver famílias */}
-      {families.length > 0 && (
-        <View style={styles.zonesButtonContainer}>
-          <Button
-            title="📍 Minhas Zonas"
-            onPress={() => setShowZones(true)}
-            variant="secondary"
-            style={styles.zonesButton}
-          />
-        </View>
-      )}
 
       <View style={styles.fab}>
         <TouchableOpacity
@@ -393,16 +382,6 @@ export default function FamilyScreen({ navigation }: any) {
         </View>
       </Modal>
 
-      {/* Modal de Zonas */}
-      {showZones && (
-        <View style={StyleSheet.absoluteFillObject}>
-          <GeofenceScreen 
-            navigation={{
-              goBack: () => setShowZones(false)
-            }}
-          />
-        </View>
-      )}
     </View>
   );
 }
