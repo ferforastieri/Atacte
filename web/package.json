@@ -15,6 +15,7 @@
     "@heroicons/vue": "^2.0.18",
     "@vueuse/core": "^10.3.0",
     "axios": "^1.4.0",
+    "maplibre-gl": "^5.9.0",
     "otpauth": "^9.4.1",
     "pinia": "^2.1.6",
     "qrcode": "^1.5.3",
