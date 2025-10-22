@@ -2,15 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Card, Header, Button } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
 import { passwordService } from '../services/passwords/passwordService';
+import { userService } from '../services/users/userService';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../hooks/useToast';
 
 interface User {
   id: string;
   email: string;
   name?: string;
+  phoneNumber?: string;
+  profilePicture?: string;
 }
 
 interface ProfileStats {
@@ -20,7 +25,9 @@ interface ProfileStats {
 }
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
+  const navigation = useNavigation();
+  const [profileData, setProfileData] = useState<User | null>(null);
   const [stats, setStats] = useState<ProfileStats>({
     totalPasswords: 0,
     favoritePasswords: 0,
@@ -28,10 +35,32 @@ export default function ProfileScreen() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const { isDark, toggleTheme } = useTheme();
+  const { showError } = useToast();
 
   useEffect(() => {
+    loadProfileData();
     loadStats();
   }, []);
+
+  // Recarregar dados quando a tela ganhar foco (ex: voltar das configurações)
+  useFocusEffect(
+    React.useCallback(() => {
+      loadProfileData();
+    }, [])
+  );
+
+  const loadProfileData = async () => {
+    try {
+      const response = await userService.getUserProfile();
+      if (response.success && response.data) {
+        setProfileData(response.data);
+      }
+    } catch (error) {
+      showError('Erro ao carregar dados do perfil');
+      // Fallback para dados do contexto
+      setProfileData(user);
+    }
+  };
 
   const loadStats = async () => {
     try {
@@ -213,27 +242,25 @@ export default function ProfileScreen() {
           <View style={styles.profileHeader}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {user?.email ? getInitials(user.email) : 'U'}
+                {profileData?.name ? getInitials(profileData.name) : (profileData?.email ? getInitials(profileData.email) : 'U')}
               </Text>
             </View>
             <Text style={styles.userName}>
-              {user?.name || 'Usuário'}
+              {profileData?.name || profileData?.email?.split('@')[0] || 'Usuário'}
             </Text>
             <Text style={styles.userEmail}>
-              {user?.email || 'email@exemplo.com'}
+              {profileData?.email || 'N/A'}
             </Text>
           </View>
 
           <View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{user?.email || 'N/A'}</Text>
+              <Text style={styles.infoValue}>{profileData?.email || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>ID do Usuário</Text>
-              <Text style={[styles.infoValue, { fontFamily: 'monospace', fontSize: 12 }]}>
-                {user?.id || 'N/A'}
-              </Text>
+              <Text style={styles.infoLabel}>Telefone</Text>
+              <Text style={styles.infoValue}>{profileData?.phoneNumber || 'Não informado'}</Text>
             </View>
           </View>
         </Card>
@@ -261,19 +288,12 @@ export default function ProfileScreen() {
         <Card style={styles.actionsCard}>
           <Text style={styles.sectionTitle}>Ações</Text>
           
-          <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity 
+          style={styles.actionButton}
+          onPress={() => navigation.navigate('Settings' as never)}
+        >
             <Ionicons name="settings-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
             <Text style={styles.actionButtonText}>Configurações</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="document-text-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
-            <Text style={styles.actionButtonText}>Logs de Auditoria</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="desktop-outline" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
-            <Text style={styles.actionButtonText}>Sessões Ativas</Text>
           </TouchableOpacity>
         </Card>
 

@@ -15,6 +15,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import PasswordDetailScreen from '../screens/PasswordDetailScreen';
 import FamilyScreen from '../screens/FamilyScreen';
 import FamilyDetailScreen from '../screens/FamilyDetailScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 
 export type RootStackParamList = {
@@ -35,6 +36,7 @@ export type MainTabParamList = {
   FamilyDetail: { familyId: string; familyName: string };
   Totp: undefined;
   Profile: undefined;
+  Settings: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -109,6 +111,15 @@ function MainTabNavigator() {
         name="Profile" 
         component={ProfileScreen}
         options={{ title: 'Perfil' }}
+      />
+      <Tab.Screen 
+        name="Settings" 
+        component={SettingsScreen}
+        options={{ 
+          title: 'Configurações',
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' }
+        }}
       />
     </Tab.Navigator>
   );
