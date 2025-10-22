@@ -32,6 +32,7 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Dashboard: undefined;
   Family: undefined;
+  FamilyDetail: { familyId: string; familyName: string };
   Totp: undefined;
   Profile: undefined;
 };
@@ -89,6 +90,15 @@ function MainTabNavigator() {
         name="Family" 
         component={FamilyScreen}
         options={{ title: 'Família' }}
+      />
+      <Tab.Screen 
+        name="FamilyDetail" 
+        component={FamilyDetailScreen}
+        options={{ 
+          title: 'Detalhes da Família',
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' }
+        }}
       />
       <Tab.Screen 
         name="Totp" 
@@ -168,11 +178,6 @@ export default function AppNavigator() {
                   fontWeight: '600',
                 },
               }}
-            />
-            <Stack.Screen 
-              name="FamilyDetail" 
-              component={FamilyDetailScreen}
-              options={{ headerShown: false }}
             />
           </>
         ) : (
