@@ -1,6 +1,6 @@
-# 🔐 Atacte - Gerenciador de Senhas Pessoal
+# 🔐 Atacte - Aplicativo de Segurança Familiar
 
-**Atacte** é um gerenciador de senhas pessoal desenvolvido com foco em estudo e aprendizado, projetado para rodar em servidor pessoal. O projeto implementa uma solução completa de gerenciamento de senhas com criptografia robusta, autenticação de dois fatores (2FA) e interfaces modernas para web e mobile.
+**Atacte** é um aplicativo de segurança familiar desenvolvido com foco em estudo e aprendizado, projetado para rodar em servidor pessoal. O projeto implementa uma solução completa de gerenciamento de senhas com criptografia robusta, autenticação de dois fatores (2FA), rastreamento de localização familiar e interfaces modernas para web e mobile.
 
 ## 📋 Índice
 
@@ -14,7 +14,6 @@
 - [API](#-api)
 - [Deployment](#-deployment)
 - [Desenvolvimento](#-desenvolvimento)
-- [Segurança](#-segurança)
 - [Contribuição](#-contribuição)
 - [Licença](#-licença)
 
@@ -29,14 +28,24 @@
 - **Sessões gerenciadas** com controle de dispositivos
 
 ### 🎯 Funcionalidades
+
+#### 🔐 Gerenciamento de Senhas
 - **Gerenciamento de senhas** com categorização e favoritos
 - **Geração de senhas seguras** com critérios personalizáveis
 - **Autenticação de dois fatores (2FA/TOTP)** integrada
 - **Importação/Exportação** de dados em formato JSON
 - **Campos customizados** para cada entrada de senha
-- **Tema claro/escuro** com preferências do usuário
 - **Auto-lock** configurável por inatividade
 - **Logs de auditoria** detalhados
+
+#### 👨‍👩‍👧‍👦 Segurança Familiar
+- **Rastreamento de localização** em tempo real
+- **Criação de grupos familiares** com códigos de convite
+- **Geofences personalizáveis** para alertas de zona
+- **Histórico de localizações** com visualização em mapa
+- **Notificações de chegada/saída** de zonas configuradas
+- **Localização em background** mesmo com app fechado
+- **Controle de permissões** granular por membro da família
 
 ### 🎨 Interface
 - **Design responsivo** com Tailwind CSS
@@ -138,6 +147,10 @@ Atacte/
 - **AsyncStorage** - Armazenamento local
 - **Expo SecureStore** - Armazenamento seguro
 - **React Native Flash Message** - Notificações
+- **Expo Location** - Rastreamento de localização
+- **Expo TaskManager** - Tarefas em background
+- **React Native Maps** - Visualização de mapas
+- **Expo Clipboard** - Funcionalidade de copiar/colar
 
 ### DevOps
 - **Docker** - Containerização
@@ -255,11 +268,30 @@ O frontend web se conecta automaticamente ao backend via proxy configurado no Vi
 
 ### Configuração do App Mobile
 
-O app mobile precisa ser configurado para se conectar ao backend. Edite o arquivo `mobile/src/lib/env.ts` com a URL do seu backend:
+O app mobile precisa ser configurado para se conectar ao backend e ter permissões de localização:
 
-```typescript
-export const API_BASE_URL = 'http://seu-servidor:3001/api';
-```
+1. **Configurar URL do backend** - Edite o arquivo `mobile/src/lib/env.ts`:
+   ```typescript
+   export const API_BASE_URL = 'http://seu-servidor:3001/api';
+   ```
+
+2. **Configurar permissões de localização** - O arquivo `mobile/app.config.js` já está configurado com:
+   - `ACCESS_FINE_LOCATION` - Localização precisa
+   - `ACCESS_BACKGROUND_LOCATION` - Localização em background
+   - `FOREGROUND_SERVICE_LOCATION` - Serviço em primeiro plano
+
+3. **Configurar EAS Build** - Para builds de produção, edite `mobile/eas.json`:
+   ```json
+   {
+     "build": {
+       "production": {
+         "env": {
+           "EXPO_PUBLIC_API_BASE_URL": "https://seu-servidor.com/api"
+         }
+       }
+     }
+   }
+   ```
 
 ## 🎯 Uso
 
@@ -319,10 +351,10 @@ npm run build
 
 # Build do app mobile (Android)
 cd ../mobile
-npx expo build:android
+npx eas build --platform android --profile production
 
 # Build do app mobile (iOS)
-npx expo build:ios
+npx eas build --platform ios --profile production
 
 # Iniciar backend
 cd ../backend
@@ -406,6 +438,35 @@ Exportar dados em JSON.
 
 #### POST `/api/import-export/import`
 Importar dados de JSON.
+
+### Localização Familiar
+
+#### POST `/api/families`
+Criar novo grupo familiar.
+
+#### POST `/api/families/:id/join`
+Entrar em família existente via código de convite.
+
+#### GET `/api/families`
+Listar famílias do usuário.
+
+#### GET `/api/families/:id/members`
+Listar membros de uma família.
+
+#### POST `/api/location/update`
+Atualizar localização do usuário.
+
+#### GET `/api/location/family/:familyId`
+Obter localizações dos membros da família.
+
+#### POST `/api/zones`
+Criar nova zona geográfica.
+
+#### GET `/api/zones/family/:familyId`
+Listar zonas de uma família.
+
+#### DELETE `/api/zones/:id`
+Remover zona geográfica.
 
 ## 🚀 Deployment
 
@@ -507,28 +568,6 @@ npm run web          # Executar versão web (Expo)
 3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
 4. Push para a branch (`git push origin feature/nova-funcionalidade`)
 5. Abra um Pull Request
-
-## 🔒 Segurança
-
-### Medidas Implementadas
-
-- **Criptografia AES-256** para todas as senhas
-- **Hash bcrypt** com salt para senha mestra
-- **JWT** com expiração configurável
-- **Rate limiting** para prevenir ataques
-- **Headers de segurança** (Helmet.js)
-- **Validação rigorosa** de entrada
-- **Auditoria completa** de ações
-- **Sessões seguras** com controle de dispositivos
-
-### Recomendações
-
-- Use **HTTPS** em produção
-- Configure **firewall** adequadamente
-- Mantenha **dependências atualizadas**
-- Monitore **logs de auditoria**
-- Faça **backups regulares**
-- Use **senhas mestras fortes**
 
 ## 📝 Licença
 

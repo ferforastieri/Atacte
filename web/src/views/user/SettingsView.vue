@@ -46,7 +46,7 @@
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div class="flex-1">
                   <h3 class="text-sm font-medium text-gray-900 dark:text-white">Importar Dados</h3>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">Importe senhas de outros gerenciadores</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Importe senhas de outros aplicativos</p>
                 </div>
                 <BaseButton variant="secondary" @click="showImportModal = true" class="w-full sm:w-auto">
                   Importar
