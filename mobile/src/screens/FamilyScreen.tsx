@@ -14,6 +14,7 @@ import { familyService, Family } from '../services/family/familyService';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocation } from '../contexts/LocationContext';
+import * as Clipboard from 'expo-clipboard';
 
 export default function FamilyScreen({ navigation }: any) {
   const [families, setFamilies] = useState<Family[]>([]);
@@ -106,6 +107,15 @@ export default function FamilyScreen({ navigation }: any) {
     navigation.navigate('FamilyDetail', { familyId: family.id, familyName: family.name });
   };
 
+  const handleCopyInviteCode = async (inviteCode: string) => {
+    try {
+      await Clipboard.setStringAsync(inviteCode);
+      showSuccess('Código de convite copiado!');
+    } catch (error) {
+      showError('Erro ao copiar código de convite');
+    }
+  };
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -181,10 +191,20 @@ export default function FamilyScreen({ navigation }: any) {
       padding: 12,
       marginBottom: 12,
     },
+    inviteCodeHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
     inviteCodeLabel: {
       fontSize: 12,
       color: isDark ? '#9ca3af' : '#6b7280',
-      marginBottom: 4,
+    },
+    copyButton: {
+      padding: 4,
+      borderRadius: 4,
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
     },
     inviteCode: {
       fontSize: 16,
@@ -289,7 +309,15 @@ export default function FamilyScreen({ navigation }: any) {
                 </View>
 
                 <View style={styles.inviteCodeContainer}>
-                  <Text style={styles.inviteCodeLabel}>Código de Convite</Text>
+                  <View style={styles.inviteCodeHeader}>
+                    <Text style={styles.inviteCodeLabel}>Código de Convite</Text>
+                    <TouchableOpacity
+                      style={styles.copyButton}
+                      onPress={() => handleCopyInviteCode(family.inviteCode)}
+                    >
+                      <Ionicons name="copy-outline" size={16} color="#16a34a" />
+                    </TouchableOpacity>
+                  </View>
                   <Text style={styles.inviteCode}>{family.inviteCode}</Text>
                 </View>
 

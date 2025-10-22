@@ -19,7 +19,6 @@ const LOCATION_TASK_NAME = 'background-location-task';
 // Registrar a task de background ANTES de qualquer uso
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
   if (error) {
-    console.error('❌ Erro na tarefa de localização:', error);
     return;
   }
   
@@ -31,14 +30,12 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
       try {
         const batteryLevel = await Battery.getBatteryLevelAsync();
         
-        // Construir payload apenas com campos válidos
         const payload: any = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
           isMoving: location.coords.speed ? location.coords.speed > 0.5 : false,
         };
         
-        // Adicionar campos opcionais apenas se tiverem valor
         if (location.coords.accuracy !== null && location.coords.accuracy !== undefined) {
           payload.accuracy = location.coords.accuracy;
         }
@@ -55,38 +52,16 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
           payload.batteryLevel = batteryLevel;
         }
         
-        // Usar o locationService para enviar via API
         await locationService.updateLocation(payload);
       } catch (error: any) {
-        console.error('❌ Erro ao enviar localização:', error.response?.data || error.message);
+        // Erro ao enviar localização em background
       }
     }
   }
 });
 
-export default function App() {
-  useEffect(() => {
-    // Funções de background location centralizadas no App
-    const initializeBackgroundLocation = async () => {
-      try {
-        
-        // Verificar se a task já está registrada
-        const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
-        
-        if (!isRegistered) {
-          // A task já foi registrada no topo do arquivo
-        }
-        
-      } catch (error) {
-        console.error('❌ Erro ao inicializar background location:', error);
-      }
-    };
-
-    initializeBackgroundLocation();
-  }, []);
-
-  // Funções de background location exportadas para uso global
-  const backgroundLocationFunctions = {
+// Funções de background location exportadas para uso global
+const backgroundLocationFunctions = {
     // Iniciar rastreamento em background
     startBackgroundLocation: async (): Promise<boolean> => {
       try {
@@ -133,7 +108,6 @@ export default function App() {
 
         return true;
       } catch (error) {
-        console.error('❌ Erro ao iniciar background location:', error);
         return false;
       }
     },
@@ -147,7 +121,7 @@ export default function App() {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       } catch (error) {
-        console.error('❌ Erro ao parar background location:', error);
+        // Erro ao parar background location
       }
     },
 
@@ -157,14 +131,15 @@ export default function App() {
         const isActive = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
         return isActive;
       } catch (error) {
-        console.error('❌ Erro ao verificar status do tracking:', error);
         return false;
       }
     }
   };
 
-  // Tornar as funções disponíveis globalmente
-  (global as any).backgroundLocationFunctions = backgroundLocationFunctions;
+// Tornar as funções disponíveis globalmente
+(global as any).backgroundLocationFunctions = backgroundLocationFunctions;
+
+export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

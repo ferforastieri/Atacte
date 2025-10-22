@@ -114,7 +114,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
         setIsTrackingActive(false);
       }
     } catch (error) {
-      console.error('Erro ao verificar e iniciar rastreamento:', error);
       setIsTrackingActive(false);
     }
   };
