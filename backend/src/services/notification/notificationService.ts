@@ -282,7 +282,6 @@ export class NotificationService {
       const pushToken = (receiver as any).receiver?.pushToken;
       
       if (!pushToken || !pushToken.startsWith('ExponentPushToken')) {
-        console.log('Push token inválido ou não encontrado');
         return;
       }
 

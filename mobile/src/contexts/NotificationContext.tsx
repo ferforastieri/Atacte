@@ -52,7 +52,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   };
 
   const handleNotificationReceived = (notification: Notifications.Notification) => {
-    console.log('Notificação recebida:', notification);
     
     // Atualizar lista de notificações
     refreshNotifications();
@@ -60,17 +59,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   };
 
   const handleNotificationResponse = (response: Notifications.NotificationResponse) => {
-    console.log('Resposta da notificação:', response);
     
     const data = response.notification.request.content.data;
     
     // Lidar com diferentes tipos de notificações
     if (data?.type === 'sos') {
       // Navegar para o mapa da família
-      console.log('Alerta SOS recebido!');
     } else if (data?.type === 'family_invite') {
       // Navegar para a tela de famílias
-      console.log('Convite de família recebido!');
     }
   };
 

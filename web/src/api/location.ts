@@ -58,10 +58,8 @@ export const locationApi = {
       const familiesResponse = await api.get('/family')
       const families = familiesResponse.data.data // Acessar o array dentro de data
       
-      console.log('Famílias encontradas:', families)
       
       if (!families || families.length === 0) {
-        console.log('Nenhuma família encontrada')
         return []
       }
       
@@ -70,11 +68,9 @@ export const locationApi = {
       
       for (const family of families) {
         try {
-          console.log(`Buscando localizações da família ${family.id}`)
           const locationResponse = await api.get(`/location/family/${family.id}`)
           const familyData = locationResponse.data
           
-          console.log(`Dados da família ${family.id}:`, familyData)
           
           if (familyData && familyData.data && familyData.data.members) {
             // Mapear os dados para o formato esperado
@@ -90,7 +86,6 @@ export const locationApi = {
             }))
             
             allMembers.push(...members)
-            console.log(`Adicionados ${members.length} membros da família ${family.id}`)
           }
         } catch (error) {
           console.error(`Erro ao buscar localizações da família ${family.id}:`, error)
@@ -98,7 +93,6 @@ export const locationApi = {
         }
       }
       
-      console.log('Total de membros encontrados:', allMembers.length)
       return allMembers
     } catch (error) {
       console.error('Erro ao buscar famílias:', error)

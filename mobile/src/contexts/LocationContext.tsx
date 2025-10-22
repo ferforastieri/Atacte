@@ -52,7 +52,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
         
         const isActive = await backgroundFunctions.isBackgroundLocationActive();
         if (!isActive && isTrackingActive) {
-          console.log('⚠️ Tracking parou inesperadamente, reiniciando...');
           await checkAndStartTracking();
         }
       } catch (error) {
@@ -70,7 +69,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
     try {
       const backgroundFunctions = (global as any).backgroundLocationFunctions;
       if (!backgroundFunctions) {
-        console.log('❌ Background functions não disponíveis');
         return;
       }
       
@@ -92,33 +90,27 @@ export function LocationProvider({ children }: LocationProviderProps) {
       const response = await familyService.getFamilies();
       
       if (!response.success || !response.data || response.data.length === 0) {
-        console.log('⚠️ Nenhuma família encontrada, não iniciando tracking');
         return;
       }
       
       const backgroundFunctions = (global as any).backgroundLocationFunctions;
       if (!backgroundFunctions) {
-        console.log('❌ Background functions não disponíveis');
         return;
       }
       
       const isActive = await backgroundFunctions.isBackgroundLocationActive();
       
       if (isActive) {
-        console.log('✅ Tracking já está ativo');
         setIsTrackingActive(true);
         return;
       }
       
-      console.log('🔄 Iniciando tracking de localização...');
       const started = await backgroundFunctions.startBackgroundLocation();
       
       if (started) {
         setIsTrackingActive(true);
-        console.log('✅ Tracking iniciado com sucesso');
         await locationService.sendCurrentLocation();
       } else {
-        console.log('❌ Falha ao iniciar tracking');
         setIsTrackingActive(false);
       }
     } catch (error) {
@@ -215,7 +207,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
       setIsLoading(true);
       const backgroundFunctions = (global as any).backgroundLocationFunctions;
       if (!backgroundFunctions) {
-        console.log('❌ Background functions não disponíveis');
         return false;
       }
       
@@ -240,7 +231,6 @@ export function LocationProvider({ children }: LocationProviderProps) {
       setIsLoading(true);
       const backgroundFunctions = (global as any).backgroundLocationFunctions;
       if (!backgroundFunctions) {
-        console.log('❌ Background functions não disponíveis');
         return;
       }
       

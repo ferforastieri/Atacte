@@ -56,7 +56,6 @@ class NotificationService {
   async requestPermissions(): Promise<boolean> {
     try {
       if (!Device.isDevice) {
-        console.log('Notificações push só funcionam em dispositivos físicos');
         return false;
       }
 

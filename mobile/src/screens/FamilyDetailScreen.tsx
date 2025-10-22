@@ -135,19 +135,15 @@ export default function FamilyDetailScreen({ route, navigation }: any) {
     if (isCreatingZone) {
       // Aqui você pode atualizar o estado com as coordenadas
       // e mostrar o modal de criação de zona
-      console.log('Coordenadas definidas:', latitude, longitude);
       setIsCreatingZone(false);
     }
   };
 
   const handleZoneClick = (zone: GeofenceZone) => {
     // Implementar lógica para editar zona
-    console.log('Zona clicada:', zone);
   };
 
   const handleMemberPress = (member: FamilyMemberLocation) => {
-    console.log('Membro clicado:', member);
-    console.log('Aba atual:', activeTab);
     
     // Focar no membro no mapa
     if (activeTab === 'map') {

@@ -57,7 +57,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
         
         // Usar o locationService para enviar via API
         await locationService.updateLocation(payload);
-        console.log('✅ Localização enviada para o servidor em background via API');
       } catch (error: any) {
         console.error('❌ Erro ao enviar localização:', error.response?.data || error.message);
       }
@@ -70,14 +69,11 @@ export default function App() {
     // Funções de background location centralizadas no App
     const initializeBackgroundLocation = async () => {
       try {
-        console.log('🔄 Inicializando background location...');
         
         // Verificar se a task já está registrada
         const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
-        console.log('📍 Task registrada:', isRegistered);
         
         if (!isRegistered) {
-          console.log('⚠️ Task não está registrada, registrando...');
           // A task já foi registrada no topo do arquivo
         }
         
@@ -94,22 +90,18 @@ export default function App() {
     // Iniciar rastreamento em background
     startBackgroundLocation: async (): Promise<boolean> => {
       try {
-        console.log('🔄 Iniciando background location...');
         
         // Verificar permissões
         const { status } = await Location.getForegroundPermissionsAsync();
         if (status !== 'granted') {
-          console.log('❌ Permissões básicas não concedidas');
           return false;
         }
 
         // Verificar permissões de background
         const { status: backgroundStatus } = await Location.getBackgroundPermissionsAsync();
         if (backgroundStatus !== 'granted') {
-          console.log('⚠️ Solicitando permissões de background...');
           const { status: newStatus } = await Location.requestBackgroundPermissionsAsync();
           if (newStatus !== 'granted') {
-            console.log('❌ Permissões de background não concedidas');
             return false;
           }
         }
@@ -139,7 +131,6 @@ export default function App() {
           mayShowUserSettingsDialog: true,
         });
 
-        console.log('✅ Background location iniciado com sucesso');
         return true;
       } catch (error) {
         console.error('❌ Erro ao iniciar background location:', error);
@@ -154,7 +145,6 @@ export default function App() {
         
         if (hasStarted) {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-          console.log('✅ Background location parado');
         }
       } catch (error) {
         console.error('❌ Erro ao parar background location:', error);
@@ -165,7 +155,6 @@ export default function App() {
     isBackgroundLocationActive: async (): Promise<boolean> => {
       try {
         const isActive = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-        console.log('📍 Status do tracking:', isActive ? 'Ativo' : 'Inativo');
         return isActive;
       } catch (error) {
         console.error('❌ Erro ao verificar status do tracking:', error);
