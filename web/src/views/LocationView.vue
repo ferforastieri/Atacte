@@ -22,17 +22,17 @@
               <span class="hidden sm:inline">Atualizar</span>
             </BaseButton>
 
-            <BaseButton
-              variant="primary"
-              size="sm"
-              @click="showCreateZoneModal = true"
-              class="hidden sm:flex"
-            >
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span class="hidden sm:inline">Nova Zona</span>
-            </BaseButton>
+                   <BaseButton
+                     variant="primary"
+                     size="sm"
+                     @click="startCreatingZone"
+                     class="hidden sm:flex"
+                   >
+                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                     </svg>
+                     <span class="hidden sm:inline">Nova Zona</span>
+                   </BaseButton>
 
             <!-- Mobile buttons -->
             <BaseButton
@@ -45,16 +45,16 @@
               <ArrowPathIcon class="w-4 h-4" />
             </BaseButton>
 
-            <BaseButton
-              variant="primary"
-              size="sm"
-              @click="showCreateZoneModal = true"
-              class="sm:hidden"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </BaseButton>
+                   <BaseButton
+                     variant="primary"
+                     size="sm"
+                     @click="startCreatingZone"
+                     class="sm:hidden"
+                   >
+                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                     </svg>
+                   </BaseButton>
           </div>
         </div>
       </div>
@@ -70,8 +70,8 @@
               <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Mapa</h2>
             </div>
             <div class="relative">
-              <!-- MapLibre GL Map -->
-              <div id="map" class="h-96 bg-gray-100 dark:bg-gray-700 rounded-b-lg"></div>
+              <!-- Leaflet Map -->
+              <div id="map" class="h-96 bg-gray-100 dark:bg-gray-700 rounded-b-lg" style="z-index: 1;"></div>
             </div>
           </div>
         </div>
@@ -135,7 +135,7 @@
               <div v-else-if="zones.length === 0" class="text-center py-4">
                 <p class="text-gray-500 dark:text-gray-400 text-sm">Nenhuma zona criada</p>
                 <button
-                  @click="showCreateZoneModal = true"
+                  @click="startCreatingZone"
                   class="mt-2 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium"
                 >
                   Criar primeira zona
@@ -176,13 +176,13 @@
     </div>
 
     <!-- Create Zone Modal -->
-    <div v-if="showCreateZoneModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
+    <div v-if="showCreateZoneModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-75 overflow-y-auto h-full w-full z-[9999]">
       <div class="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
         <div class="mt-3">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Criar Nova Zona</h3>
             <button
-              @click="showCreateZoneModal = false"
+              @click="closeModal"
               class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             >
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -277,7 +277,7 @@
             <div class="flex justify-end space-x-3 pt-4">
               <button
                 type="button"
-                @click="showCreateZoneModal = false"
+                @click="closeModal"
                 class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
                 Cancelar
@@ -301,8 +301,8 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { locationApi, type FamilyMember, type GeofenceZone, type CreateZoneData } from '@/api/location'
-import maplibregl from 'maplibre-gl'
-import 'maplibre-gl/dist/maplibre-gl.css'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { Logo, ThemeToggle, BaseButton } from '@/components/ui'
 import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 
@@ -326,9 +326,11 @@ const familyMembers = ref<FamilyMember[]>([])
 const zones = ref<GeofenceZone[]>([])
 
 // Map variables
-let map: maplibregl.Map | null = null
-let markers: maplibregl.Marker[] = []
-let zoneCircles: maplibregl.Circle[] = []
+let map: L.Map | null = null
+let markers: L.Marker[] = []
+let zoneCircles: L.Circle[] = []
+let isCreatingZoneMode = false
+let tempCircle: L.Circle | null = null
 
 const newZone = ref<NewZone>({
   name: '',
@@ -346,45 +348,147 @@ const toast = useToast()
 const initMap = () => {
   if (map) return
 
-  map = new maplibregl.Map({
-    container: 'map',
-    style: 'https://demotiles.maplibre.org/style.json', // OpenStreetMap style
-    center: [-46.6333, -23.5505], // São Paulo
-    zoom: 12
-  })
+  // Inicializar mapa Leaflet
+  map = L.map('map').setView([-23.5505, -46.6333], 12)
 
-  // Adicionar controles de navegação
-  map.addControl(new maplibregl.NavigationControl(), 'top-right')
-  map.addControl(new maplibregl.FullscreenControl(), 'top-right')
+  // Adicionar tiles do OpenStreetMap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map)
 
-  // Aguardar o mapa carregar
-  map.on('load', () => {
-    updateMapMarkers()
-    updateMapZones()
-  })
+  // Adicionar controles
+  map.addControl(L.control.zoom({ position: 'topright' }))
+  map.addControl(L.control.scale({ position: 'bottomright' }))
+
+  // Eventos do mapa
+  map.on('click', onMapClick)
+  map.on('mousemove', onMapMouseMove)
+
+  // Carregar dados iniciais
+  updateMapMarkers()
+  updateMapZones()
+}
+
+// Evento de clique no mapa para criar zona
+const onMapClick = (e: L.LeafletMouseEvent) => {
+  if (!isCreatingZoneMode) return
+
+  const { lat, lng } = e.latlng
+  
+  // Atualizar coordenadas no formulário
+  newZone.value.latitude = lat
+  newZone.value.longitude = lng
+  
+  // Mostrar círculo temporário
+  if (tempCircle) {
+    map?.removeLayer(tempCircle)
+  }
+  
+  tempCircle = L.circle([lat, lng], {
+    radius: newZone.value.radius,
+    color: '#16a34a',
+    fillColor: '#16a34a',
+    fillOpacity: 0.2,
+    weight: 2
+  }).addTo(map!)
+  
+  // Sair do modo criação e mostrar modal
+  isCreatingZoneMode = false
+  map?.closePopup()
+  showCreateZoneModal.value = true
+}
+
+// Evento de movimento do mouse para atualizar círculo
+const onMapMouseMove = (e: L.LeafletMouseEvent) => {
+  if (!isCreatingZoneMode || !tempCircle) return
+  
+  const { lat, lng } = e.latlng
+  tempCircle.setLatLng([lat, lng])
+}
+
+// Iniciar criação de zona
+const startCreatingZone = () => {
+  isCreatingZoneMode = true
+  showCreateZoneModal.value = false
+  
+  // Adicionar instrução visual
+  if (map) {
+    const instruction = L.popup()
+      .setLatLng(map.getCenter())
+      .setContent(`
+        <div style="text-align: center; padding: 10px;">
+          <strong style="color: #1f2937; font-size: 16px;">🗺️ Clique no mapa para criar uma zona</strong>
+          <br><br>
+          <button onclick="cancelZoneCreation()" style="
+            padding: 8px 16px; 
+            background: #dc2626; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer;
+            font-weight: 500;
+          ">❌ Cancelar</button>
+        </div>
+      `)
+      .openOn(map)
+  }
+}
+
+// Cancelar criação de zona
+const cancelZoneCreation = () => {
+  isCreatingZoneMode = false
+  if (tempCircle) {
+    map?.removeLayer(tempCircle)
+    tempCircle = null
+  }
+  map?.closePopup()
+}
+
+// Fechar modal e sair do modo criação
+const closeModal = () => {
+  showCreateZoneModal.value = false
+  isCreatingZoneMode = false
+  if (tempCircle) {
+    map?.removeLayer(tempCircle)
+    tempCircle = null
+  }
 }
 
 const updateMapMarkers = () => {
   if (!map) return
 
   // Limpar marcadores existentes
-  markers.forEach(marker => marker.remove())
+  markers.forEach(marker => map?.removeLayer(marker))
   markers = []
 
   // Adicionar marcadores dos membros da família
   familyMembers.value.forEach(member => {
     if (member.latitude && member.longitude) {
-      const marker = new maplibregl.Marker({
-        color: member.batteryLevel && member.batteryLevel < 0.2 ? '#dc2626' : '#16a34a'
+      // Criar ícone personalizado baseado na bateria
+      const iconColor = member.batteryLevel && member.batteryLevel < 0.2 ? '#dc2626' : '#16a34a'
+      const icon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="
+          background-color: ${iconColor};
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        "></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
       })
-        .setLngLat([member.longitude, member.latitude])
-        .setPopup(new maplibregl.Popup().setHTML(`
-          <div class="p-2">
-            <h3 class="font-semibold">${member.name}</h3>
-            <p class="text-sm text-gray-600">Última localização: ${formatTime(member.lastSeen || '')}</p>
-            ${member.batteryLevel !== null ? `<p class="text-sm">Bateria: ${Math.round(member.batteryLevel * 100)}%</p>` : ''}
+
+      const marker = L.marker([member.latitude, member.longitude], { icon })
+        .bindPopup(`
+          <div style="padding: 8px; min-width: 200px;">
+            <h3 style="margin: 0 0 8px 0; font-weight: 600; color: #1f2937;">${member.name}</h3>
+            <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Última localização: ${formatTime(member.lastSeen || '')}</p>
+            ${member.batteryLevel !== null ? `<p style="margin: 0; font-size: 14px; color: #6b7280;">Bateria: ${Math.round(member.batteryLevel * 100)}%</p>` : ''}
           </div>
-        `))
+        `)
         .addTo(map)
 
       markers.push(marker)
@@ -396,22 +500,30 @@ const updateMapZones = () => {
   if (!map) return
 
   // Limpar círculos existentes
-  zoneCircles.forEach(circle => circle.remove())
+  zoneCircles.forEach(circle => map?.removeLayer(circle))
   zoneCircles = []
 
   // Adicionar círculos das zonas
   if (zones.value && Array.isArray(zones.value)) {
     zones.value.forEach(zone => {
-    const circle = new maplibregl.Circle({
-      center: [zone.longitude, zone.latitude],
-      radius: zone.radius,
-      color: zone.isActive ? '#16a34a' : '#6b7280',
-      fillColor: zone.isActive ? '#16a34a' : '#6b7280',
-      fillOpacity: 0.2,
-      strokeOpacity: 0.8
-    }).addTo(map)
+      const circle = L.circle([zone.latitude, zone.longitude], {
+        radius: zone.radius,
+        color: zone.isActive ? '#16a34a' : '#6b7280',
+        fillColor: zone.isActive ? '#16a34a' : '#6b7280',
+        fillOpacity: 0.2,
+        weight: 2,
+        opacity: 0.8
+      })
+        .bindPopup(`
+          <div style="padding: 8px; min-width: 200px;">
+            <h3 style="margin: 0 0 8px 0; font-weight: 600; color: #1f2937;">${zone.name}</h3>
+            <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Raio: ${zone.radius}m</p>
+            <p style="margin: 0; font-size: 14px; color: #6b7280;">Status: ${zone.isActive ? 'Ativa' : 'Inativa'}</p>
+          </div>
+        `)
+        .addTo(map)
 
-    zoneCircles.push(circle)
+      zoneCircles.push(circle)
     })
   }
 }
@@ -449,6 +561,13 @@ const createZone = async () => {
     
     toast.success('Zona criada com sucesso!')
     showCreateZoneModal.value = false
+    
+    // Limpar círculo temporário e sair do modo criação
+    if (tempCircle) {
+      map?.removeLayer(tempCircle)
+      tempCircle = null
+    }
+    isCreatingZoneMode = false
     
     // Reset form
     newZone.value = {
@@ -495,6 +614,9 @@ const formatTime = (dateString: string) => {
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h atrás`
   return `${Math.floor(diff / 86400000)}d atrás`
 }
+
+// Expor função global para cancelar criação
+;(window as any).cancelZoneCreation = cancelZoneCreation
 
 // Lifecycle
 onMounted(() => {
