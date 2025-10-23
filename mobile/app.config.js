@@ -49,7 +49,8 @@ export default {
       usesCleartextTraffic: true,
       compileSdkVersion: 34,
       targetSdkVersion: 34,
-      minSdkVersion: 23
+      minSdkVersion: 23,
+      googleServicesFile: "./google-services.json"
     },
     web: {
       favicon: "./assets/logo.png"
@@ -79,6 +80,14 @@ export default {
           icon: "./assets/logo.png",
           color: "#16a34a",
           defaultChannel: "default"
+        }
+      ],
+      [
+        "@react-native-firebase/app",
+        {
+          android: {
+            googleServicesFile: "./google-services.json"
+          }
         }
       ],
       [

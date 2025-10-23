@@ -177,7 +177,13 @@ export class GeofenceService {
       return;
     }
 
-    // Não notificar o próprio usuário - apenas a família
+    // Notificar a família sobre o evento de geofence
+    await this.notificationService.sendGeofenceToFamily(
+      userId,
+      zone.name,
+      eventType,
+      zoneId
+    );
   }
 
   // Calcular distância entre dois pontos (fórmula de Haversine)

@@ -274,14 +274,19 @@ export class NotificationService {
   // Enviar push notification via Expo Push Notifications
   private async sendPushNotification(notification: Notification): Promise<void> {
     try {
-      // Buscar o push token do receptor
-      const receiver = await this.notificationRepository.findById(notification.id);
+      // Buscar o push token do receptor através do UserRepository
+      const { UserRepository } = await import('../../repositories/users/userRepository');
+      const userRepository = new UserRepository();
       
-      if (!receiver) return;
+      const receiver = await userRepository.findById(notification.receiverId);
+      
+      if (!receiver || !receiver.pushToken) {
+        return;
+      }
 
-      const pushToken = (receiver as any).receiver?.pushToken;
+      const pushToken = receiver.pushToken;
       
-      if (!pushToken || !pushToken.startsWith('ExponentPushToken')) {
+      if (!pushToken.startsWith('ExponentPushToken')) {
         return;
       }
 
@@ -307,7 +312,8 @@ export class NotificationService {
       if (response.ok) {
         await this.notificationRepository.markAsSent(notification.id);
       } else {
-        console.error('Erro ao enviar push notification:', await response.text());
+        const errorText = await response.text();
+        console.error('Erro ao enviar push notification:', errorText);
       }
     } catch (error) {
       console.error('Erro ao enviar push notification:', error);

@@ -55,10 +55,6 @@ class NotificationService {
   // Solicitar permissões de notificação
   async requestPermissions(): Promise<boolean> {
     try {
-      if (!Device.isDevice) {
-        return false;
-      }
-
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 
