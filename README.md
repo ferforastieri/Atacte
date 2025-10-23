@@ -578,17 +578,3 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 **Fernando** - Desenvolvedor
 
 ---
-
-## 📚 Recursos Adicionais
-
-- [Documentação do Prisma](https://www.prisma.io/docs)
-- [Documentação do Vue.js](https://vuejs.org/guide/)
-- [Documentação do Express.js](https://expressjs.com/)
-- [Documentação do Tailwind CSS](https://tailwindcss.com/docs)
-- [Documentação do React Native](https://reactnative.dev/docs/getting-started)
-- [Documentação do Expo](https://docs.expo.dev/)
-- [Documentação do NativeWind](https://www.nativewind.dev/)
-
----
-
-**⚠️ Aviso**: Este projeto é destinado para fins educacionais e uso pessoal. Para uso em produção, considere implementar medidas de segurança adicionais e realizar auditorias de segurança profissionais.
