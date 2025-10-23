@@ -224,16 +224,6 @@ export class FamilyService {
       throw new Error('Você não é membro desta família');
     }
 
-    // Verificar se é o último admin
-    const family = await this.familyRepository.findById(familyId);
-    const adminCount = family?.members.filter((m) => m.role === 'admin').length || 0;
-
-    if (member.role === 'admin' && adminCount === 1) {
-      throw new Error(
-        'Você é o último administrador. Promova outro membro antes de sair.'
-      );
-    }
-
     await this.familyRepository.removeMember(member.id);
 
     // Log de auditoria

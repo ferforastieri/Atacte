@@ -231,6 +231,7 @@ router.post(
       }
 
       const authReq = req as AuthenticatedRequest;
+      
       const family = await familyService.joinFamily(
         authReq.user.id,
         req.body,

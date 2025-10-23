@@ -87,6 +87,14 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   const checkAndStartTracking = async () => {
     try {
+      // Primeiro, solicitar permissões de localização
+      const permissionsGranted = await locationService.requestPermissions();
+      
+      if (!permissionsGranted) {
+        setIsTrackingActive(false);
+        return;
+      }
+      
       const response = await familyService.getFamilies();
       
       if (!response.success || !response.data || response.data.length === 0) {
@@ -114,6 +122,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
         setIsTrackingActive(false);
       }
     } catch (error) {
+      console.error('Erro ao verificar/iniciar rastreamento:', error);
       setIsTrackingActive(false);
     }
   };

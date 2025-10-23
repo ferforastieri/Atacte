@@ -85,6 +85,7 @@ export default function FamilyScreen({ navigation }: any) {
 
     try {
       setIsSaving(true);
+      
       const response = await familyService.joinFamily({ inviteCode });
       
       if (response.success) {
@@ -97,6 +98,7 @@ export default function FamilyScreen({ navigation }: any) {
         showError(response.message || 'Erro ao entrar na família');
       }
     } catch (error) {
+      console.error('Join family error:', error);
       showError('Erro ao entrar na família');
     } finally {
       setIsSaving(false);
@@ -113,6 +115,22 @@ export default function FamilyScreen({ navigation }: any) {
       showSuccess('Código de convite copiado!');
     } catch (error) {
       showError('Erro ao copiar código de convite');
+    }
+  };
+
+  const handleLeaveFamily = async (familyId: string, familyName: string) => {
+    try {
+      const response = await familyService.leaveFamily(familyId);
+      
+      if (response.success) {
+        showSuccess('Você saiu da família!');
+        loadFamilies();
+      } else {
+        showError(response.message || 'Erro ao sair da família');
+      }
+    } catch (error) {
+      console.error('Leave family error:', error);
+      showError('Erro ao sair da família');
     }
   };
 
@@ -303,7 +321,10 @@ export default function FamilyScreen({ navigation }: any) {
                       {family.members.length} {family.members.length === 1 ? 'membro' : 'membros'}
                     </Text>
                   </View>
-                  <TouchableOpacity style={styles.leaveButton}>
+                  <TouchableOpacity 
+                    style={styles.leaveButton}
+                    onPress={() => handleLeaveFamily(family.id, family.name)}
+                  >
                     <Ionicons name="exit-outline" size={20} color="#dc2626" />
                   </TouchableOpacity>
                 </View>

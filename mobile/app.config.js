@@ -69,7 +69,8 @@ export default {
           locationAlwaysPermission: "Este app precisa da sua localização em segundo plano para mantê-lo conectado com sua família.",
           locationWhenInUsePermission: "Este app precisa da sua localização quando estiver em uso.",
           isAndroidBackgroundLocationEnabled: true,
-          isAndroidForegroundServiceEnabled: true
+          isAndroidForegroundServiceEnabled: true,
+          isAndroidBackgroundLocationPermissionEnabled: true
         }
       ],
       [

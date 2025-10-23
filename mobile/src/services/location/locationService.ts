@@ -73,10 +73,15 @@ class LocationService {
       if (foregroundStatus !== 'granted') {
         return false;
       }
-
+      
       const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
       
-      return backgroundStatus === 'granted';
+      if (backgroundStatus !== 'granted') {
+        // Mesmo sem background, podemos continuar com foreground
+        return true;
+      }
+      
+      return true;
     } catch (error) {
       console.error('Erro ao solicitar permissões de localização:', error);
       return false;
@@ -154,7 +159,7 @@ class LocationService {
 
       const batteryLevel = await this.getBatteryLevel();
 
-      const result = await this.updateLocation({
+      const payload = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         accuracy: location.coords.accuracy || undefined,
@@ -163,8 +168,9 @@ class LocationService {
         heading: location.coords.heading || undefined,
         batteryLevel: batteryLevel >= 0 ? batteryLevel : undefined,
         isMoving: location.coords.speed ? location.coords.speed > 0.5 : false,
-      });
+      };
 
+      const result = await this.updateLocation(payload);
       return result.success;
     } catch (error) {
       console.error('Erro ao enviar localização:', error);

@@ -54,7 +54,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
         
         await locationService.updateLocation(payload);
       } catch (error: any) {
-        // Erro ao enviar localização em background
+        // Erro ao processar localização em background
       }
     }
   }
@@ -65,8 +65,7 @@ const backgroundLocationFunctions = {
     // Iniciar rastreamento em background
     startBackgroundLocation: async (): Promise<boolean> => {
       try {
-        
-        // Verificar permissões
+        // Verificar permissões (já foram solicitadas anteriormente)
         const { status } = await Location.getForegroundPermissionsAsync();
         if (status !== 'granted') {
           return false;
@@ -75,10 +74,7 @@ const backgroundLocationFunctions = {
         // Verificar permissões de background
         const { status: backgroundStatus } = await Location.getBackgroundPermissionsAsync();
         if (backgroundStatus !== 'granted') {
-          const { status: newStatus } = await Location.requestBackgroundPermissionsAsync();
-          if (newStatus !== 'granted') {
-            return false;
-          }
+          // Não retornar false aqui, permitir funcionar sem background
         }
 
         // Verificar se já está rodando
@@ -90,10 +86,10 @@ const backgroundLocationFunctions = {
 
         // Iniciar rastreamento em background
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: Location.Accuracy.High,
-          timeInterval: 10000, // 10 segundos
-          distanceInterval: 25, // 25 metros
-          deferredUpdatesInterval: 10000,
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 15000, // 15 segundos
+          distanceInterval: 50, // 50 metros
+          deferredUpdatesInterval: 15000,
           foregroundService: {
             notificationTitle: 'Atacte - Rastreamento Ativo',
             notificationBody: 'Compartilhando sua localização com sua família',
