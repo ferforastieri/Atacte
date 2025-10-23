@@ -32,7 +32,7 @@ export default {
         foregroundImage: "./assets/logo.png",
         backgroundColor: "#ffffff"
       },
-      package: "com.atacte.mobile",
+      package: "atacte.seguranca",
       permissions: [
         "INTERNET",
         "ACCESS_FINE_LOCATION",
