@@ -50,7 +50,7 @@ export default {
       compileSdkVersion: 34,
       targetSdkVersion: 34,
       minSdkVersion: 23,
-      googleServicesFile: "./google-services.json"
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON ? "./google-services.json" : undefined
     },
     web: {
       favicon: "./assets/logo.png"
