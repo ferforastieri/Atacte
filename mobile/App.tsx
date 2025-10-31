@@ -90,12 +90,6 @@ const backgroundLocationFunctions = {
           timeInterval: 15000, // 15 segundos
           distanceInterval: 50, // 50 metros
           deferredUpdatesInterval: 15000,
-          foregroundService: {
-            notificationTitle: 'Atacte - Rastreamento Ativo',
-            notificationBody: 'Compartilhando sua localização com sua família',
-            notificationColor: '#16a34a',
-            killServiceOnDestroy: false,
-          },
           pausesUpdatesAutomatically: false,
           activityType: Location.ActivityType.OtherNavigation,
           showsBackgroundLocationIndicator: true,

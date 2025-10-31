@@ -55,6 +55,26 @@ export class NotificationRepository {
     return result.count;
   }
 
+  async createBatchAndReturn(notifications: CreateNotificationData[]): Promise<Notification[]> {
+    const createdNotifications = [];
+    
+    for (const n of notifications) {
+      const notification = await prisma.notification.create({
+        data: {
+          senderId: n.senderId || null,
+          receiverId: n.receiverId,
+          type: n.type,
+          title: n.title,
+          body: n.body,
+          data: (n.data || {}) as Prisma.InputJsonValue,
+        },
+      });
+      createdNotifications.push(notification);
+    }
+
+    return createdNotifications;
+  }
+
   async findById(id: string): Promise<Notification | null> {
     return await prisma.notification.findUnique({
       where: { id },

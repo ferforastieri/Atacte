@@ -2,6 +2,7 @@ import { Request } from 'express';
 import { NotificationRepository } from '../../repositories/notification/notificationRepository';
 import { FamilyRepository } from '../../repositories/family/familyRepository';
 import { Notification } from '../../../node_modules/.prisma/client';
+import { Expo, ExpoPushMessage } from 'expo-server-sdk';
 
 export interface NotificationDto {
   id: string;
@@ -152,7 +153,14 @@ export class NotificationService {
         },
       }));
 
-    await this.notificationRepository.createBatch(notifications);
+    if (notifications.length > 0) {
+      const createdNotifications = await this.notificationRepository.createBatchAndReturn(notifications);
+      
+      // Enviar push para cada notificação criada
+      for (const notification of createdNotifications) {
+        await this.sendPushNotification(notification);
+      }
+    }
   }
 
   async sendLowBatteryAlert(userId: string, batteryLevel: number): Promise<void> {
@@ -183,7 +191,12 @@ export class NotificationService {
     }
 
     if (notifications.length > 0) {
-      await this.notificationRepository.createBatch(notifications);
+      const createdNotifications = await this.notificationRepository.createBatchAndReturn(notifications);
+      
+      // Enviar push para cada notificação criada
+      for (const notification of createdNotifications) {
+        await this.sendPushNotification(notification);
+      }
     }
   }
 
@@ -214,7 +227,12 @@ export class NotificationService {
     }
 
     if (notifications.length > 0) {
-      await this.notificationRepository.createBatch(notifications);
+      const createdNotifications = await this.notificationRepository.createBatchAndReturn(notifications);
+      
+      // Enviar push para cada notificação criada
+      for (const notification of createdNotifications) {
+        await this.sendPushNotification(notification);
+      }
     }
   }
 
@@ -231,18 +249,21 @@ export class NotificationService {
     const notifications: CreateNotificationData[] = [];
 
     for (const family of families) {
-      // Buscar todos os membros da família (exceto o próprio usuário)
+      // Buscar o membro que entrou na zona para obter o nickname/apelido dele na família
+      const senderMember = family.members.find(member => member.userId === userId);
+      const senderName = senderMember?.nickname || senderMember?.user?.name || 'Membro da família';
+      
+      // Buscar todos os membros da família (exceto o próprio usuário) para notificar
       const members = family.members.filter(member => member.userId !== userId);
       
       for (const member of members) {
-        const memberName = member.nickname || member.user.name || 'Membro da família';
         const title = eventType === 'enter' 
-          ? `📍 ${memberName} chegou em ${zoneName}` 
-          : `🚶 ${memberName} saiu de ${zoneName}`;
+          ? `📍 ${senderName} chegou em ${zoneName}` 
+          : `🚶 ${senderName} saiu de ${zoneName}`;
         
         const body = eventType === 'enter'
-          ? `${memberName} entrou na zona ${zoneName}`
-          : `${memberName} saiu da zona ${zoneName}`;
+          ? `${senderName} entrou na zona ${zoneName}`
+          : `${senderName} saiu da zona ${zoneName}`;
 
         notifications.push({
           senderId: userId,
@@ -254,7 +275,7 @@ export class NotificationService {
             zoneId,
             zoneName,
             eventType,
-            memberName,
+            memberName: senderName,
             familyId: family.id,
             familyName: family.name,
           },
@@ -263,7 +284,12 @@ export class NotificationService {
     }
 
     if (notifications.length > 0) {
-      await this.notificationRepository.createBatch(notifications);
+      const createdNotifications = await this.notificationRepository.createBatchAndReturn(notifications);
+      
+      // Enviar push para cada notificação criada
+      for (const notification of createdNotifications) {
+        await this.sendPushNotification(notification);
+      }
     }
   }
 
@@ -287,33 +313,46 @@ export class NotificationService {
       const pushToken = receiver.pushToken;
       
       if (!pushToken.startsWith('ExponentPushToken')) {
+        console.warn(`Token inválido ignorado: ${pushToken}`);
         return;
       }
 
-      // Enviar via Expo Push Notifications
-      const message = {
+      // Usar Expo SDK para enviar notificações com chunks
+      const expo = new Expo({
+        useFcmV1: true,
+      });
+
+      if (!Expo.isExpoPushToken(pushToken)) {
+        console.warn(`Token inválido ignorado: ${pushToken}`);
+        return;
+      }
+
+      const message: ExpoPushMessage = {
         to: pushToken,
         sound: 'default',
         title: notification.title,
         body: notification.body,
-        data: notification.data,
+        data: notification.data as Record<string, any> || {},
+        _contentAvailable: true,
       };
 
-      const response = await fetch('https://exp.host/--/api/v2/push/send', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Accept-encoding': 'gzip, deflate',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(message),
-      });
+      const chunks = expo.chunkPushNotifications([message]);
 
-      if (response.ok) {
-        await this.notificationRepository.markAsSent(notification.id);
-      } else {
-        const errorText = await response.text();
-        console.error('Erro ao enviar push notification:', errorText);
+      for (const chunk of chunks) {
+        try {
+          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          
+          // Marcar como enviado apenas se não houver erro
+          const hasError = ticketChunk.some(ticket => 
+            ticket.status === 'error' && ticket.details?.error !== 'DeviceNotRegistered'
+          );
+          
+          if (!hasError) {
+            await this.notificationRepository.markAsSent(notification.id);
+          }
+        } catch (error) {
+          console.error('Erro ao enviar chunk de notificação:', error);
+        }
       }
     } catch (error) {
       console.error('Erro ao enviar push notification:', error);
